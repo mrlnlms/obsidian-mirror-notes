@@ -29,37 +29,90 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
 var MyPlugin = class extends import_obsidian.Plugin {
-  async onload() {
-    console.log("[Mirror Notes] v1 loaded \u2014 Skeleton: Notice, stubs");
-    new import_obsidian.Notice("Opening \u{1F440} Mirror Preview Plugin!");
+  constructor() {
+    super(...arguments);
+    this.toolbarEl = null;
   }
-  async onunload() {
+  onload() {
+    console.log("[Mirror Notes] v2 loaded \u2014 Ribbon button + tooltip");
+    this.addToolbar();
     this.registerEvent(
-      new import_obsidian.Notice("Closing Mirror Preview Plugin!")
-      //this.app.workspace.on('active-leaf-change', this.onFileOpen.bind(this))
+      this.app.workspace.on("active-leaf-change", this.onActiveLeafChange.bind(this))
     );
   }
-  async onFileOpen(leaf) {
-    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian.MarkdownView))
+  addToolbar() {
+    this.toolbarEl = document.querySelector(".workspace-ribbon-left");
+    if (!this.toolbarEl)
       return;
-    const view = leaf.view;
-    const file = view.file;
+    this.addToolbarIcon();
+  }
+  addToolbarIcon() {
+    if (!this.toolbarEl)
+      return;
+    const button = this.addIcon("Custom Tool", "Click me", "mdi-information-variant");
+    button.addEventListener("click", () => {
+      this.insertCustomBlock();
+    });
+    this.toolbarEl.appendChild(button);
+  }
+  insertCustomBlock() {
+    const activeLeaf = this.app.workspace.activeLeaf;
+    if (!activeLeaf || !activeLeaf.view)
+      return;
+    const view = activeLeaf.view;
+    if (!(view instanceof import_obsidian.MarkdownView))
+      return;
+    const markdownView = view;
+    const file = markdownView.file;
     if (!file)
       return;
-    const fileCache = this.app.metadataCache.getFileCache(file);
-    if (fileCache && fileCache.frontmatter && fileCache.frontmatter.type === "project") {
-      this.insertCustomBlock(view);
-    }
-  }
-  async insertCustomBlock(view) {
-    new import_obsidian.Notice("RODOU!");
-    const container = view.containerEl.querySelector(".markdown-preview-view") || view.containerEl.querySelector(".markdown-source-view");
+    const container = markdownView.containerEl.querySelector(".markdown-preview-view") || markdownView.containerEl.querySelector(".markdown-source-view");
     if (container && !container.querySelector(".custom-block")) {
-      const content = "MARLON BRANDON";
       const customBlock = document.createElement("div");
       customBlock.className = "custom-block";
-      customBlock.innerHTML = content;
-      container.appendChild(customBlock);
+      customBlock.innerText = "MARLON BRANDON";
+      const header = container.querySelector("h1");
+      if (header && header.parentElement) {
+        header.parentElement.insertBefore(customBlock, header.nextSibling);
+      } else {
+        container.appendChild(customBlock);
+      }
     }
+  }
+  onActiveLeafChange() {
+    if (this.toolbarEl) {
+      this.toolbarEl.innerHTML = "";
+      this.addToolbarIcon();
+    }
+  }
+  addIcon(label, tooltip, icon) {
+    const button = document.createElement("div");
+    button.className = "toolbar-icon";
+    button.innerHTML = `<span class="mdi ${icon}" aria-hidden="true"></span>`;
+    button.setAttribute("aria-label", tooltip);
+    button.setAttribute("title", tooltip);
+    button.setAttribute("role", "button");
+    button.setAttribute("aria-haspopup", "true");
+    button.setAttribute("aria-expanded", "false");
+    button.appendChild(document.createTextNode(label));
+    this.addHoverTooltip(button, label);
+    return button;
+  }
+  addHoverTooltip(el, text) {
+    const tooltip = this.createTooltip(text);
+    el.addEventListener("mouseenter", () => {
+      tooltip.style.display = "block";
+    });
+    el.addEventListener("mouseleave", () => {
+      tooltip.style.display = "none";
+    });
+  }
+  createTooltip(text) {
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    tooltip.style.display = "none";
+    tooltip.innerText = text;
+    document.body.appendChild(tooltip);
+    return tooltip;
   }
 };

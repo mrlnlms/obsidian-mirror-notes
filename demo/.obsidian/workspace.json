@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-06-06_v1-skeleton/test-note.md",
+                "file": "2024-06-06_v2-ribbon-button/test-note.md",
                 "mode": "source",
                 "source": false
               },
@@ -174,6 +174,7 @@
   },
   "left-ribbon": {
     "hiddenItems": {
+      "obsidian42-brat:BRAT": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -183,10 +184,11 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
+    "2024-06-06_v1-skeleton/test-note.md",
+    "2024-06-06_v2-ribbon-button/test-note.md",
+    "2024-06-06_v2-ribbon-button",
     "2024-06-06_v3-yaml-check/test-note.md",
     "2024-08-05_v18-build-styles/test-note.md",
-    "2024-06-06_v2-ribbon-button/test-note.md",
-    "2024-06-06_v1-skeleton/test-note.md",
     "2024-08-05_v18-build-styles/type-project-test.md",
     "2024-08-05_v18-build-styles/banner-test-note.md",
     "2024-08-05_v18-build-styles",
@@ -206,7 +208,6 @@
     "2024-07-20_v12-autocomplete-utils/test-note.md",
     "2024-07-20_v12-autocomplete-utils",
     "2024-07-19_v11-settings-ui/_historico/settings-ui-snapshot.md",
-    "2024-07-19_v11-settings-ui/_historico",
     "2024-07-19_v11-settings-ui/test-note.md",
     "2024-06-08_v10-final-v1/html-injection-tests.md",
     "2024-06-08_v10-final-v1/_historico/milestone-script-v1.md",
@@ -217,7 +218,6 @@
     "2024-06-07_v7-settings-tab/test-note.md",
     "2024-06-07_v6-mirror-ui-plugin/test-note 2.md",
     "templates/ui-preview-mode.md",
-    "templates/ui-live_preview-mode.md",
-    "2024-06-07_v6-mirror-ui-plugin/test-note.md"
+    "templates/ui-live_preview-mode.md"
   ]
 }

@@ -2,25 +2,27 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v1 — Skeleton
+## Status: v2 — Ribbon Button Attempt
 
-This is the very first version. The plugin loads and shows a Notice, but doesn't do anything useful yet.
+Second iteration. Trying to add a custom button to the left ribbon sidebar.
 
 ### What works
-- Plugin loads successfully
-- Shows "Opening Mirror Preview Plugin!" Notice on load
-- Has stub methods for future functionality
+- Plugin loads
+- Registers `active-leaf-change` event
+- Attempts to add button to ribbon with click handler
+- Click tries to insert a custom block after h1
 
 ### What doesn't work yet
-- No template injection
+- Custom `addIcon` conflicts with Obsidian's API
+- MDI icons not available
 - No YAML detection
-- No UI elements
-- File event listeners are commented out
+- No template injection
+- Tooltip implementation is raw HTML (no cleanup)
 
 ### Architecture
 - Single file: `src/main.ts`
 - Class: `MyPlugin extends Plugin`
-- Entry point: `onload()` → shows Notice
+- Methods: `addToolbar`, `addToolbarIcon`, `insertCustomBlock`, `addHoverTooltip`
 
 ## Development
 
