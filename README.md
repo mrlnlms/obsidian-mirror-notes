@@ -2,27 +2,25 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v2 — Ribbon Button Attempt
+## Status: v3 — YAML Frontmatter Detection
 
-Second iteration. Trying to add a custom button to the left ribbon sidebar.
+Complete rewrite. Checks YAML frontmatter on file-open and conditionally renders a custom element.
 
 ### What works
-- Plugin loads
-- Registers `active-leaf-change` event
-- Attempts to add button to ribbon with click handler
-- Click tries to insert a custom block after h1
+- Reads YAML frontmatter via `metadataCache`
+- Conditional rendering when `type: projects` matches
+- Cleanup when switching notes
 
 ### What doesn't work yet
-- Custom `addIcon` conflicts with Obsidian's API
-- MDI icons not available
-- No YAML detection
-- No template injection
-- Tooltip implementation is raw HTML (no cleanup)
+- Type check uses `projects` (plural) — won't match `type: project`
+- Yellow bar is raw DOM, not Obsidian's design system
+- No template loading
+- Button has no icon
 
 ### Architecture
 - Single file: `src/main.ts`
-- Class: `MyPlugin extends Plugin`
-- Methods: `addToolbar`, `addToolbarIcon`, `insertCustomBlock`, `addHoverTooltip`
+- Class: `MyCustomPlugin extends Plugin`
+- Event: `file-open` → check YAML → render or cleanup
 
 ## Development
 

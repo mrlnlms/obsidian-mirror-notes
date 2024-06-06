@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-06-06_v2-ribbon-button/test-note.md",
+                "file": "2024-06-06_v3-yaml-check/test-note.md",
                 "mode": "source",
                 "source": false
               },
@@ -184,10 +184,11 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
-    "2024-06-06_v1-skeleton/test-note.md",
     "2024-06-06_v2-ribbon-button/test-note.md",
-    "2024-06-06_v2-ribbon-button",
     "2024-06-06_v3-yaml-check/test-note.md",
+    "2024-06-06_v3-yaml-check",
+    "2024-06-06_v1-skeleton/test-note.md",
+    "2024-06-06_v2-ribbon-button",
     "2024-08-05_v18-build-styles/test-note.md",
     "2024-08-05_v18-build-styles/type-project-test.md",
     "2024-08-05_v18-build-styles/banner-test-note.md",
@@ -206,7 +207,6 @@
     "2024-07-22_v13-settings-model1",
     "2024-07-20_v12-autocomplete-utils/css-snippets-reference.md",
     "2024-07-20_v12-autocomplete-utils/test-note.md",
-    "2024-07-20_v12-autocomplete-utils",
     "2024-07-19_v11-settings-ui/_historico/settings-ui-snapshot.md",
     "2024-07-19_v11-settings-ui/test-note.md",
     "2024-06-08_v10-final-v1/html-injection-tests.md",

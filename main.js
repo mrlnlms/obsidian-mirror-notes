@@ -24,95 +24,54 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/main.ts
 var main_exports = {};
 __export(main_exports, {
-  default: () => MyPlugin
+  default: () => MyCustomPlugin
 });
 module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
-var MyPlugin = class extends import_obsidian.Plugin {
+var MyCustomPlugin = class extends import_obsidian.Plugin {
   constructor() {
     super(...arguments);
-    this.toolbarEl = null;
+    this.customElement = null;
   }
-  onload() {
-    console.log("[Mirror Notes] v2 loaded \u2014 Ribbon button + tooltip");
-    this.addToolbar();
+  async onload() {
+    console.log("[Mirror Notes] v3 loaded \u2014 YAML type check");
     this.registerEvent(
-      this.app.workspace.on("active-leaf-change", this.onActiveLeafChange.bind(this))
+      this.app.workspace.on("file-open", async (file) => {
+        var _a;
+        if (file && file.extension === "md") {
+          const yaml = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+          if (yaml && yaml.type === "projects") {
+            this.renderCustomElement();
+          } else {
+            this.cleanupCustomElement();
+          }
+        }
+      })
     );
   }
-  addToolbar() {
-    this.toolbarEl = document.querySelector(".workspace-ribbon-left");
-    if (!this.toolbarEl)
+  renderCustomElement() {
+    if (this.customElement)
       return;
-    this.addToolbarIcon();
-  }
-  addToolbarIcon() {
-    if (!this.toolbarEl)
-      return;
-    const button = this.addIcon("Custom Tool", "Click me", "mdi-information-variant");
-    button.addEventListener("click", () => {
-      this.insertCustomBlock();
-    });
-    this.toolbarEl.appendChild(button);
-  }
-  insertCustomBlock() {
-    const activeLeaf = this.app.workspace.activeLeaf;
-    if (!activeLeaf || !activeLeaf.view)
-      return;
-    const view = activeLeaf.view;
-    if (!(view instanceof import_obsidian.MarkdownView))
-      return;
-    const markdownView = view;
-    const file = markdownView.file;
-    if (!file)
-      return;
-    const container = markdownView.containerEl.querySelector(".markdown-preview-view") || markdownView.containerEl.querySelector(".markdown-source-view");
-    if (container && !container.querySelector(".custom-block")) {
-      const customBlock = document.createElement("div");
-      customBlock.className = "custom-block";
-      customBlock.innerText = "MARLON BRANDON";
-      const header = container.querySelector("h1");
-      if (header && header.parentElement) {
-        header.parentElement.insertBefore(customBlock, header.nextSibling);
-      } else {
-        container.appendChild(customBlock);
-      }
+    this.customElement = document.createElement("div");
+    this.customElement.classList.add("cMenuModalBar");
+    this.customElement.style.width = "100%";
+    this.customElement.style.backgroundColor = "yellow";
+    const button = document.createElement("button");
+    button.classList.add("cMenuModalBar");
+    button.setAttribute("title", "Open Note Toolbar");
+    button.setAttribute("aria-label", "Open Note Toolbar");
+    this.customElement.appendChild(button);
+    const view = this.app.workspace.getActiveViewOfType(import_obsidian.MarkdownView);
+    if (view) {
+      const containerEl = view.containerEl;
+      containerEl.appendChild(this.customElement);
     }
   }
-  onActiveLeafChange() {
-    if (this.toolbarEl) {
-      this.toolbarEl.innerHTML = "";
-      this.addToolbarIcon();
+  cleanupCustomElement() {
+    if (this.customElement && this.customElement.parentNode) {
+      this.customElement.parentNode.removeChild(this.customElement);
+      this.customElement = null;
+      console.log("heeh");
     }
-  }
-  addIcon(label, tooltip, icon) {
-    const button = document.createElement("div");
-    button.className = "toolbar-icon";
-    button.innerHTML = `<span class="mdi ${icon}" aria-hidden="true"></span>`;
-    button.setAttribute("aria-label", tooltip);
-    button.setAttribute("title", tooltip);
-    button.setAttribute("role", "button");
-    button.setAttribute("aria-haspopup", "true");
-    button.setAttribute("aria-expanded", "false");
-    button.appendChild(document.createTextNode(label));
-    this.addHoverTooltip(button, label);
-    return button;
-  }
-  addHoverTooltip(el, text) {
-    const tooltip = this.createTooltip(text);
-    el.addEventListener("mouseenter", () => {
-      tooltip.style.display = "block";
-    });
-    el.addEventListener("mouseleave", () => {
-      tooltip.style.display = "none";
-    });
-  }
-  createTooltip(text) {
-    const tooltip = document.createElement("div");
-    tooltip.className = "tooltip";
-    tooltip.style.display = "none";
-    tooltip.innerText = text;
-    document.body.appendChild(tooltip);
-    return tooltip;
   }
 };
