@@ -1,0 +1,13 @@
+.custom-block {
+    position: absolute;
+    top: 10px; /* Ajuste a posição superior conforme necessário */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: lightblue;
+    font-weight: bold;
+    padding: 10px;
+    z-index: 1000; /* Garante que esteja acima de outros elementos */
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  

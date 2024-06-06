@@ -1,0 +1,7 @@
+node_modules/
+*.map
+.DS_Store
+data.json
+.hotreload
+demo/.obsidian/plugins/hot-reload/
+demo/.obsidian/plugins/obsidian42-brat/

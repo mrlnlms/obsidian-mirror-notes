@@ -1,0 +1,10 @@
+{
+	"id": "obsidian-mirror-notes",
+	"name": "Mirror Notes",
+	"version": "1.0.0",
+	"minAppVersion": "0.15.0",
+	"description": "Load dynamic templates into your notes based on YAML frontmatter.",
+	"author": "MOSx (Marlon Lemes)",
+	"authorUrl": "https://marlonlemes.io",
+	"isDesktopOnly": false
+}

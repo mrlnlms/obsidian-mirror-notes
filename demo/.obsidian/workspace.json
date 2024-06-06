@@ -1,0 +1,223 @@
+{
+  "main": {
+    "id": "c6f541f05a3259f3",
+    "type": "split",
+    "children": [
+      {
+        "id": "4c29cebf3c040af8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "777f646b02a3ae8a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "2024-06-06_v1-skeleton/test-note.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "test-note"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "e4e59762601de77f",
+    "type": "split",
+    "children": [
+      {
+        "id": "e7fb2c2587d437dc",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "b59e1cba71840f16",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
+            }
+          },
+          {
+            "id": "0ff2326da1b9d7eb",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Search"
+            }
+          },
+          {
+            "id": "d4d23982aafc9eef",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "89b7ae46b2e0add2",
+    "type": "split",
+    "children": [
+      {
+        "id": "a0da4874da3b533f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "86e40802cff44c38",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "2024-06-06_v2-ribbon-button/test-note.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for test-note"
+            }
+          },
+          {
+            "id": "9edad97049664801",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "2024-06-06_v2-ribbon-button/test-note.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "lucide-ghost",
+              "title": "outgoing-link"
+            }
+          },
+          {
+            "id": "5239014d6093bda5",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-ghost",
+              "title": "tag"
+            }
+          },
+          {
+            "id": "dbf6b004e7e296ee",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "All properties"
+            }
+          },
+          {
+            "id": "7da60dd2dd06f91d",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "2024-06-06_v2-ribbon-button/test-note.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-ghost",
+              "title": "outline"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Open quick switcher": false,
+      "graph:Open graph view": false,
+      "canvas:Create new canvas": false,
+      "command-palette:Open command palette": false,
+      "bases:Create new base": false
+    }
+  },
+  "active": "777f646b02a3ae8a",
+  "lastOpenFiles": [
+    "2024-06-06_v3-yaml-check/test-note.md",
+    "2024-08-05_v18-build-styles/test-note.md",
+    "2024-06-06_v2-ribbon-button/test-note.md",
+    "2024-06-06_v1-skeleton/test-note.md",
+    "2024-08-05_v18-build-styles/type-project-test.md",
+    "2024-08-05_v18-build-styles/banner-test-note.md",
+    "2024-08-05_v18-build-styles",
+    "2024-07-26_v17-settings-final/_historico/html-prototype.html",
+    "2024-07-26_v17-settings-final/test-note.md",
+    "2024-07-26_v17-settings-final/_historico",
+    "2024-07-26_v17-settings-final",
+    "2024-07-25_v16-finalmente/test-note.md",
+    "2024-07-25_v16-finalmente",
+    "2024-07-24_v15-settings-model3/test-note.md",
+    "2024-07-24_v15-settings-model3",
+    "2024-07-23_v14-settings-model2/test-note.md",
+    "2024-07-23_v14-settings-model2",
+    "2024-07-22_v13-settings-model1/test-note.md",
+    "2024-07-22_v13-settings-model1",
+    "2024-07-20_v12-autocomplete-utils/css-snippets-reference.md",
+    "2024-07-20_v12-autocomplete-utils/test-note.md",
+    "2024-07-20_v12-autocomplete-utils",
+    "2024-07-19_v11-settings-ui/_historico/settings-ui-snapshot.md",
+    "2024-07-19_v11-settings-ui/_historico",
+    "2024-07-19_v11-settings-ui/test-note.md",
+    "2024-06-08_v10-final-v1/html-injection-tests.md",
+    "2024-06-08_v10-final-v1/_historico/milestone-script-v1.md",
+    "2024-06-08_v10-final-v1/_historico/milestone-script-final.md",
+    "2024-06-08_v10-final-v1/test-note.md",
+    "2024-06-07_v9-full-routing/test-note.md",
+    "2024-06-07_v8-mode-detection/test-note.md",
+    "2024-06-07_v7-settings-tab/test-note.md",
+    "2024-06-07_v6-mirror-ui-plugin/test-note 2.md",
+    "templates/ui-preview-mode.md",
+    "templates/ui-live_preview-mode.md",
+    "2024-06-07_v6-mirror-ui-plugin/test-note.md"
+  ]
+}
