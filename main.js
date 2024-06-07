@@ -30,7 +30,7 @@ module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
 var ProjectToolbarPlugin = class extends import_obsidian.Plugin {
   onload() {
-    console.log("[Mirror Notes] v4 loaded \u2014 ProjectToolbarPlugin + MarkdownRenderer");
+    console.log("[Mirror Notes] v5 loaded \u2014 cm-scroller targeting");
     this.registerEvent(
       this.app.workspace.on("file-open", this.addToolbar.bind(this))
     );
@@ -56,10 +56,13 @@ var ProjectToolbarPlugin = class extends import_obsidian.Plugin {
     if ((frontmatter == null ? void 0 : frontmatter.type) === "project") {
       const toolbar = activeDocument.createElement("div");
       toolbar.className = "project-toolbar";
-      document.body.appendChild(toolbar);
+      let teste = document.body.querySelector(".cm-scroller");
+      if (teste) {
+        new import_obsidian.Notice("AHAHAAHA");
+        teste.append(toolbar);
+      }
       this.removeToolbar();
       activeLeaf.view.containerEl.prepend(toolbar);
-      new import_obsidian.Notice("AHA");
       let marlon = "marlon\n leticia \n livia";
       import_obsidian.MarkdownRenderer.render(this.app, marlon, toolbar, "templates/ui-live_preview-mode.md", this);
     } else {

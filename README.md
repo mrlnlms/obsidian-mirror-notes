@@ -2,25 +2,22 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v4 — ProjectToolbarPlugin + MarkdownRenderer
+## Status: v5 — cm-scroller Targeting
 
-First use of `MarkdownRenderer.render()`. Toolbar appears on `type: project` notes.
+Experimenting with `.cm-scroller` as toolbar container target.
 
 ### What works
-- YAML detection: `type: project` (singular, correct)
-- Toolbar div rendered via MarkdownRenderer
-- Three events: file-open, layout-change, active-leaf-change
-- Cleanup on non-project notes
+- YAML detection, MarkdownRenderer rendering
+- Tries `.cm-scroller` as target (CodeMirror's scroll container)
 
 ### What doesn't work yet
-- Renders hardcoded string, not template file
-- Toolbar positioning is basic
-- No settings, no view class
+- Toolbar appended to cm-scroller AND prepended to containerEl (duplicate)
+- removeToolbar() order bug (called after append)
+- Still hardcoded content
 
 ### Architecture
 - Single file: `src/main.ts`
 - Class: `ProjectToolbarPlugin extends Plugin`
-- Uses: `MarkdownRenderer.render()`, `metadataCache`
 
 ## Development
 

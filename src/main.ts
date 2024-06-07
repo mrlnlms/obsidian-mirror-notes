@@ -2,7 +2,7 @@ import { App, MarkdownView, Plugin, Notice, TFile, WorkspaceLeaf, MarkdownRender
 
 export default class ProjectToolbarPlugin extends Plugin {
     onload() {
-        console.log('[Mirror Notes] v4 loaded — ProjectToolbarPlugin + MarkdownRenderer');
+        console.log('[Mirror Notes] v5 loaded — cm-scroller targeting');
         // Registra os observadores para os eventos de abertura de arquivo e mudança de layout
         this.registerEvent(
             this.app.workspace.on("file-open", this.addToolbar.bind(this))
@@ -36,23 +36,21 @@ export default class ProjectToolbarPlugin extends Plugin {
             
             //toolbar.innerHTML =  await this.app.vault.adapter.read("templates/ui-live_preview-mode.md");//"Barra de Ferramentas";
             toolbar.className = "project-toolbar";
-            document.body.appendChild(toolbar);
+            
+            let teste = document.body.querySelector(".cm-scroller")
+
+            if(teste){
+                new Notice("AHAHAAHA");
+                teste.append(toolbar);
+            }
             
             // Remove a barra de ferramentas existente, se houver
-            this.removeToolbar()//const existingToolbar = activeLeaf.view.containerEl.querySelector(".project-toolbar");
-            //if (existingToolbar) existingToolbar.remove();
+            this.removeToolbar();
 
             // Insere a barra de ferramentas na visualização do painel
             activeLeaf.view.containerEl.prepend(toolbar);
 
-            //let corpodocs = document.querySelector(".cm-contentContainer");
-            //if(corpodocs){
-                new Notice("AHA");
-            //    corpodocs.append(toolbar);
 
-            //}
-
-            // document.querySelector('.mod-header')
             let marlon = "marlon\n leticia \n livia";//activeLeaf.view;
             
             
@@ -60,8 +58,6 @@ export default class ProjectToolbarPlugin extends Plugin {
             
         } else {
             // Remove a barra de ferramentas se o arquivo não for do tipo projeto
-            //const existingToolbar = activeLeaf.view.containerEl.querySelector(".project-toolbar");
-            //if (existingToolbar) existingToolbar.remove();
             this.removeToolbar()
         }
     }
