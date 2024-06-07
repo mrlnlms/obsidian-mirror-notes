@@ -1,54 +1,74 @@
-import { MarkdownView, Plugin } from 'obsidian';
+import { App, MarkdownView, Plugin, Notice, TFile, WorkspaceLeaf, MarkdownRenderer } from 'obsidian';
 
-export default class MyCustomPlugin extends Plugin {
-    private customElement: HTMLDivElement | null = null;
-
-    async onload() {
-        console.log('[Mirror Notes] v3 loaded — YAML type check');
+export default class ProjectToolbarPlugin extends Plugin {
+    onload() {
+        console.log('[Mirror Notes] v4 loaded — ProjectToolbarPlugin + MarkdownRenderer');
+        // Registra os observadores para os eventos de abertura de arquivo e mudança de layout
         this.registerEvent(
-            this.app.workspace.on('file-open', async (file) => {
-                if (file && file.extension === 'md') {
-                    const yaml = this.app.metadataCache.getFileCache(file)?.frontmatter;
-                    if (yaml && yaml.type === 'projects') {
-                        this.renderCustomElement();
-                    } else {
-                        this.cleanupCustomElement();
-                    }
-                }
-            })
+            this.app.workspace.on("file-open", this.addToolbar.bind(this))
         );
+        this.registerEvent(
+            this.app.workspace.on("layout-change", this.addToolbar.bind(this))
+        );
+        this.registerEvent(
+            this.app.workspace.on('active-leaf-change', this.addToolbar.bind(this))
+          );
     }
 
-    private renderCustomElement() {
-        if (this.customElement) return;
+    async addToolbar(leaf: WorkspaceLeaf) {
+        if (!leaf || !leaf.view || !(leaf.view instanceof MarkdownView)) return;
+    
+    
+        // Obtém o painel ativo
+        const activeLeaf = this.app.workspace.activeLeaf;
+        if (!activeLeaf) return;
+        const view = leaf.view as MarkdownView;
+        const file = view.file;
+        if (!file) return;
+        // Verifica se o arquivo possui YAML do tipo projeto
+        const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
+        if (frontmatter?.type === "project") {
+            //view.containerEl.querySelector('.markdown-source-view')
+            
+            // Cria um novo elemento HTML para a barra de ferramentas
+            const toolbar = activeDocument.createElement("div");
+            
+            
+            //toolbar.innerHTML =  await this.app.vault.adapter.read("templates/ui-live_preview-mode.md");//"Barra de Ferramentas";
+            toolbar.className = "project-toolbar";
+            document.body.appendChild(toolbar);
+            
+            // Remove a barra de ferramentas existente, se houver
+            this.removeToolbar()//const existingToolbar = activeLeaf.view.containerEl.querySelector(".project-toolbar");
+            //if (existingToolbar) existingToolbar.remove();
 
-        this.customElement = document.createElement('div');
-        this.customElement.classList.add('cMenuModalBar');
-        this.customElement.style.width = '100%';
-        this.customElement.style.backgroundColor = 'yellow';
-        
-        const button = document.createElement('button');
-        button.classList.add('cMenuModalBar');
-        button.setAttribute('title', 'Open Note Toolbar');
-        button.setAttribute('aria-label', 'Open Note Toolbar');
-        // Adicione aqui o ícone do seu botão, se necessário
-        // setIcon(button, this.settings.icon);
+            // Insere a barra de ferramentas na visualização do painel
+            activeLeaf.view.containerEl.prepend(toolbar);
 
-        this.customElement.appendChild(button);
+            //let corpodocs = document.querySelector(".cm-contentContainer");
+            //if(corpodocs){
+                new Notice("AHA");
+            //    corpodocs.append(toolbar);
 
-        // Adicione o elemento personalizado à visualização de Markdown
-        const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (view) {
-            const containerEl = view.containerEl;
-            containerEl.appendChild(this.customElement);
+            //}
+
+            // document.querySelector('.mod-header')
+            let marlon = "marlon\n leticia \n livia";//activeLeaf.view;
+            
+            
+            MarkdownRenderer.render(this.app, marlon, toolbar,"templates/ui-live_preview-mode.md",this);
+            
+        } else {
+            // Remove a barra de ferramentas se o arquivo não for do tipo projeto
+            //const existingToolbar = activeLeaf.view.containerEl.querySelector(".project-toolbar");
+            //if (existingToolbar) existingToolbar.remove();
+            this.removeToolbar()
         }
     }
-
-    private cleanupCustomElement() {
-        if (this.customElement && this.customElement.parentNode) {
-            this.customElement.parentNode.removeChild(this.customElement);
-            this.customElement = null;
-            console.log("heeh")
-        }
+    removeToolbar() {
+        // Remove a barra de ferramentas, se existir
+        const existingToolbar = document.querySelector(".project-toolbar");
+        if (existingToolbar) existingToolbar.remove();
     }
+    
 }

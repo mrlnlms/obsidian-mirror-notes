@@ -2,25 +2,25 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v3 — YAML Frontmatter Detection
+## Status: v4 — ProjectToolbarPlugin + MarkdownRenderer
 
-Complete rewrite. Checks YAML frontmatter on file-open and conditionally renders a custom element.
+First use of `MarkdownRenderer.render()`. Toolbar appears on `type: project` notes.
 
 ### What works
-- Reads YAML frontmatter via `metadataCache`
-- Conditional rendering when `type: projects` matches
-- Cleanup when switching notes
+- YAML detection: `type: project` (singular, correct)
+- Toolbar div rendered via MarkdownRenderer
+- Three events: file-open, layout-change, active-leaf-change
+- Cleanup on non-project notes
 
 ### What doesn't work yet
-- Type check uses `projects` (plural) — won't match `type: project`
-- Yellow bar is raw DOM, not Obsidian's design system
-- No template loading
-- Button has no icon
+- Renders hardcoded string, not template file
+- Toolbar positioning is basic
+- No settings, no view class
 
 ### Architecture
 - Single file: `src/main.ts`
-- Class: `MyCustomPlugin extends Plugin`
-- Event: `file-open` → check YAML → render or cleanup
+- Class: `ProjectToolbarPlugin extends Plugin`
+- Uses: `MarkdownRenderer.render()`, `metadataCache`
 
 ## Development
 

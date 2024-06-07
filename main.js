@@ -24,54 +24,51 @@ var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: tru
 // src/main.ts
 var main_exports = {};
 __export(main_exports, {
-  default: () => MyCustomPlugin
+  default: () => ProjectToolbarPlugin
 });
 module.exports = __toCommonJS(main_exports);
 var import_obsidian = require("obsidian");
-var MyCustomPlugin = class extends import_obsidian.Plugin {
-  constructor() {
-    super(...arguments);
-    this.customElement = null;
-  }
-  async onload() {
-    console.log("[Mirror Notes] v3 loaded \u2014 YAML type check");
+var ProjectToolbarPlugin = class extends import_obsidian.Plugin {
+  onload() {
+    console.log("[Mirror Notes] v4 loaded \u2014 ProjectToolbarPlugin + MarkdownRenderer");
     this.registerEvent(
-      this.app.workspace.on("file-open", async (file) => {
-        var _a;
-        if (file && file.extension === "md") {
-          const yaml = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-          if (yaml && yaml.type === "projects") {
-            this.renderCustomElement();
-          } else {
-            this.cleanupCustomElement();
-          }
-        }
-      })
+      this.app.workspace.on("file-open", this.addToolbar.bind(this))
+    );
+    this.registerEvent(
+      this.app.workspace.on("layout-change", this.addToolbar.bind(this))
+    );
+    this.registerEvent(
+      this.app.workspace.on("active-leaf-change", this.addToolbar.bind(this))
     );
   }
-  renderCustomElement() {
-    if (this.customElement)
+  async addToolbar(leaf) {
+    var _a;
+    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian.MarkdownView))
       return;
-    this.customElement = document.createElement("div");
-    this.customElement.classList.add("cMenuModalBar");
-    this.customElement.style.width = "100%";
-    this.customElement.style.backgroundColor = "yellow";
-    const button = document.createElement("button");
-    button.classList.add("cMenuModalBar");
-    button.setAttribute("title", "Open Note Toolbar");
-    button.setAttribute("aria-label", "Open Note Toolbar");
-    this.customElement.appendChild(button);
-    const view = this.app.workspace.getActiveViewOfType(import_obsidian.MarkdownView);
-    if (view) {
-      const containerEl = view.containerEl;
-      containerEl.appendChild(this.customElement);
+    const activeLeaf = this.app.workspace.activeLeaf;
+    if (!activeLeaf)
+      return;
+    const view = leaf.view;
+    const file = view.file;
+    if (!file)
+      return;
+    const frontmatter = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+    if ((frontmatter == null ? void 0 : frontmatter.type) === "project") {
+      const toolbar = activeDocument.createElement("div");
+      toolbar.className = "project-toolbar";
+      document.body.appendChild(toolbar);
+      this.removeToolbar();
+      activeLeaf.view.containerEl.prepend(toolbar);
+      new import_obsidian.Notice("AHA");
+      let marlon = "marlon\n leticia \n livia";
+      import_obsidian.MarkdownRenderer.render(this.app, marlon, toolbar, "templates/ui-live_preview-mode.md", this);
+    } else {
+      this.removeToolbar();
     }
   }
-  cleanupCustomElement() {
-    if (this.customElement && this.customElement.parentNode) {
-      this.customElement.parentNode.removeChild(this.customElement);
-      this.customElement = null;
-      console.log("heeh");
-    }
+  removeToolbar() {
+    const existingToolbar = document.querySelector(".project-toolbar");
+    if (existingToolbar)
+      existingToolbar.remove();
   }
 };
