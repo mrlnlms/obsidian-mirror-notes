@@ -2,24 +2,21 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v6 — MirrorUIPlugin Class Born
+## Status: v7 — Settings Tab Enabled
 
-Major milestone. Definitive class name, settings, sidebar view, ribbon icons, commands.
+Settings tab now active. Shows "Mirror UI Settings" in Obsidian settings.
 
 ### What works
-- Settings load/save, Notice with plugin name
-- Ribbon icons (eye, file), commands (Decorate, Peek)
-- Custom sidebar view registered
-- Template file reading attempt
+- Settings tab visible (empty, just heading)
+- Ribbon icons, commands, YAML detection, sidebar view
 
 ### What doesn't work yet
-- Settings tab commented out
-- Template rendering experimental
-- Toolbar shows hardcoded "MARLON"
+- Settings tab has no config options
+- Template rendering still experimental
 
 ### Architecture
-- `src/main.ts` — `MirrorUIPlugin` class
-- `src/settings.ts` — `mirrorSeetingsTab`
+- `src/main.ts` — `MirrorUIPlugin`
+- `src/settings.ts` — `mirrorSeetingsTab` (basic stub)
 - `src/view.ts` — `MirrorUIView` sidebar
 
 ## Development

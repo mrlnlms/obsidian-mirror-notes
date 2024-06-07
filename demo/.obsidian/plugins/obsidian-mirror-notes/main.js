@@ -27,12 +27,25 @@ __export(main_exports, {
   default: () => MirrorUIPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
+
+// src/settings.ts
+var import_obsidian = require("obsidian");
+var mirrorSeetingsTab = class extends import_obsidian.PluginSettingTab {
+  constructor(app, plugin) {
+    super(app, plugin);
+  }
+  display() {
+    const { containerEl } = this;
+    containerEl.empty();
+    containerEl.createEl("h2", { text: "Mirror UI Settings" });
+  }
+};
 
 // src/view.ts
-var import_obsidian = require("obsidian");
+var import_obsidian2 = require("obsidian");
 var MIRROR_UI_VIEW_TYPE = "mirror-ui-view";
-var MirrorUIView = class extends import_obsidian.ItemView {
+var MirrorUIView = class extends import_obsidian2.ItemView {
   getViewType() {
     return "mirror-ui-view";
   }
@@ -42,7 +55,7 @@ var MirrorUIView = class extends import_obsidian.ItemView {
   async onOpen() {
     const { contentEl } = this;
     contentEl.createEl("h1", { text: "Emergeny contact" });
-    new import_obsidian.Setting(contentEl).setName("Ghostbusters").addButton((item) => {
+    new import_obsidian2.Setting(contentEl).setName("Ghostbusters").addButton((item) => {
       item.setButtonText("Call");
     });
   }
@@ -52,7 +65,7 @@ var MirrorUIView = class extends import_obsidian.ItemView {
 var DEFALT_SETTINGS = {
   myPluginName: "\u{1F440} Mirror Preview Plugin"
 };
-var MirrorUIPlugin = class extends import_obsidian2.Plugin {
+var MirrorUIPlugin = class extends import_obsidian3.Plugin {
   //app: App;
   // Útil para quando você vai trabalhar com dados padrão e dados do usuários salvos nas configurações
   async loadSettings() {
@@ -66,7 +79,7 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
     this.saveData(this.settings);
   }
   async onload() {
-    console.log("[Mirror Notes] v6 loaded \u2014 MirrorUIPlugin class born");
+    console.log("[Mirror Notes] v7 loaded \u2014 Settings tab enabled");
     this.registerEvent(
       this.app.workspace.on("file-open", this.addToolbar.bind(this))
     );
@@ -78,9 +91,9 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
     );
     await this.loadSettings();
     this.registerView(MIRROR_UI_VIEW_TYPE, (leaf) => new MirrorUIView(leaf));
-    new import_obsidian2.Notice("Opening " + this.settings.myPluginName + "!");
+    new import_obsidian3.Notice("Opening " + this.settings.myPluginName + "!");
     this.addRibbonIcon("eye", this.settings.myPluginName, () => {
-      new import_obsidian2.Notice("Triggering " + this.settings.myPluginName + ".");
+      new import_obsidian3.Notice("Triggering " + this.settings.myPluginName + ".");
     });
     this.addRibbonIcon("file", this.settings.myPluginName, () => {
       this.openView();
@@ -92,7 +105,7 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
         editorCallback: (editor) => {
           const value = editor.getValue().replace(/^\#(.*)$/gm, (match) => match + " \u{1F600}");
           editor.setValue(value);
-          new import_obsidian2.Notice(value);
+          new import_obsidian3.Notice(value);
         }
       }
     );
@@ -104,7 +117,7 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
           const isPastDark = new Date().getHours() >= 23;
           if (isPastDark) {
             if (!checking) {
-              new import_obsidian2.Notice("Booo!");
+              new import_obsidian3.Notice("Booo!");
             }
             return true;
           }
@@ -112,9 +125,10 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
         }
       }
     );
+    this.addSettingTab(new mirrorSeetingsTab(this.app, this));
   }
   async onunload() {
-    new import_obsidian2.Notice("Closing Mirror Preview Plugin!");
+    new import_obsidian3.Notice("Closing Mirror Preview Plugin!");
   }
   openView() {
     this.app.workspace.detachLeavesOfType(MIRROR_UI_VIEW_TYPE);
@@ -126,9 +140,9 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
   }
   async addToolbar(leaf) {
     var _a;
-    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian2.MarkdownView))
+    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian3.MarkdownView))
       return;
-    const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
+    const activeLeaf = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
     if (!activeLeaf)
       return;
     const view = leaf.view;
@@ -138,19 +152,24 @@ var MirrorUIPlugin = class extends import_obsidian2.Plugin {
     const frontmatter = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
     if ((frontmatter == null ? void 0 : frontmatter.type) === "project") {
       const toolbar = activeDocument.createElement("div");
-      let embedBlock = toolbar.createEl("h1", { text: "MARLON" });
-      toolbar.className = "project-toolbar";
+      toolbar.className = "project-toolbar, cm-contentContainer";
       this.removeToolbar();
-      let currentView = this.app.workspace.getActiveViewOfType(import_obsidian2.MarkdownView);
+      let currentView = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
       let corpodocs = document.querySelector(".metadata-container");
       if (corpodocs) {
-        new import_obsidian2.Notice("AHA");
-        let conteudo = await this.app.vault.adapter.read("templates/ui-live_preview-mode.md");
-        let file2 = this.app.vault.getAbstractFileByPath("templates/ui-live_preview-mode.md");
-        if (file2 instanceof import_obsidian2.TFile) {
-          let conteudo2 = this.app.vault.read(file2);
-        } else {
-        }
+        new import_obsidian3.Notice("AHA");
+        const mdFilePath = "templates/ui-live_preview-mode.md";
+        const fileContents = await this.app.vault.adapter.read(mdFilePath);
+        const mdContainer = document.createElement("div");
+        toolbar.append(mdContainer);
+        import_obsidian3.MarkdownRenderer.render(
+          this.app,
+          fileContents,
+          mdContainer,
+          file.path,
+          this
+        );
+        corpodocs.append(toolbar);
       }
     } else {
       this.removeToolbar();

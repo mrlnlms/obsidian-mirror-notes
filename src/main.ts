@@ -43,7 +43,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
 
     async onload() {
-        console.log('[Mirror Notes] v6 loaded — MirrorUIPlugin class born');
+        console.log('[Mirror Notes] v7 loaded — Settings tab enabled');
 
         // Registra os observadores para os eventos de abertura de arquivo e mudança de layout
         this.registerEvent(
@@ -105,7 +105,7 @@ export default class MirrorUIPlugin extends Plugin {
                 },
         });
 
-        //this.addSettingTab(new mirrorSeetingsTab(this.app,this));
+        this.addSettingTab(new mirrorSeetingsTab(this.app,this));
   }
 
 
@@ -143,9 +143,9 @@ export default class MirrorUIPlugin extends Plugin {
             
             // Cria um novo elemento HTML para a barra de ferramentas
             const toolbar = activeDocument.createElement("div");
-            let embedBlock = toolbar.createEl("h1",{text: "MARLON"});
+            //let embedBlock = toolbar.createEl("h1",{text: "MARLON"});
             //toolbar.innerHTML =  await this.app.vault.adapter.read("templates/ui-live_preview-mode.md");//"Barra de Ferramentas";
-            toolbar.className = "project-toolbar";
+            toolbar.className = "project-toolbar, cm-contentContainer";
         
 
             // Remove a barra de ferramentas existente, se houver
@@ -186,31 +186,24 @@ export default class MirrorUIPlugin extends Plugin {
                 new Notice("AHA");
                 //corpodocs.prepend(toolbar);
                 
-                let conteudo = await this.app.vault.adapter.read("templates/ui-live_preview-mode.md");
-                //let corpodocs;
+                //const mdFilePath = "templates/_ui-management.md";
+                const mdFilePath = "templates/ui-live_preview-mode.md";
+                const fileContents = await this.app.vault.adapter.read(mdFilePath);
+                //const content = await this.app.vault.adapter.read(mdFilePath);
+                //dv.el("div", content);
+                //const mdContainer = document.createEl("div", fileContents);
+                const mdContainer = document.createElement("div");
+                toolbar.append(mdContainer);
                 
+                MarkdownRenderer.render(
+                    this.app,
+                    fileContents,
+                    mdContainer,
+                    file.path,
+                    this
+                );
 
-
-                let file = this.app.vault.getAbstractFileByPath('templates/ui-live_preview-mode.md');
-
-                
-                if (file instanceof TFile) {
-                    let conteudo = this.app.vault.read(file);
-                    //this.app.vault.read(file).then(content => {
-                    //    console.log(content);
-                    //}).catch(error => {
-                    //    console.error("Error reading the file:", error);
-                    //});
-                } else {
-                    //console.error("The file is not an instance of TFile:", file);
-                }
-                //MarkdownRenderer.render(this.app, conteudo, corpodocs,"templates/ui-live_preview-mode.md",this);
-                //MarkdownRenderer.render(this.app, file, corpodocs,"templates/ui-live_preview-mode.md",this);
-
-                //corpodocs.append(content);
-                //MarkdownRenderer.render(this.app, marlon, corpodocs,"templates/ui-live_preview-mode.md",this)
-                
-                //corpodocs.append(embedBlock);
+                corpodocs.append(toolbar);
             }
 
 
