@@ -2,22 +2,25 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v5 — cm-scroller Targeting
+## Status: v6 — MirrorUIPlugin Class Born
 
-Experimenting with `.cm-scroller` as toolbar container target.
+Major milestone. Definitive class name, settings, sidebar view, ribbon icons, commands.
 
 ### What works
-- YAML detection, MarkdownRenderer rendering
-- Tries `.cm-scroller` as target (CodeMirror's scroll container)
+- Settings load/save, Notice with plugin name
+- Ribbon icons (eye, file), commands (Decorate, Peek)
+- Custom sidebar view registered
+- Template file reading attempt
 
 ### What doesn't work yet
-- Toolbar appended to cm-scroller AND prepended to containerEl (duplicate)
-- removeToolbar() order bug (called after append)
-- Still hardcoded content
+- Settings tab commented out
+- Template rendering experimental
+- Toolbar shows hardcoded "MARLON"
 
 ### Architecture
-- Single file: `src/main.ts`
-- Class: `ProjectToolbarPlugin extends Plugin`
+- `src/main.ts` — `MirrorUIPlugin` class
+- `src/settings.ts` — `mirrorSeetingsTab`
+- `src/view.ts` — `MirrorUIView` sidebar
 
 ## Development
 
