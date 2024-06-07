@@ -2,23 +2,29 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v8 — Mode Detection
+## Status: v9 — Full Routing + Debug
 
-New `eventTests` method uses `view.getMode()` to detect whether the editor is in source or preview mode. Events now route through this new handler instead of `addToolbar`. The old `addToolbar` method is kept but commented out of the event bindings.
+Re-enables the original `addToolbar` event flow with full routing logic and extensive debug logging. The `eventTests` method from v8 is removed. The sidebar view, ribbon icons, and commands are all re-enabled. Template routing now switches between `ui-live_preview_mode.md` and `ui-preview-mode.md` based on the active view mode.
 
 ### What works
-- Mode detection via `view.getMode()` (displays mode in a Notice)
+- Three workspace events (`file-open`, `layout-change`, `active-leaf-change`) driving `addToolbar`
 - YAML frontmatter check for `type: project`
-- Template rendering into `.metadata-container`
-- Settings tab, ribbon icons, commands, sidebar view
+- Mode detection via `view.getMode()` with routing to different template files
+- Toolbar injection below `.metadata-container` with `MarkdownRenderer.render()`
+- Toolbar removal (`removeToolbar`) called before re-adding and on non-project files
+- Sidebar view (`MirrorUIView`) registered and openable via ribbon icon
+- Commands: "Decorate Titles" (appends emoji to headings), "Peek into the dark" (time-gated)
+- Settings tab loaded in `onload()`
 
 ### What doesn't work yet
-- `eventTests` crashes when `leaf` or `leaf.view` is undefined (missing null guards that `addToolbar` had)
-- Template file `templates/ui-live_preview_mode.md` doesn't exist — causes ENOENT error
-- Mode-based template switching is commented out (only default template path used)
-- No toolbar cleanup (`removeToolbar` call is commented out in `eventTests`)
+- `addToolbar` parameter is typed as `WorkspaceLeaf` but `file-open` emits `TFile | null` — type mismatch causes potential runtime errors
+- Template files (`templates/ui-live_preview_mode.md`, `templates/ui-preview-mode.md`) must exist in the vault or `vault.adapter.read()` throws ENOENT
+- `removeToolbar` is called twice in succession within `addToolbar` (once at top, once before append) — redundant
+- Toolbar duplication possible due to race conditions between the three event listeners
+- Excessive `Notice` popups on every event fire (debug leftovers)
+- `teste()` method is dead code
+- Lots of commented-out experimental code
 - Settings tab still has no config options
-- Ribbon icons and commands removed from this version's onload
 
 ### Architecture
 - `src/main.ts` — `MirrorUIPlugin`
