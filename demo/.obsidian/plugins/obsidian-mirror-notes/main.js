@@ -66,8 +66,6 @@ var DEFALT_SETTINGS = {
   myPluginName: "\u{1F440} Mirror Preview Plugin"
 };
 var MirrorUIPlugin = class extends import_obsidian3.Plugin {
-  //app: App;
-  // Útil para quando você vai trabalhar com dados padrão e dados do usuários salvos nas configurações
   async loadSettings() {
     this.settings = Object.assign(
       {},
@@ -78,15 +76,25 @@ var MirrorUIPlugin = class extends import_obsidian3.Plugin {
   async saveSettings() {
     this.saveData(this.settings);
   }
+  async onActiveFileLeafChange(leaf) {
+    var _a;
+    console.log("onActiveFileLeafChange");
+    const activeFile = (_a = leaf == null ? void 0 : leaf.view) == null ? void 0 : _a.file;
+    if (activeFile) {
+      console.log("1 :) " + (leaf == null ? void 0 : leaf.view));
+      return this.addToolbar.bind(this);
+    } else {
+      console.log("2 :) " + activeFile);
+    }
+    console.log("onActiveFileLeafChange -- FIMMM");
+  }
   async onload() {
-    console.log("[Mirror Notes] v9 loaded \u2014 Full routing + debug");
+    console.log("[Mirror Notes] v10 loaded \u2014 v1 final");
     this.registerEvent(
-      this.app.workspace.on("file-open", this.addToolbar.bind(this))
+      this.app.workspace.on("active-leaf-change", this.onActiveFileLeafChange.bind(this))
     );
     this.registerEvent(
-      this.app.workspace.on("layout-change", this.addToolbar.bind(this))
-    );
-    this.registerEvent(
+      //this.app.workspace.on('active-leaf-change', await this.handleLeafChange.bind(this))
       this.app.workspace.on("active-leaf-change", this.addToolbar.bind(this))
     );
     await this.loadSettings();
@@ -98,34 +106,33 @@ var MirrorUIPlugin = class extends import_obsidian3.Plugin {
     this.addRibbonIcon("file", this.settings.myPluginName, () => {
       this.openView();
     });
-    this.addCommand(
-      {
-        id: "decorate",
-        name: "Decorate Titles",
-        editorCallback: (editor) => {
-          const value = editor.getValue().replace(/^\#(.*)$/gm, (match) => match + " \u{1F600}");
-          editor.setValue(value);
-          new import_obsidian3.Notice(value);
-        }
+    this.addCommand({
+      id: "decorate",
+      name: "Decorate Titles",
+      editorCallback: (editor) => {
+        const value = editor.getValue().replace(/^\#(.*)$/gm, (match) => match + " \u{1F600}");
+        editor.setValue(value);
+        new import_obsidian3.Notice(value);
       }
-    );
-    this.addCommand(
-      {
-        id: "Peek",
-        name: "Peek into the dark",
-        checkCallback: (checking) => {
-          const isPastDark = new Date().getHours() >= 23;
-          if (isPastDark) {
-            if (!checking) {
-              new import_obsidian3.Notice("Booo!");
-            }
-            return true;
+    });
+    this.addCommand({
+      id: "Peek",
+      name: "Peek into the dark",
+      checkCallback: (checking) => {
+        const isPastDark = new Date().getHours() >= 23;
+        if (isPastDark) {
+          if (!checking) {
+            new import_obsidian3.Notice("Booo!");
           }
-          return false;
+          return true;
         }
+        return false;
       }
-    );
+    });
     this.addSettingTab(new mirrorSeetingsTab(this.app, this));
+  }
+  async mylayout(leaf) {
+    console.log("layout-change");
   }
   async onunload() {
     new import_obsidian3.Notice("Closing Mirror Preview Plugin!");
@@ -138,43 +145,42 @@ var MirrorUIPlugin = class extends import_obsidian3.Plugin {
         type: MIRROR_UI_VIEW_TYPE
       });
   }
-  async teste(leaf) {
-    new import_obsidian3.Notice("LALALALLALALALALALALALL");
-    console.log(typeof leaf);
+  async handleLeafChange(leaf) {
+    if (leaf.view instanceof import_obsidian3.MarkdownView) {
+      console.log("AAAAA");
+      await this.removeToolbar(leaf);
+      this.addToolbar(leaf);
+    } else {
+      console.log("BBBBBB");
+    }
   }
   async addToolbar(leaf) {
-    var _a, _b;
-    await this.removeToolbar();
-    new import_obsidian3.Notice("Starting Add Toolbar");
-    const view = this.app.workspace.getActiveViewOfType(import_obsidian3.MarkdownView);
-    if (!view)
+    var _a;
+    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian3.MarkdownView))
       return;
-    console.log("Minha view: " + ((_a = view.file) == null ? void 0 : _a.name));
+    const view = leaf.view;
+    console.log("KD: " + view);
     const file = view.file;
     if (!file)
       return;
-    console.log("O ARQuivo: " + file.name);
-    const frontmatter = (_b = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _b.frontmatter;
+    await this.removeToolbar(leaf);
+    const frontmatter = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
     if ((frontmatter == null ? void 0 : frontmatter.type) === "project") {
-      const toolbar = activeDocument.createElement("div");
+      const toolbar = document.createElement("div");
       toolbar.className = "project-toolbar";
+      if (view.containerEl.querySelector(".project-toolbar"))
+        return;
       const mode = view.getMode();
       let temps = "templates/ui-live_preview_mode.md";
       if (mode === "preview") {
-        new import_obsidian3.Notice(mode);
         temps = "templates/ui-live_preview-mode.md";
       } else if (mode === "source") {
-        new import_obsidian3.Notice(mode);
         temps = "templates/ui-preview-mode.md";
       }
-      new import_obsidian3.Notice(">>>>>>>>>>>>>>" + temps);
-      let corpodocs = document.querySelector(".metadata-container");
+      let corpodocs = view.containerEl.querySelector(".metadata-container");
       if (corpodocs) {
-        console.log("corpodocs:::  " + corpodocs.getAttr);
-        new import_obsidian3.Notice("Encontrou .metadata-container (abaixo das propriredades");
         const mdFilePath = temps;
         const fileContents = await this.app.vault.adapter.read(mdFilePath);
-        console.log("mdFilePath::: " + mdFilePath);
         const mdContainer = document.createElement("div");
         toolbar.append(mdContainer);
         import_obsidian3.MarkdownRenderer.render(
@@ -184,15 +190,15 @@ var MirrorUIPlugin = class extends import_obsidian3.Plugin {
           file.path,
           this
         );
-        await this.removeToolbar();
         corpodocs.append(toolbar);
       }
-    } else {
-      await this.removeToolbar();
     }
   }
-  async removeToolbar() {
-    const existingToolbar = document.querySelector(".project-toolbar");
+  async removeToolbar(leaf) {
+    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian3.MarkdownView))
+      return;
+    const view = leaf.view;
+    const existingToolbar = view.containerEl.querySelector(".project-toolbar");
     if (existingToolbar)
       existingToolbar.remove();
   }
