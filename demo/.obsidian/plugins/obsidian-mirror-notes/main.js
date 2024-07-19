@@ -27,179 +27,242 @@ __export(main_exports, {
   default: () => MirrorUIPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian2 = require("obsidian");
 
 // src/settings.ts
 var import_obsidian = require("obsidian");
-var mirrorSeetingsTab = class extends import_obsidian.PluginSettingTab {
+var DEFAULT_SETTINGS = {
+  folderTemplates: []
+};
+var MirrorUISettingsTab = class extends import_obsidian.PluginSettingTab {
   constructor(app, plugin) {
     super(app, plugin);
+    this.plugin = plugin;
+  }
+  getFolders() {
+    return this.app.vault.getAllLoadedFiles().filter((file) => file instanceof import_obsidian.TFolder);
+  }
+  getFiles() {
+    return this.app.vault.getAllLoadedFiles().filter((file) => file instanceof import_obsidian.TFile);
+  }
+  getYAMLProperties() {
+    const files = this.app.vault.getAllLoadedFiles().filter((file) => file instanceof import_obsidian.TFile);
+    const properties = /* @__PURE__ */ new Set();
+    files.forEach((file) => {
+      var _a;
+      const frontmatter = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
+      if (frontmatter) {
+        Object.keys(frontmatter).forEach((key) => properties.add(key));
+      }
+    });
+    return Array.from(properties);
   }
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "Mirror UI Settings" });
+    containerEl.createEl("h2", { text: "Insira o template que deseja sincronizar" });
+    containerEl.createEl("h3", { text: "Descreva o atributo YAML e seu valor para relacionar com este template." });
+    const addNewSetting = () => {
+      const settingData = { templateName: "", templatePath: "", yamlAttribute: "", yamlValue: "" };
+      this.plugin.settings.folderTemplates.push(settingData);
+      this.plugin.saveSettings();
+      this.addSettingElement(containerEl, settingData);
+    };
+    if (!this.plugin.settings.folderTemplates) {
+      console.error("folderTemplates is null or undefined");
+      this.plugin.settings.folderTemplates = [];
+    }
+    this.plugin.settings.folderTemplates.forEach((settingData) => {
+      if (settingData) {
+        this.addSettingElement(containerEl, settingData);
+      } else {
+        console.error("Encountered null or undefined settingData");
+      }
+    });
+    new import_obsidian.Setting(containerEl).addButton((button) => button.setButtonText("Add New").setCta().onClick(addNewSetting));
+  }
+  addSettingElement(containerEl, settingData) {
+    if (!settingData) {
+      console.error("settingData is null or undefined");
+      return;
+    }
+    const settingDiv = containerEl.createDiv({ cls: "elemento-geral" });
+    const formContent = settingDiv.createDiv({ cls: "form-content" });
+    const templateGroup = formContent.createDiv({ cls: "templates" });
+    const templateNameDiv = templateGroup.createDiv({ cls: "campo" });
+    templateNameDiv.createEl("label", { text: "LivePreview Template", attr: { for: "templateName" } });
+    new import_obsidian.Setting(templateNameDiv).addText((text) => text.setPlaceholder("./templates/template.md").setValue(settingData.templateName || "").onChange((value) => {
+      settingData.templateName = value;
+      this.plugin.saveSettings();
+    }));
+    const templatePathDiv = templateGroup.createDiv({ cls: "campo" });
+    templatePathDiv.createEl("label", { text: "Preview Template", attr: { for: "templatePath" } });
+    new import_obsidian.Setting(templatePathDiv).addText((text) => text.setPlaceholder("./templates/template.md").setValue(settingData.templatePath || "").onChange((value) => {
+      settingData.templatePath = value;
+      this.plugin.saveSettings();
+    }));
+    const yamlGroup = formContent.createDiv({ cls: "yaml" });
+    const yamlAttributeDiv = yamlGroup.createDiv({ cls: "campo" });
+    new import_obsidian.Setting(yamlAttributeDiv).addText((text) => {
+      text.setPlaceholder("Atributo YAML").setValue(settingData.yamlAttribute || "").onChange((value) => {
+        settingData.yamlAttribute = value;
+        this.plugin.saveSettings();
+      });
+      text.inputEl.addEventListener("click", () => {
+        const suggestions = this.getYAMLProperties();
+        const filteredSuggestions = suggestions.filter((prop) => prop.includes(text.getValue()));
+        if (filteredSuggestions.length > 0) {
+          new SuggestionModal(this.app, filteredSuggestions, text.inputEl).open();
+        }
+      });
+    });
+    const yamlValueDiv = yamlGroup.createDiv({ cls: "campo" });
+    yamlValueDiv.createEl("label", { text: "YAML Property Value", attr: { for: "yamlValue" } });
+    new import_obsidian.Setting(yamlValueDiv).addText((text) => text.setPlaceholder("Valor").setValue(settingData.yamlValue || "").onChange((value) => {
+      settingData.yamlValue = value;
+      this.plugin.saveSettings();
+    }));
+    const buttonsDiv = settingDiv.createDiv({ cls: "botoes" });
+    new import_obsidian.Setting(buttonsDiv).addExtraButton((button) => button.setIcon("up-chevron-glyph").onClick(() => this.moveSetting(settingDiv, -1))).addExtraButton((button) => button.setIcon("down-chevron-glyph").onClick(() => this.moveSetting(settingDiv, 1))).addExtraButton((button) => button.setIcon("cross").onClick(() => {
+      settingDiv.remove();
+      const index = this.plugin.settings.folderTemplates.indexOf(settingData);
+      if (index > -1) {
+        this.plugin.settings.folderTemplates.splice(index, 1);
+        this.plugin.saveSettings();
+      }
+    }));
+  }
+  moveSetting(settingDiv, direction) {
+    const containerEl = settingDiv.parentElement;
+    const settingIndex = Array.from(containerEl.children).indexOf(settingDiv);
+    const newIndex = settingIndex + direction;
+    if (newIndex < 0 || newIndex >= containerEl.children.length)
+      return;
+    const parent = settingDiv.parentElement;
+    if (parent) {
+      parent.removeChild(settingDiv);
+      parent.insertBefore(settingDiv, parent.children[newIndex]);
+    }
+    const [settingData] = this.plugin.settings.folderTemplates.splice(settingIndex, 1);
+    this.plugin.settings.folderTemplates.splice(newIndex, 0, settingData);
+    this.plugin.saveSettings();
   }
 };
-
-// src/view.ts
-var import_obsidian2 = require("obsidian");
-var MIRROR_UI_VIEW_TYPE = "mirror-ui-view";
-var MirrorUIView = class extends import_obsidian2.ItemView {
-  getViewType() {
-    return "mirror-ui-view";
+var SuggestionModal = class extends import_obsidian.Modal {
+  constructor(app, suggestions, inputElement) {
+    super(app);
+    this.suggestions = suggestions;
+    this.inputElement = inputElement;
   }
-  getDisplayText() {
-    return "Mirror UI Title - Emergency Contact";
-  }
-  async onOpen() {
+  onOpen() {
     const { contentEl } = this;
-    contentEl.createEl("h1", { text: "Emergeny contact" });
-    new import_obsidian2.Setting(contentEl).setName("Ghostbusters").addButton((item) => {
-      item.setButtonText("Call");
+    contentEl.empty();
+    this.suggestions.forEach((suggestion) => {
+      const item = contentEl.createDiv({ text: suggestion, cls: "suggestion-item" });
+      item.addEventListener("click", () => {
+        this.inputElement.value = suggestion;
+        this.close();
+      });
     });
+    this.setStyle();
+  }
+  setStyle() {
+    const { contentEl } = this;
+    contentEl.addClass("custom-suggester");
+    const style = document.createElement("style");
+    style.textContent = `
+            .custom-suggester {
+                background-color: white;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                max-height: 200px;
+                overflow-y: auto;
+            }
+            .suggestion-item {
+                padding: 8px;
+                cursor: pointer;
+            }
+            .suggestion-item:hover {
+                background-color: #f0f0f0;
+            }
+        `;
+    document.head.appendChild(style);
   }
 };
 
 // src/main.ts
-var DEFALT_SETTINGS = {
-  myPluginName: "\u{1F440} Mirror Preview Plugin"
-};
-var MirrorUIPlugin = class extends import_obsidian3.Plugin {
-  async loadSettings() {
-    this.settings = Object.assign(
-      {},
-      DEFALT_SETTINGS,
-      await this.loadData()
+var MirrorUIPlugin = class extends import_obsidian2.Plugin {
+  async onload() {
+    console.log("[Mirror Notes] v11 loaded \u2014 settings.ts + YAMLSuggest");
+    await this.loadSettings();
+    this.addSettingTab(new MirrorUISettingsTab(this.app, this));
+    this.registerEvent(this.app.workspace.on("file-open", await this.noteOpen.bind(this)));
+    this.registerEvent(this.app.workspace.on("active-leaf-change", await this.activeNoteChange.bind(this)));
+    this.registerEvent(
+      this.app.workspace.on("layout-change", () => {
+        const leaves = this.app.workspace.getLeavesOfType("markdown");
+        setTimeout(() => {
+          this.noteLayoutChange(leaves.values);
+          console.log(leaves);
+          console.log(" ");
+        }, 2);
+      })
     );
+  }
+  async loadSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
   }
   async saveSettings() {
-    this.saveData(this.settings);
+    await this.saveData(this.settings);
   }
-  async onActiveFileLeafChange(leaf) {
-    var _a;
-    console.log("onActiveFileLeafChange");
-    const activeFile = (_a = leaf == null ? void 0 : leaf.view) == null ? void 0 : _a.file;
-    if (activeFile) {
-      console.log("1 :) " + (leaf == null ? void 0 : leaf.view));
-      return this.addToolbar.bind(this);
-    } else {
-      console.log("2 :) " + activeFile);
-    }
-    console.log("onActiveFileLeafChange -- FIMMM");
+  async resetSettings() {
+    this.settings = Object.assign({}, DEFAULT_SETTINGS);
+    await this.saveSettings();
   }
-  async onload() {
-    console.log("[Mirror Notes] v10 loaded \u2014 v1 final");
-    this.registerEvent(
-      this.app.workspace.on("active-leaf-change", this.onActiveFileLeafChange.bind(this))
-    );
-    this.registerEvent(
-      //this.app.workspace.on('active-leaf-change', await this.handleLeafChange.bind(this))
-      this.app.workspace.on("active-leaf-change", this.addToolbar.bind(this))
-    );
-    await this.loadSettings();
-    this.registerView(MIRROR_UI_VIEW_TYPE, (leaf) => new MirrorUIView(leaf));
-    new import_obsidian3.Notice("Opening " + this.settings.myPluginName + "!");
-    this.addRibbonIcon("eye", this.settings.myPluginName, () => {
-      new import_obsidian3.Notice("Triggering " + this.settings.myPluginName + ".");
-    });
-    this.addRibbonIcon("file", this.settings.myPluginName, () => {
-      this.openView();
-    });
-    this.addCommand({
-      id: "decorate",
-      name: "Decorate Titles",
-      editorCallback: (editor) => {
-        const value = editor.getValue().replace(/^\#(.*)$/gm, (match) => match + " \u{1F600}");
-        editor.setValue(value);
-        new import_obsidian3.Notice(value);
-      }
-    });
-    this.addCommand({
-      id: "Peek",
-      name: "Peek into the dark",
-      checkCallback: (checking) => {
-        const isPastDark = new Date().getHours() >= 23;
-        if (isPastDark) {
-          if (!checking) {
-            new import_obsidian3.Notice("Booo!");
-          }
-          return true;
-        }
-        return false;
-      }
-    });
-    this.addSettingTab(new mirrorSeetingsTab(this.app, this));
+  onunload() {
   }
-  async mylayout(leaf) {
-    console.log("layout-change");
+  /**
+   *
+   * Começa aqui a refatoração.
+   *
+   *
+   */
+  async noteOpen() {
+    console.log("file-open");
+    console.log("Quando usu\xE1rio com 2 abas em uma leaf, troca de arquivo (+ active-leaf-change)");
+    console.log("----------------------------");
   }
-  async onunload() {
-    new import_obsidian3.Notice("Closing Mirror Preview Plugin!");
+  async activeNoteChange(file) {
+    console.log("active-leaf-change");
+    console.log("Quando usu\xE1rio com 2 abas em uma leaf, troca de arquivo por aba ou focus (+ file-open)");
+    console.log("Quando usu\xE1rio interage com browser de arquivos");
+    console.log("----------------------------");
   }
-  openView() {
-    this.app.workspace.detachLeavesOfType(MIRROR_UI_VIEW_TYPE);
-    const leaf = this.app.workspace.getRightLeaf(false);
-    if (leaf)
-      leaf.setViewState({
-        type: MIRROR_UI_VIEW_TYPE
-      });
+  async noteLayoutChange(file) {
+    console.log("Layout-change");
+    console.log("-----  ****  ------");
   }
-  async handleLeafChange(leaf) {
-    if (leaf.view instanceof import_obsidian3.MarkdownView) {
-      console.log("AAAAA");
-      await this.removeToolbar(leaf);
-      this.addToolbar(leaf);
-    } else {
-      console.log("BBBBBB");
-    }
+  async editorDrop() {
+    console.log("editor-drop");
+    console.log("----------------------------");
   }
-  async addToolbar(leaf) {
-    var _a;
-    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian3.MarkdownView))
-      return;
-    const view = leaf.view;
-    console.log("KD: " + view);
-    const file = view.file;
-    if (!file)
-      return;
-    await this.removeToolbar(leaf);
-    const frontmatter = (_a = this.app.metadataCache.getFileCache(file)) == null ? void 0 : _a.frontmatter;
-    if ((frontmatter == null ? void 0 : frontmatter.type) === "project") {
-      const toolbar = document.createElement("div");
-      toolbar.className = "project-toolbar";
-      if (view.containerEl.querySelector(".project-toolbar"))
-        return;
-      const mode = view.getMode();
-      let temps = "templates/ui-live_preview_mode.md";
-      if (mode === "preview") {
-        temps = "templates/ui-live_preview-mode.md";
-      } else if (mode === "source") {
-        temps = "templates/ui-preview-mode.md";
-      }
-      let corpodocs = view.containerEl.querySelector(".metadata-container");
-      if (corpodocs) {
-        const mdFilePath = temps;
-        const fileContents = await this.app.vault.adapter.read(mdFilePath);
-        const mdContainer = document.createElement("div");
-        toolbar.append(mdContainer);
-        import_obsidian3.MarkdownRenderer.render(
-          this.app,
-          fileContents,
-          mdContainer,
-          file.path,
-          this
-        );
-        corpodocs.append(toolbar);
-      }
-    }
+  async applyMirrorPlugin(live_mode_note, preview_mode_note) {
+    console.log("applyMirrorPlugin(live_mode_note: string, preview_mode_note: string))");
+    console.log("Aplicando Mirror Plugin?");
   }
-  async removeToolbar(leaf) {
-    if (!leaf || !leaf.view || !(leaf.view instanceof import_obsidian3.MarkdownView))
-      return;
-    const view = leaf.view;
-    const existingToolbar = view.containerEl.querySelector(".project-toolbar");
-    if (existingToolbar)
-      existingToolbar.remove();
+  async rerender() {
+    console.log("rerender()");
+  }
+  async eventLayoutChange(file_target) {
+    console.log("eventLayoutChange(file_target: TFile)");
+    console.log("Layout Change");
+  }
+  async addToolbarToActiveLeaf(file, file_target) {
+    console.log("addToolbarToActiveLeaf(file: TFile, file_target: TFile)");
+    console.log("Adicionou Toolbar na Active Leaf");
+  }
+  async removeToolbarFromActiveLeaf() {
+    console.log("removeToolbarFromActiveLeaf()");
+    console.log("Removeu");
   }
 };

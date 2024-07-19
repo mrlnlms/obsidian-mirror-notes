@@ -1,3 +1,6 @@
+// settings.ts
+
+```typescript
 import { App, PluginSettingTab, Setting, TFile, TFolder, Modal, SuggestModal } from 'obsidian';
 import MirrorUIPlugin from './main';
 
@@ -26,21 +29,21 @@ export class MirrorUISettingsTab extends PluginSettingTab {
     getFolders(): TFolder[] {
         return this.app.vault.getAllLoadedFiles().filter(file => file instanceof TFolder) as TFolder[];
     }
-
+    
     getFiles(): TFile[] {
         return this.app.vault.getAllLoadedFiles().filter(file => file instanceof TFile) as TFile[];
     }
     getYAMLProperties(): string[] {
         const files = this.app.vault.getAllLoadedFiles().filter(file => file instanceof TFile) as TFile[];
         const properties = new Set<string>();
-
+    
         files.forEach(file => {
             const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter;
             if (frontmatter) {
                 Object.keys(frontmatter).forEach(key => properties.add(key));
             }
         });
-
+    
         return Array.from(properties);
     }
     display(): void {
@@ -254,3 +257,5 @@ class SuggestionModal extends Modal {
         document.head.appendChild(style);
     }
 }
+```
+

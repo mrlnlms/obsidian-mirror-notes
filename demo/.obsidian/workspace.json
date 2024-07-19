@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md",
+                "file": "2024-07-19_v11-settings-yaml/test-note.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "milestone-script-v1"
+              "title": "test-note"
             }
           }
         ]
@@ -179,17 +179,20 @@
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
       "command-palette:Open command palette": false,
-      "bases:Create new base": false,
-      "obsidian-mirror-notes:👀 Mirror Preview Plugin": false
+      "bases:Create new base": false
     }
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
+    "2024-07-19_v11-settings-yaml/_historico/settings-ui-snapshot.md",
+    "2024-07-19_v11-settings-yaml/test-note.md",
+    "2024-06-08_v10-v1-final/test-note.md",
+    "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md",
+    "2024-07-19_v11-settings-yaml/_historico",
+    "2024-07-19_v11-settings-yaml",
     "2024-06-08_v10-v1-final/_historico/milestone-script-final.md",
     "2024-06-08_v10-v1-final/_historico/html-injection-tests.md",
-    "2024-06-08_v10-v1-final/test-note.md",
     "2024-06-07_v9-full-routing/test-note.md",
-    "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md",
     "2024-06-08_v10-v1-final/_historico",
     "2024-06-08_v10-v1-final",
     "2024-06-07_v8-mode-detection/test-note.md",
@@ -207,8 +210,6 @@
     "2024-06-07_v5-cm-scroller",
     "2024-06-06_v3-yaml-check/test-note.md",
     "2024-06-06_v2-ribbon-button/test-note.md",
-    "2024-06-06_v4-toolbar",
-    "2024-06-06_v3-yaml-check",
     "2024-06-06_v1-skeleton/test-note.md",
     "2024-08-05_v18-build-styles/test-note.md",
     "2024-08-05_v18-build-styles/type-project-test.md",
@@ -218,8 +219,6 @@
     "2024-07-24_v15-settings-model3/test-note.md",
     "2024-07-23_v14-settings-model2/test-note.md",
     "2024-07-22_v13-settings-model1/test-note.md",
-    "2024-07-20_v12-autocomplete-utils/css-snippets-reference.md",
-    "2024-07-20_v12-autocomplete-utils/test-note.md",
-    "2024-07-19_v11-settings-ui/_historico/settings-ui-snapshot.md"
+    "2024-07-20_v12-autocomplete-utils/css-snippets-reference.md"
   ]
 }

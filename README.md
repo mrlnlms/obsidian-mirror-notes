@@ -2,36 +2,36 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v10 — v1 Final Clean
+## Status: v11 — Settings Evolution Start (Era 2)
 
-Final version of Era 1. Cleans up v9's debug-heavy approach by scoping DOM queries to the leaf's `view.containerEl` instead of global `document.querySelector`. The `removeToolbar` method now takes a `leaf` parameter for proper scoping. A new `handleLeafChange` validates views before toolbar injection. Debug `Notice` popups are removed. Dead code (`teste()`) is gone. A new `onActiveFileLeafChange` handler is added for file-level change detection. Event listeners are reduced from three (`file-open`, `layout-change`, `active-leaf-change`) to two `active-leaf-change` registrations (one for `onActiveFileLeafChange`, one for `addToolbar`).
-
-This is the first version to include `_historico` files — development milestone documents from Era 1.
+Start of Era 2. Complete architecture rewrite — the Era 1 toolbar injection system is replaced by a new settings-focused plugin from the settingsPlugin codebase. This version introduces a full settings tab UI with dynamic form elements and a YAML property suggestion system.
 
 ### What works
-- Two `active-leaf-change` event listeners driving toolbar injection
-- YAML frontmatter check for `type: project`
-- Mode detection via `view.getMode()` with routing to different template files
-- Toolbar injection below `.metadata-container` scoped to `view.containerEl`
-- Toolbar removal scoped per-leaf via `removeToolbar(leaf)`
-- Duplicate toolbar guard via `view.containerEl.querySelector(".project-toolbar")`
-- Sidebar view (`MirrorUIView`) registered and openable via ribbon icon
-- Commands: "Decorate Titles" (appends emoji to headings), "Peek into the dark" (time-gated)
-- Settings tab loaded in `onload()`
+- Settings tab (`MirrorUISettingsTab`) with dynamic add/remove of template settings
+- Each setting has: LivePreview Template path, Preview Template path, YAML Attribute, YAML Value
+- YAML attribute field has a click-to-suggest modal (`SuggestionModal`) that reads all frontmatter properties from the vault's metadata cache
+- Settings reordering with up/down chevron buttons
+- Delete button per setting entry
+- Settings persistence via `loadData()`/`saveData()`
+- `resetSettings()` method to restore defaults
+- Three event listeners registered: `file-open`, `active-leaf-change`, `layout-change`
+- Console logging for all event handlers (debug stubs)
 
 ### What doesn't work yet
-- Template files (`templates/ui-live_preview_mode.md`, `templates/ui-preview-mode.md`) must exist in the vault or `vault.adapter.read()` throws ENOENT
-- `onActiveFileLeafChange` returns a bound function reference instead of calling it — effectively a no-op
-- `handleLeafChange` is defined but never called (dead code candidate)
-- `mylayout` method is dead code
-- Two `active-leaf-change` registrations means `addToolbar` fires twice per leaf change
-- Settings tab still has no config options
-- Commented-out code still present in `handleLeafChange`
+- Event handlers are stubs — they log to console but don't do anything functional
+- No toolbar injection (Era 1's toolbar system was removed)
+- No sidebar view (Era 1's `MirrorUIView` is gone)
+- No commands registered
+- No ribbon icons
+- `SuggestionModal` injects inline `<style>` into `document.head` on every open (accumulates)
+- `SuggestionModal` uses a basic `Modal` instead of Obsidian's `SuggestModal` — no keyboard navigation
+- `stopBuild` property declared but never used
+- `editorDrop`, `applyMirrorPlugin`, `rerender`, `eventLayoutChange`, `addToolbarToActiveLeaf`, `removeToolbarFromActiveLeaf` are all dead code stubs
+- `noteLayoutChange` receives `leaves.values` (a function reference) instead of actual values
 
 ### Architecture
-- `src/main.ts` — `MirrorUIPlugin`
-- `src/settings.ts` — `mirrorSeetingsTab` (basic stub)
-- `src/view.ts` — `MirrorUIView` sidebar
+- `src/main.ts` — `MirrorUIPlugin` (new architecture, event stubs)
+- `src/settings.ts` — `MirrorUISettingsTab` + `SuggestionModal` (YAML suggest)
 
 ## Development
 
