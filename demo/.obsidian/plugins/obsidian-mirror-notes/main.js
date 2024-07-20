@@ -193,7 +193,7 @@ var SuggestionModal = class extends import_obsidian.Modal {
 // src/main.ts
 var MirrorUIPlugin = class extends import_obsidian2.Plugin {
   async onload() {
-    console.log("[Mirror Notes] v11 loaded \u2014 settings.ts + YAMLSuggest");
+    console.log("[Mirror Notes] v12 loaded \u2014 utils/ autocomplete");
     await this.loadSettings();
     this.addSettingTab(new MirrorUISettingsTab(this.app, this));
     this.registerEvent(this.app.workspace.on("file-open", await this.noteOpen.bind(this)));

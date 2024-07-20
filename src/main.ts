@@ -6,7 +6,7 @@ export default class MirrorUIPlugin extends Plugin {
 	stopBuild: boolean;
 
     async onload() {
-        console.log('[Mirror Notes] v11 loaded — settings.ts + YAMLSuggest');
+        console.log('[Mirror Notes] v12 loaded — utils/ autocomplete');
 
         await this.loadSettings();
         this.addSettingTab(new MirrorUISettingsTab(this.app, this));
