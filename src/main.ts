@@ -6,7 +6,7 @@ export default class MirrorUIPlugin extends Plugin {
 	stopBuild: boolean;
 
     async onload() {
-        console.log('[Mirror Notes] v14 loaded — SettingModel2');
+        console.log('[Mirror Notes] v15 loaded — SettingModel3');
 
         await this.loadSettings();
         this.addSettingTab(new MirrorUISettingsTab(this.app, this));

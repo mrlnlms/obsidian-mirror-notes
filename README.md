@@ -2,31 +2,14 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v14 — SettingModel2 (Era 2)
+## Status: v15 — SettingModel3 (Era 2)
 
-The BIG settings model — `src/settings/SettingModel2.ts` at 31KB. Massive expansion of the settings UI with Getting Started banner, Global/Custom mirror sections, card-based custom mirrors, and multi-criteria filtering (filename, folder, YAML properties with key+value pairing). This is a parallel settings model (not wired into `main.ts`), evolving from SettingModel1.
+Third settings model snapshot — `src/settings/SettingModel3.ts`. This is an intermediate save point identical to SettingModel2 except for 2 blank lines prepended at the top. Represents an incremental checkpoint in the evolution of the settings model, before further divergence in later versions.
 
-### What changed in v14
-- New `src/settings/SettingModel2.ts` — 31KB settings model with `SampleSettingTab` class
-- Getting Started banner with dismiss button and persistent `enable_getting_started` toggle
-- Global Mirror Settings section with toggle header (`enable_global_settings`)
-- Custom Mirror Settings with card-based UI (`enable_custom_settings`)
-- Filter by Filename (`filter_files`), Filter by Folder (`filter_folders`), Filter by Properties (`filter_props` + `filter_props_values`)
-- Custom mirror cards with move up/down, collapse, edit, reset, delete buttons
-- Live Preview Mode + Preview Mode template selection per mirror card
-- Replace Mirror toggle (global vs custom override logic)
-- `custom_items` array for dynamic card management with "Add New Mirror" button
-- Property value pairing — YAML filter with key + value fields side by side
-- `clearAdjacentField()` — clears the paired value field when clearing a property key
-- `addToggleHeader()` — reusable toggle+heading component
-- `addStatsDescr()` — section description with global/custom variants
-- `replaceMirror()` — toggle for mirror override behavior
-- `addTemplateSelection()` — generic template selection with toggle + conditional file picker
-- `addSelectionField()` — reusable file search field with `FileSuggest`
-- `addInputFilePath()` — dynamic filter rows with suggesters (`FileSuggest`, `FolderSuggest`, `YamlPropertySuggest`)
-- `addCustomSettingCards()` — card renderer for custom mirrors with full button bar
-- Extended `MyPluginSettings` interface with 10+ new fields
-- Extended `DEFAULT_SETTINGS` with defaults for all new fields
+### What changed in v15
+- New `src/settings/SettingModel3.ts` — third settings model snapshot (31KB, parallel/unwired)
+- Content identical to SettingModel2 with 2 blank lines added at top
+- No functional changes — this is a save-point/checkpoint version
 
 ### What works
 - Settings tab (`MirrorUISettingsTab`) with dynamic add/remove of template settings
@@ -45,6 +28,7 @@ The BIG settings model — `src/settings/SettingModel2.ts` at 31KB. Massive expa
 - SettingModel2: Multi-criteria filtering (filename, folder, YAML property+value)
 - SettingModel2: `FileSuggest`, `FolderSuggest`, `YamlPropertySuggest` wired into all filter inputs
 - SettingModel2: Reusable components (`addToggleHeader`, `addTemplateSelection`, `addSelectionField`, `addInputFilePath`)
+- SettingModel3: Identical to SettingModel2 (intermediate checkpoint)
 
 ### What doesn't work yet
 - Event handlers are stubs — they log to console but don't do anything functional
@@ -56,6 +40,7 @@ The BIG settings model — `src/settings/SettingModel2.ts` at 31KB. Massive expa
 - `SuggestionModal` uses a basic `Modal` instead of Obsidian's `SuggestModal` — no keyboard navigation
 - SettingModel1 is not wired into `main.ts` — it exists as a parallel settings model, not yet replacing `settings.ts`
 - SettingModel2 is not wired into `main.ts` — also a parallel settings model
+- SettingModel3 is not wired into `main.ts` — also a parallel settings model (identical to Model2)
 - SettingModel1 uses `@ts-ignore` on `super(app, plugin)` constructor call
 - SettingModel2 uses `@ts-ignore` on `super(app, plugin)` constructor call
 - SettingModel2: `CustomItem` type referenced in `@ts-ignore` comment but never defined (uses `FolderTemplate` at runtime)
@@ -71,6 +56,7 @@ The BIG settings model — `src/settings/SettingModel2.ts` at 31KB. Massive expa
 - `src/settings.ts` — `MirrorUISettingsTab` + `SuggestionModal` (YAML suggest, active)
 - `src/settings/SettingModel1.ts` — `SampleSettingTab` + `MyPluginSettings` (alternative model, not wired)
 - `src/settings/SettingModel2.ts` — `SampleSettingTab` + extended `MyPluginSettings` (31KB, massive settings UI, not wired)
+- `src/settings/SettingModel3.ts` — `SampleSettingTab` snapshot (identical to Model2, intermediate checkpoint, not wired)
 - `src/utils/suggest.ts` — `Suggest<T>` (internal) + `TextInputSuggest<T>` (exported abstract)
 - `src/utils/file-suggest.ts` — `FileSuggest`, `FolderSuggest`, `YamlPropertySuggest`
 - `src/utils/utils.ts` — `wrapAround()` helper
