@@ -2,61 +2,64 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v15 — SettingModel3 (Era 2)
+## Status: v16 — finalmente.ts (Era 2)
 
-Third settings model snapshot — `src/settings/SettingModel3.ts`. This is an intermediate save point identical to SettingModel2 except for 2 blank lines prepended at the top. Represents an incremental checkpoint in the evolution of the settings model, before further divergence in later versions.
+KEY milestone: the settings model is **finally wired into main.ts**. After three parallel explorations (SettingModel1-3), `finalmente.ts` ("finally" in Portuguese) is the settings file that actually gets imported and used by main.ts. This version also replaces the stub event handlers in main.ts with the full implementation from the Era 2 source.
 
-### What changed in v15
-- New `src/settings/SettingModel3.ts` — third settings model snapshot (31KB, parallel/unwired)
-- Content identical to SettingModel2 with 2 blank lines added at top
-- No functional changes — this is a save-point/checkpoint version
+### What changed in v16
+- New `src/settings/finalmente.ts` — the settings model that finally works (59KB, wired into main.ts)
+- `src/main.ts` completely rewritten — stubs replaced with full implementation from Era 2 source
+- main.ts now imports `{ DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab }` from `./settings/finalmente`
+- `scriptTeste()` — core mirror evaluation logic (global vs custom, with override support)
+- `isFileName()`, `isFolder()`, `isProp()` — filter matching against active file
+- `applyMirrorPlugin()` — applies mirror content based on view mode (live preview vs reading)
+- `rerender()` — forces re-render of all markdown views (toggle source/preview to refresh)
+- `eventLayoutChange()` — handles layout changes, manages toolbar lifecycle
+- `addToolbarToActiveLeaf()` — renders mirror note content into toolbar div, injects CSS classes from frontmatter
+- `removeToolbarFromActiveLeaf()` — cleanup with cssClassesMap tracking
+- `cssClassesMap: Map<string, string[]>` — tracks injected CSS classes per file for proper cleanup
+- `src/settings.ts` — still exists but no longer imported by main.ts (superseded by finalmente.ts)
 
 ### What works
-- Settings tab (`MirrorUISettingsTab`) with dynamic add/remove of template settings
-- Each setting has: LivePreview Template path, Preview Template path, YAML Attribute, YAML Value
-- YAML attribute field has a click-to-suggest modal (`SuggestionModal`) — still uses the v11 basic modal
-- Settings reordering with up/down chevron buttons
-- Delete button per setting entry
+- Settings tab (`SampleSettingTab` from finalmente.ts) fully wired into main.ts
+- Getting Started banner with dismiss functionality
+- Global Mirror toggle — applies mirror to all notes in vault
+- Custom Mirrors — card-based UI with per-mirror configuration
+- Per-mirror settings: Live Preview template, Preview template, position (top/bottom/left/right)
+- Multi-criteria filtering: by filename (`FileSuggest`), folder path (`FolderSuggest`), YAML property+value (`YamlPropertySuggest`)
+- Card management: add, delete, reorder (up/down), collapse/expand
+- Hide properties toggle per mirror
+- Replace custom mirrors toggle (global override behavior)
+- Reset settings button
+- `layout-change` event triggers `scriptTeste()` which evaluates all mirrors
+- Mirror content rendered via `MarkdownRenderer.render()` into `.project-toolbar` div
+- CSS class injection from mirror target's frontmatter (`cssClass`/`cssclass`/`cssClasses`/`cssclasses`)
+- Special `banner` class handling — only applied if source file has `mosxbanner` property
+- Toolbar lifecycle management (add/remove with DOM queries)
 - Settings persistence via `loadData()`/`saveData()`
 - `resetSettings()` method to restore defaults
-- Three event listeners registered: `file-open`, `active-leaf-change`, `layout-change`
-- Console logging for all event handlers (debug stubs)
-- `TextInputSuggest<T>` autocomplete system with keyboard navigation (ArrowUp/Down/Enter/Escape), Popper.js positioning, and click/mouseover support
-- SettingModel1: `FolderSuggest` on folder search fields, `YamlPropertySuggest` on template search fields
-- SettingModel2: Full settings UI with Getting Started banner, Global/Custom mirror sections
-- SettingModel2: Card-based custom mirror management with CRUD operations
-- SettingModel2: Multi-criteria filtering (filename, folder, YAML property+value)
-- SettingModel2: `FileSuggest`, `FolderSuggest`, `YamlPropertySuggest` wired into all filter inputs
-- SettingModel2: Reusable components (`addToggleHeader`, `addTemplateSelection`, `addSelectionField`, `addInputFilePath`)
-- SettingModel3: Identical to SettingModel2 (intermediate checkpoint)
+- `TextInputSuggest<T>` autocomplete system with keyboard navigation
+- SettingModel1-3 still present as historical snapshots
 
 ### What doesn't work yet
-- Event handlers are stubs — they log to console but don't do anything functional
-- No toolbar injection (Era 1's toolbar system was removed)
 - No sidebar view (Era 1's `MirrorUIView` is gone)
 - No commands registered
 - No ribbon icons
-- `SuggestionModal` injects inline `<style>` into `document.head` on every open (accumulates)
-- `SuggestionModal` uses a basic `Modal` instead of Obsidian's `SuggestModal` — no keyboard navigation
-- SettingModel1 is not wired into `main.ts` — it exists as a parallel settings model, not yet replacing `settings.ts`
-- SettingModel2 is not wired into `main.ts` — also a parallel settings model
-- SettingModel3 is not wired into `main.ts` — also a parallel settings model (identical to Model2)
-- SettingModel1 uses `@ts-ignore` on `super(app, plugin)` constructor call
-- SettingModel2 uses `@ts-ignore` on `super(app, plugin)` constructor call
-- SettingModel2: `CustomItem` type referenced in `@ts-ignore` comment but never defined (uses `FolderTemplate` at runtime)
-- SettingModel2: Reset Settings button onClick handler has unclosed braces/incomplete logic
-- SettingModel2: `addCustomSettingCards` always uses `custom_items.length - 1` for index (incorrect for multiple cards)
-- SettingModel2: Some CSS classes referenced (e.g. `mirror-separator`, `mirror-plugin-banner`, `mirror-card`) but no styles.css yet
-- `stopBuild` property declared but never used
-- `editorDrop`, `applyMirrorPlugin`, `rerender`, `eventLayoutChange`, `addToolbarToActiveLeaf`, `removeToolbarFromActiveLeaf` are all dead code stubs
-- `noteLayoutChange` receives `leaves.values` (a function reference) instead of actual values
+- No styles.css — CSS classes referenced (e.g. `mirror-plugin-banner`, `mirror-card`, `mirror-settings_main`) but no stylesheet
+- `src/settings.ts` (v11 settings) is now dead code — superseded but not removed
+- finalmente.ts uses `@ts-ignore` on `super(app, plugin)` constructor call
+- finalmente.ts `addCustomSettingCards` uses `settingKey` variable in template literal but it comes from outer scope
+- `eventFileOpen` and `eventActiveLeafChange` are defined but commented out in event registration
+- Typo preserved from original: `"Open fhaile has the property"` in `isProp()`
+- `stopBuild` flag logic can miss cases (set to true after first match, preventing subsequent matches)
 
 ### Architecture
-- `src/main.ts` — `MirrorUIPlugin` (new architecture, event stubs)
-- `src/settings.ts` — `MirrorUISettingsTab` + `SuggestionModal` (YAML suggest, active)
-- `src/settings/SettingModel1.ts` — `SampleSettingTab` + `MyPluginSettings` (alternative model, not wired)
-- `src/settings/SettingModel2.ts` — `SampleSettingTab` + extended `MyPluginSettings` (31KB, massive settings UI, not wired)
-- `src/settings/SettingModel3.ts` — `SampleSettingTab` snapshot (identical to Model2, intermediate checkpoint, not wired)
+- `src/main.ts` — `MirrorUIPlugin` (fully wired with finalmente.ts, full implementation)
+- `src/settings.ts` — `MirrorUISettingsTab` + `SuggestionModal` (v11 settings, now dead code)
+- `src/settings/finalmente.ts` — `SampleSettingTab` + `MyPluginSettings` + `CustomMirror` (ACTIVE, wired)
+- `src/settings/SettingModel1.ts` — `SampleSettingTab` + `MyPluginSettings` (historical, not wired)
+- `src/settings/SettingModel2.ts` — `SampleSettingTab` + extended `MyPluginSettings` (historical, not wired)
+- `src/settings/SettingModel3.ts` — `SampleSettingTab` snapshot (historical, not wired)
 - `src/utils/suggest.ts` — `Suggest<T>` (internal) + `TextInputSuggest<T>` (exported abstract)
 - `src/utils/file-suggest.ts` — `FileSuggest`, `FolderSuggest`, `YamlPropertySuggest`
 - `src/utils/utils.ts` — `wrapAround()` helper

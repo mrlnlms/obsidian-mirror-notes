@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-07-24_v15-setting-model-3/test-note.md",
+                "file": "2024-07-25_v16-finalmente/test-note.md",
                 "mode": "source",
                 "source": false
               },
@@ -184,8 +184,10 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
-    "2024-07-23_v14-setting-model-2/test-note.md",
     "2024-07-24_v15-setting-model-3/test-note.md",
+    "2024-07-25_v16-finalmente/test-note.md",
+    "2024-07-25_v16-finalmente",
+    "2024-07-23_v14-setting-model-2/test-note.md",
     "2024-07-24_v15-setting-model-3",
     "2024-07-22_v13-setting-model-1/test-note.md",
     "2024-07-23_v14-setting-model-2",
@@ -206,7 +208,6 @@
     "2024-06-08_v10-v1-final/_historico/html-injection-tests.md",
     "2024-06-07_v9-full-routing/test-note.md",
     "2024-06-08_v10-v1-final/_historico",
-    "2024-06-08_v10-v1-final",
     "2024-06-07_v8-mode-detection/test-note.md",
     "2024-06-07_v7-settings-tab/test-note.md",
     "2024-06-07_v6-mirror-ui-plugin/test-note.md",
@@ -218,7 +219,6 @@
     "2024-06-06_v1-skeleton/test-note.md",
     "2024-08-05_v18-build-styles/test-note.md",
     "2024-08-05_v18-build-styles/type-project-test.md",
-    "2024-08-05_v18-build-styles/banner-test-note.md",
-    "2024-07-26_v17-settings-final/test-note.md"
+    "2024-08-05_v18-build-styles/banner-test-note.md"
   ]
 }
