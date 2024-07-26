@@ -2,26 +2,22 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v16 — finalmente.ts (Era 2)
+## Status: v17 — Settings.ts final (Era 2)
 
-KEY milestone: the settings model is **finally wired into main.ts**. After three parallel explorations (SettingModel1-3), `finalmente.ts` ("finally" in Portuguese) is the settings file that actually gets imported and used by main.ts. This version also replaces the stub event handlers in main.ts with the full implementation from the Era 2 source.
+**Fixes the settings crash from v16.** The final, polished settings file `Settings.ts` replaces `finalmente.ts`. After the SettingModel 1-3 explorations and finalmente.ts consolidation, `Settings.ts` is the clean, production-ready result at 732 lines. The constructor bug is fixed: `SampleSettingTab(app: App, plugin: MyPlugin)` now correctly accepts 2 parameters, matching the `new SampleSettingTab(this.app, this)` call in main.ts.
 
-### What changed in v16
-- New `src/settings/finalmente.ts` — the settings model that finally works (59KB, wired into main.ts)
-- `src/main.ts` completely rewritten — stubs replaced with full implementation from Era 2 source
-- main.ts now imports `{ DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab }` from `./settings/finalmente`
-- `scriptTeste()` — core mirror evaluation logic (global vs custom, with override support)
-- `isFileName()`, `isFolder()`, `isProp()` — filter matching against active file
-- `applyMirrorPlugin()` — applies mirror content based on view mode (live preview vs reading)
-- `rerender()` — forces re-render of all markdown views (toggle source/preview to refresh)
-- `eventLayoutChange()` — handles layout changes, manages toolbar lifecycle
-- `addToolbarToActiveLeaf()` — renders mirror note content into toolbar div, injects CSS classes from frontmatter
-- `removeToolbarFromActiveLeaf()` — cleanup with cssClassesMap tracking
-- `cssClassesMap: Map<string, string[]>` — tracks injected CSS classes per file for proper cleanup
-- `src/settings.ts` — still exists but no longer imported by main.ts (superseded by finalmente.ts)
+### What changed in v17
+- New `src/settings/Settings.ts` — the final settings module (732 lines), replaces finalmente.ts as the active import
+- `src/main.ts` import changed from `./settings/finalmente` to `./settings/Settings`
+- Version log: `[Mirror Notes] v17 loaded — Settings.ts final`
+- Constructor fix: `constructor(app: App, plugin: MyPlugin)` with proper `super(app, plugin)` call (still has `@ts-ignore` but now matches the 2-param call in main.ts)
+- Same interfaces exported: `FolderTemplate`, `MyPluginSettings`, `CustomMirror`, `SampleSettingTab`, `DEFAULT_SETTINGS`
+- `src/settings/finalmente.ts` — still exists but no longer imported (superseded by Settings.ts)
+- Demo: `_historico/html-prototype.html` — HTML prototype from original `teste.html` (InDrive project note layout)
+- Demo: `test-note.md` — v17 test note
 
 ### What works
-- Settings tab (`SampleSettingTab` from finalmente.ts) fully wired into main.ts
+- Settings tab (`SampleSettingTab` from Settings.ts) fully wired into main.ts — **no more crash on settings open**
 - Getting Started banner with dismiss functionality
 - Global Mirror toggle — applies mirror to all notes in vault
 - Custom Mirrors — card-based UI with per-mirror configuration
@@ -39,7 +35,7 @@ KEY milestone: the settings model is **finally wired into main.ts**. After three
 - Settings persistence via `loadData()`/`saveData()`
 - `resetSettings()` method to restore defaults
 - `TextInputSuggest<T>` autocomplete system with keyboard navigation
-- SettingModel1-3 still present as historical snapshots
+- SettingModel1-3 and finalmente.ts still present as historical snapshots
 
 ### What doesn't work yet
 - No sidebar view (Era 1's `MirrorUIView` is gone)
@@ -47,16 +43,17 @@ KEY milestone: the settings model is **finally wired into main.ts**. After three
 - No ribbon icons
 - No styles.css — CSS classes referenced (e.g. `mirror-plugin-banner`, `mirror-card`, `mirror-settings_main`) but no stylesheet
 - `src/settings.ts` (v11 settings) is now dead code — superseded but not removed
-- finalmente.ts uses `@ts-ignore` on `super(app, plugin)` constructor call
-- finalmente.ts `addCustomSettingCards` uses `settingKey` variable in template literal but it comes from outer scope
+- Settings.ts still uses `@ts-ignore` on `super(app, plugin)` constructor call
+- `addCustomSettingCards` uses `settingKey` variable in template literal but it comes from outer scope
 - `eventFileOpen` and `eventActiveLeafChange` are defined but commented out in event registration
 - Typo preserved from original: `"Open fhaile has the property"` in `isProp()`
 - `stopBuild` flag logic can miss cases (set to true after first match, preventing subsequent matches)
 
 ### Architecture
-- `src/main.ts` — `MirrorUIPlugin` (fully wired with finalmente.ts, full implementation)
+- `src/main.ts` — `MirrorUIPlugin` (fully wired with Settings.ts, full implementation)
 - `src/settings.ts` — `MirrorUISettingsTab` + `SuggestionModal` (v11 settings, now dead code)
-- `src/settings/finalmente.ts` — `SampleSettingTab` + `MyPluginSettings` + `CustomMirror` (ACTIVE, wired)
+- `src/settings/Settings.ts` — `SampleSettingTab` + `MyPluginSettings` + `CustomMirror` (ACTIVE, wired)
+- `src/settings/finalmente.ts` — `SampleSettingTab` + `MyPluginSettings` + `CustomMirror` (historical, superseded by Settings.ts)
 - `src/settings/SettingModel1.ts` — `SampleSettingTab` + `MyPluginSettings` (historical, not wired)
 - `src/settings/SettingModel2.ts` — `SampleSettingTab` + extended `MyPluginSettings` (historical, not wired)
 - `src/settings/SettingModel3.ts` — `SampleSettingTab` snapshot (historical, not wired)

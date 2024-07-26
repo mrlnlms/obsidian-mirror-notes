@@ -1,5 +1,5 @@
 import { App, Editor, MarkdownRenderer, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting, TFile, WorkspaceLeaf } from 'obsidian';
-import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from './settings/finalmente';
+import { DEFAULT_SETTINGS, MyPluginSettings, SampleSettingTab } from './settings/Settings';
 
 export default class MirrorUIPlugin extends Plugin {
     settings: MyPluginSettings;
@@ -7,7 +7,7 @@ export default class MirrorUIPlugin extends Plugin {
     cssClassesMap: Map<string, string[]> = new Map();
 
     async onload() {
-        console.log('[Mirror Notes] v16 loaded — finalmente.ts');
+        console.log('[Mirror Notes] v17 loaded — Settings.ts final');
 
         await this.loadSettings();
         this.addSettingTab(new SampleSettingTab(this.app, this));

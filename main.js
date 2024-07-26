@@ -29,7 +29,7 @@ __export(main_exports, {
 module.exports = __toCommonJS(main_exports);
 var import_obsidian4 = require("obsidian");
 
-// src/settings/finalmente.ts
+// src/settings/Settings.ts
 var import_obsidian3 = require("obsidian");
 
 // src/utils/file-suggest.ts
@@ -1572,8 +1572,8 @@ var Suggest = class {
   }
 };
 var TextInputSuggest = class {
-  constructor(app2, inputEl) {
-    this.app = app2;
+  constructor(app, inputEl) {
+    this.app = app;
     this.inputEl = inputEl;
     this.scope = new import_obsidian.Scope();
     this.suggestEl = createDiv("suggestion-container");
@@ -1698,22 +1698,9 @@ var YamlPropertySuggest = class extends TextInputSuggest {
   }
 };
 
-// src/settings/finalmente.ts
+// src/settings/Settings.ts
 var DEFAULT_SETTINGS = {
-  mySetting: "default",
-  templates_folder: "",
-  enable_folder_templates: true,
-  folder_templates: [{ folder: "", template: "" }],
-  user_scripts_folder: "",
   enable_getting_started: true,
-  enable_global_settings: false,
-  enable_custom_settings: false,
-  filter_files: [{ folder: "", template: "" }],
-  filter_folders: [{ folder: "", template: "" }],
-  filter_props: [{ folder: "", template: "" }],
-  filter_props_values: [{ folder: "", template: "" }],
-  customMirrors: [],
-  // Utilizar objeto para armazenar os dados dos cards
   global_settings: false,
   enable_global_live_preview_mode: false,
   global_settings_live_preview_note: "",
@@ -1722,10 +1709,12 @@ var DEFAULT_SETTINGS = {
   global_settings_preview_note: "",
   global_settings_preview_pos: "top",
   global_settings_overide: false,
-  global_settings_hide_props: false
+  global_settings_hide_props: false,
+  customMirrors: []
+  // Utilizar objeto para armazenar os dados dos cards
 };
 var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
-  constructor(plugin) {
+  constructor(app, plugin) {
     super(app, plugin);
     this.plugin = plugin;
   }
@@ -1871,7 +1860,7 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         this.display();
       });
     });
-    globalSettings.createEl("hr", { cls: "divider" });
+    globalSettings.createEl("hr", { cls: "mirror-separator" });
     const cards = customSettings.createEl("div", { cls: "mirror-plugin-cards" });
     this.addCustomSettingCards(cards, "customMirrors");
     new import_obsidian3.Setting(mirrorSettings_main).addButton((button) => {
@@ -1882,31 +1871,6 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
       });
     }).setClass("mirror-reset");
   }
-  add_global_mirror() {
-    const global_container = this.containerEl.createEl("div", { cls: "global-container" });
-    const global_comp = global_container.createEl("div", { cls: "headers-toggleing" });
-    this.addToggleHeader(global_comp, "Global Mirror Settings", "enable_global_settings");
-    if (!this.plugin.settings.enable_global_settings)
-      return;
-    this.addStatsDescr(global_container, true);
-    const globalMirrorSettings = this.containerEl.createEl("div", { cls: "global-mirror-settings" });
-    this.createSelectionMirrorNotes(globalMirrorSettings);
-    this.replaceMirror(globalMirrorSettings);
-  }
-  add_custom_mirrors() {
-    const custom_container = this.containerEl.createEl("div", { cls: "custom-container" });
-    const global_comp = custom_container.createEl("div", { cls: "headers-toggleing" });
-    this.addToggleHeader(global_comp, "\u{1F44B} Custom Mirror Settings", "enable_custom_settings");
-    if (!this.plugin.settings.enable_custom_settings)
-      return;
-    this.addStatsDescr(custom_container);
-    const cards = custom_container.createEl("div", { cls: "mirror-plugin-cards" });
-    this.addCustomSettingCards(cards, "customMirrors");
-  }
-  /**
-   * 
-   Aquii  ***************************************************************
-   */
   addCustomSettingCards(container, settingKey) {
     const customMirrors = this.plugin.settings[settingKey];
     customMirrors.forEach((customMirror, index) => {
@@ -2002,7 +1966,6 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
       }
       new import_obsidian3.Setting(card).setName("Filter by Filename").setDesc("If there are diferent files with the same filename, both are will be considered in the filter. Ex. ./note.md and ./folder/note.md.").addExtraButton((cb) => {
         cb.setIcon("any-key").setTooltip("Add New Filename").onClick(() => {
-          console.log(customMirrors[index].filterFiles);
           customMirrors[index].filterFiles.push({
             folder: "",
             template: ""
@@ -2012,8 +1975,8 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         });
       });
       customMirrors[index].filterFiles.forEach((folder_template, index2) => {
-        const folderSelection2 = card.createEl("div", { cls: "global-note-selection-setting" });
-        const s = new import_obsidian3.Setting(folderSelection2).addSearch((cb) => {
+        const folderSelection = card.createEl("div", { cls: "global-note-selection-setting" });
+        const s = new import_obsidian3.Setting(folderSelection).addSearch((cb) => {
           new FileSuggest(this.app, cb.inputEl);
           cb.setPlaceholder("placeholder").setValue(customMirrors[index].filterFiles[index2].folder).onChange((new_folder) => {
             customMirrors[index].filterFiles[index2].folder = new_folder;
@@ -2027,14 +1990,12 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
             if (index2 > 0) {
               this.arraymove(customMirrors[index].filterFiles, index2, index2 - 1);
             }
-            console.log(index2);
             this.plugin.saveSettings();
             this.display();
           });
         }).addExtraButton((cb) => {
           cb.setIcon("down-chevron-glyph").setTooltip("Move down").onClick(() => {
             this.arraymove(customMirrors[index].filterFiles, index2, index2 + 1);
-            console.log(index2);
             this.plugin.saveSettings();
             this.display();
           });
@@ -2047,7 +2008,6 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         });
         s.infoEl.remove();
       });
-      const folderSelection = card.createEl("div", { cls: "global-note-selection-setting" });
       new import_obsidian3.Setting(card).setName("Filter by Folder path").setDesc("Arquivos globais est\xE3o sendo pegos assim por folder path.").addExtraButton((cb) => {
         cb.setIcon("any-key").setTooltip("Add New Folder").onClick(() => {
           customMirrors[index].filterFolders.push({
@@ -2059,8 +2019,8 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         });
       });
       customMirrors[index].filterFolders.forEach((folder_template, index2) => {
-        const folderSelection2 = card.createEl("div", { cls: "global-note-selection-setting" });
-        const s = new import_obsidian3.Setting(folderSelection2).addSearch((cb) => {
+        const folderSelection = card.createEl("div", { cls: "global-note-selection-setting" });
+        const s = new import_obsidian3.Setting(folderSelection).addSearch((cb) => {
           new FolderSuggest(this.app, cb.inputEl);
           cb.setPlaceholder("placeholder").setValue(customMirrors[index].filterFolders[index2].folder).onChange((new_folder) => {
             customMirrors[index].filterFolders[index2].folder = new_folder;
@@ -2073,14 +2033,12 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
             if (index2 > 0) {
               this.arraymove(customMirrors[index].filterFolders, index2, index2 - 1);
             }
-            console.log(index2);
             this.plugin.saveSettings();
             this.display();
           });
         }).addExtraButton((cb) => {
           cb.setIcon("down-chevron-glyph").setTooltip("Move down").onClick(() => {
             this.arraymove(customMirrors[index].filterFolders, index2, index2 + 1);
-            console.log(index2);
             this.plugin.saveSettings();
             this.display();
           });
@@ -2104,10 +2062,10 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         });
       });
       customMirrors[index].filterProps.forEach((folder_template, index2) => {
-        const folderSelection2 = card.createEl("div", { cls: "global-note-selection-setting" });
-        const s = new import_obsidian3.Setting(folderSelection2).addSearch((cb) => {
+        const folderSelection = card.createEl("div", { cls: "global-note-selection-setting" });
+        const s = new import_obsidian3.Setting(folderSelection).addSearch((cb) => {
           new YamlPropertySuggest(this.app, cb.inputEl);
-          cb.setPlaceholder("placeholder").setValue(customMirrors[index].filterProps[index2].folder).onChange((new_folder) => {
+          cb.setPlaceholder("Select a YAML property").setValue(customMirrors[index].filterProps[index2].folder).onChange((new_folder) => {
             customMirrors[index].filterProps[index2].folder = new_folder;
             this.plugin.saveSettings();
           });
@@ -2122,7 +2080,7 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         });
         s.addSearch((cb) => {
           new YamlPropertySuggest(this.app, cb.inputEl);
-          cb.setPlaceholder("placeholder").setValue(customMirrors[index].filterProps[index2].template).onChange((new_folder) => {
+          cb.setPlaceholder("Type or select a value.").setValue(customMirrors[index].filterProps[index2].template).onChange((new_folder) => {
             customMirrors[index].filterProps[index2].template = new_folder;
             this.plugin.saveSettings();
           });
@@ -2132,15 +2090,13 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
           cb.setIcon("up-chevron-glyph").setTooltip("Move up").onClick(() => {
             if (index2 > 0) {
               this.arraymove(customMirrors[index].filterProps, index2, index2 - 1);
+              this.plugin.saveSettings();
+              this.display();
             }
-            console.log(index2);
-            this.plugin.saveSettings();
-            this.display();
           });
         }).addExtraButton((cb) => {
           cb.setIcon("down-chevron-glyph").setTooltip("Move down").onClick(() => {
             this.arraymove(customMirrors[index].filterProps, index2, index2 + 1);
-            console.log(index2);
             this.plugin.saveSettings();
             this.display();
           });
@@ -2154,118 +2110,26 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
         s.infoEl.remove();
       });
       new import_obsidian3.Setting(card).setName("Hide properties").setDesc("If set ON, it hides the properties on the target pages.").addToggle((cb) => {
-        cb.setValue(customMirrors[index].custom_settings_overide).onChange((value) => {
-          customMirrors[index].custom_settings_overide = value;
-          this.plugin.saveSettings();
-          this.display();
-        });
-      }).setClass("toogle-header");
-      new import_obsidian3.Setting(card).setName("Replace custom Mirrors").setDesc("Por padr\xE3o, custom Mirrors sobrescrevem o global Mirror. Com esta op\xE7\xE3o, o plugin ir\xE1 sobrescrever os custom Mirros, a menos que estes estejam setados para sobrecrever esta fun\xE7\xE3o.").addToggle((cb) => {
         cb.setValue(customMirrors[index].custom_settings_hide_props).onChange((value) => {
           customMirrors[index].custom_settings_hide_props = value;
           this.plugin.saveSettings();
           this.display();
         });
       }).setClass("toogle-header");
-    });
-  }
-  createSelectionMirrorNotes(container, customMirror) {
-    this.addTemplateSelection(container, customMirror, "enable_global_live_preview_mode", "Live Preview Mode Template Mirror Note", "./Note Folder/example-note.md");
-    this.addTemplateSelection(container, customMirror, "enable_global_preview_mode", "Preview Mode Template Mirror Note", "./Note Folder/example-note.md");
-  }
-  addTemplateSelection(container, customMirror, settingKey, name, placeholder) {
-    new import_obsidian3.Setting(container).setName(name).setDesc(`Select a note for ${name.toLowerCase()}.`).setClass("toogle-header").addToggle((cb) => {
-      cb.setValue(customMirror[settingKey]).onChange((value) => {
-        customMirror[settingKey] = value;
-        this.plugin.saveSettings();
-        this.display();
-      });
-    });
-    if (customMirror[settingKey]) {
-      const templateField = container.createEl("div", { cls: `${name.toLowerCase().replace(/ /g, "-")}-template-field` });
-      this.addSelectionField(templateField, placeholder);
-    }
-  }
-  addInputFilePath(container, folderTemplates, settingKey, filterPropsValues) {
-    folderTemplates.forEach((folder_template, index) => {
-      const s = new import_obsidian3.Setting(container).addSearch((cb) => {
-        let myPlaceholder;
-        if (settingKey === "filter_files") {
-          new FileSuggest(this.app, cb.inputEl);
-          myPlaceholder = "Select a file";
-        } else if (settingKey === "filter_folders") {
-          new FolderSuggest(this.app, cb.inputEl);
-          myPlaceholder = "Select a folder";
-        } else if (settingKey === "filter_props") {
-          new YamlPropertySuggest(this.app, cb.inputEl);
-          myPlaceholder = "Select a property";
-        } else {
-          myPlaceholder = "N/A";
-        }
-        cb.setPlaceholder(myPlaceholder).setValue(folder_template.folder).onChange((new_folder) => {
-          if (new_folder && folderTemplates.some((e) => e.folder === new_folder)) {
-            new import_obsidian3.Notice("This folder already has a template associated with it");
-            return;
-          }
-          folderTemplates[index].folder = new_folder;
-          this.plugin.saveSettings();
-        });
-        cb.inputEl.id = `input-${settingKey}-${index}`;
-        const clearButton = cb.containerEl.querySelector(".search-input-clear-button");
-        if (clearButton) {
-          clearButton.addEventListener("click", () => {
-            this.clearAdjacentField(filterPropsValues, index);
-          });
-        }
-        cb.containerEl.addClass("templater_search");
-      });
-      if (settingKey === "filter_props" && filterPropsValues) {
-        s.addSearch((cb) => {
-          let myPlaceholder = "Select a property value";
-          new YamlPropertySuggest(this.app, cb.inputEl);
-          cb.setPlaceholder(myPlaceholder).setValue(filterPropsValues[index].folder).onChange((new_folder) => {
-            if (new_folder && filterPropsValues.some((e) => e.folder === new_folder)) {
-              new import_obsidian3.Notice("This folder already has a template associated with it");
-              return;
-            }
-            filterPropsValues[index].folder = new_folder;
-            this.plugin.saveSettings();
-          });
-          cb.inputEl.id = `input-filter_props_values-${index}`;
-          cb.containerEl.addClass("templater_search");
-        });
-      }
-      s.addExtraButton((cb) => {
-        cb.setIcon("up-chevron-glyph").setTooltip("Move up").onClick(() => {
-          this.arraymove(folderTemplates, index, index - 1);
-          if (settingKey === "filter_props" && filterPropsValues) {
-            this.arraymove(filterPropsValues, index, index - 1);
-          }
+      new import_obsidian3.Setting(card).setName("Replace global mirror overide").setDesc("Se o global mirror estiver com a op\xE7\xE3o de sobrescrever as custom mirrors, este bot\xE3o se habilitado ignora a substitui\xE7\xE3o para este mirror.").addToggle((cb) => {
+        cb.setValue(customMirrors[index].custom_settings_overide).onChange((value) => {
+          customMirrors[index].custom_settings_overide = value;
           this.plugin.saveSettings();
           this.display();
         });
-      }).addExtraButton((cb) => {
-        cb.setIcon("down-chevron-glyph").setTooltip("Move down").onClick(() => {
-          this.arraymove(folderTemplates, index, index + 1);
-          if (settingKey === "filter_props" && filterPropsValues) {
-            this.arraymove(filterPropsValues, index, index + 1);
-          }
-          this.plugin.saveSettings();
-          this.display();
-        });
-      }).addExtraButton((cb) => {
-        cb.setIcon("cross").setTooltip("Delete").onClick(() => {
-          folderTemplates.splice(index, 1);
-          if (settingKey === "filter_props" && filterPropsValues) {
-            filterPropsValues.splice(index, 1);
-          }
-          this.plugin.saveSettings();
-          this.display();
-        });
-      });
-      s.infoEl.remove();
+      }).setClass("toogle-header");
     });
   }
+  /**
+   * Utils Functions
+   * 
+   * 
+   */
   clearAdjacentField(filterPropsValues, index) {
     const adjacentInput = document.querySelector(`#input-filter_props_values-${index}`);
     if (adjacentInput) {
@@ -2279,76 +2143,6 @@ var SampleSettingTab = class extends import_obsidian3.PluginSettingTab {
     arr.splice(fromIndex, 1);
     arr.splice(toIndex, 0, element);
   }
-  addToggleHeader(container, title, settingPath) {
-    const global_header = container.createEl("div");
-    global_header.createEl("h1", { text: title });
-    if (typeof this.plugin.settings[settingPath] === "boolean") {
-      new import_obsidian3.Setting(container).addToggle((cb) => {
-        cb.setValue(this.plugin.settings[settingPath]).onChange((value) => {
-          this.plugin.settings[settingPath] = value;
-          this.plugin.saveSettings();
-          this.display();
-        });
-      }).setClass("toggle-header");
-    }
-  }
-  addStatsDescr(container, globalComp = false) {
-    if (globalComp) {
-      const globalDescription = container.createEl("div");
-      new import_obsidian3.Setting(globalDescription).setDesc("Arquivos globais est\xE3o sendo pegos assim assado. TESTE");
-    } else {
-      const customDescription = this.containerEl.createEl("div");
-      new import_obsidian3.Setting(container).setName("Add new").setDesc("Arquivos globais est\xE3o sendo pegos assim assado.").addButton((button) => {
-        button.setTooltip("Add additional folder template").setButtonText("Add New Mirror").setCta().onClick(() => {
-          this.plugin.settings.customMirrors.push({
-            /*  id: crypto.randomUUID(),
-             name: `Mirror ${this.plugin.settings.customMirrors.length + 1}`,
-             folder: "",
-             template: "",
-             filterFiles: [],
-             filterFolders: [],
-             filterProps: [],
-             filterPropsValues: [] */
-            id: crypto.randomUUID(),
-            name: `Mirror ${this.plugin.settings.customMirrors.length + 1}`,
-            openview: true,
-            enable_custom_live_preview_mode: false,
-            custom_settings_live_preview_note: "",
-            custom_settings_live_preview_pos: "top",
-            enable_custom_preview_mode: false,
-            custom_settings_preview_note: "",
-            custom_settings_preview_pos: "top",
-            custom_settings_overide: false,
-            custom_settings_hide_props: false,
-            filterFiles: [],
-            // array com diversos nomes de arquivos
-            filterFolders: [],
-            // array com diversos paths 
-            filterProps: []
-            // array de arrays [prop, value] => 
-          });
-          this.plugin.saveSettings();
-          this.display();
-        });
-      });
-    }
-  }
-  replaceMirror(container, globalComp = false) {
-    if (globalComp) {
-      new import_obsidian3.Setting(container).setName("Replace custom Mirrors").setDesc("Por padr\xE3o, custom Mirrors sobrescrevem o global Mirror. Com esta op\xE7\xE3o, o plugin ir\xE1 sobrescrever os custom Mirros, a menos que estes estejam setados para sobrecrever esta fun\xE7\xE3o.").addToggle((cb) => {
-      }).setClass("toogle-header");
-    } else {
-      new import_obsidian3.Setting(container).setName("Replace custom Mirrors").setDesc("Se TRUE, sobrescreve o mirror global setado como subrescrever").addToggle((cb) => {
-      }).setClass("toogle-header");
-    }
-  }
-  addSelectionField(container, descr = "") {
-    new import_obsidian3.Setting(container).addSearch((cb) => {
-      new FileSuggest(this.app, cb.inputEl);
-      cb.setPlaceholder(descr);
-      cb.containerEl.addClass("mirror_search");
-    });
-  }
 };
 
 // src/main.ts
@@ -2358,7 +2152,7 @@ var MirrorUIPlugin = class extends import_obsidian4.Plugin {
     this.cssClassesMap = /* @__PURE__ */ new Map();
   }
   async onload() {
-    console.log("[Mirror Notes] v16 loaded \u2014 finalmente.ts");
+    console.log("[Mirror Notes] v17 loaded \u2014 Settings.ts final");
     await this.loadSettings();
     this.addSettingTab(new SampleSettingTab(this.app, this));
     this.registerEvent(

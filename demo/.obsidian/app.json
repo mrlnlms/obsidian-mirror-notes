@@ -1,1 +1,5 @@
-{}
+{
+  "alwaysUpdateLinks": true,
+  "uriCallbacks": true,
+  "showUnsupportedFiles": true
+}
