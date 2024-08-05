@@ -1,0 +1,19 @@
+{
+	"nodes":[
+		{"id":"ab28c6f589c679dd","type":"text","text":"Main","x":-80,"y":-30,"width":440,"height":410},
+		{"id":"e105746342e73472","type":"text","text":"Mirrors Array","x":-680,"y":560,"width":250,"height":60},
+		{"id":"a7ca692aaff09961","type":"text","text":"getEligibles\n\nTrabalha em cima dos valores de Mirror Array. \n\nCaso não tenha nenhum retorno, retorna false, caso contrário retorna as páginas que devem ser abertas","x":500,"y":458,"width":340,"height":265},
+		{"id":"56bf24b489c74c6c","type":"text","text":"getMirrorFile\n\nTrabalha em cima dos valores de Mirror Array. \n\nCaso não tenha nenhum retorno, retorna false, caso contrário retorna as páginas que devem ser abertas","x":880,"y":458,"width":340,"height":265},
+		{"id":"faf1aa7b243c5f7f","type":"text","text":"Mirror\n\nPega o valor retornado por getEligibles. Se for false, não executa nada, e retira o elemento da tela caso ele exista.\n\ngetMirrorFile()\nSe retornar algo, verifica se os campos não são vazios (o que não exibiria nada), se vazio, não executa nada e retira o elemento da tela. Se contiver os caminhos, carregas o(s) arquivo(s) em uma variável.\n\nshowMirror()\nSe contiver as páginas existirem, inicia a construção (append no html element da página.)\n\n","x":500,"y":-50,"width":720,"height":410},
+		{"id":"8cd8702b9d1ab8dd","type":"text","text":"**Open Page**\nToda vez que a página é aberta é preciso que o comando de adição (.append) ocorra, pois parece que só assim o obsidian faz a troca de forma correta.","x":-20,"y":63,"width":420,"height":185},
+		{"id":"78dd7b4b66b4fe24","type":"text","text":"Settings","x":-680,"y":145,"width":250,"height":60}
+	],
+	"edges":[
+		{"id":"12b11bcbc17426ea","fromNode":"ab28c6f589c679dd","fromSide":"left","toNode":"78dd7b4b66b4fe24","toSide":"right","label":"Load\n"},
+		{"id":"42bb7a8057b889e5","fromNode":"78dd7b4b66b4fe24","fromSide":"bottom","toNode":"e105746342e73472","toSide":"top","label":"Build"},
+		{"id":"2ec2255e2a1e4042","fromNode":"a7ca692aaff09961","fromSide":"left","toNode":"e105746342e73472","toSide":"right"},
+		{"id":"27a6d3fe52b50039","fromNode":"faf1aa7b243c5f7f","fromSide":"bottom","toNode":"a7ca692aaff09961","toSide":"top","fromEnd":"arrow"},
+		{"id":"39ffc83f7d308cc8","fromNode":"faf1aa7b243c5f7f","fromSide":"bottom","toNode":"56bf24b489c74c6c","toSide":"top"},
+		{"id":"5010576ed46f4326","fromNode":"8cd8702b9d1ab8dd","fromSide":"right","toNode":"faf1aa7b243c5f7f","toSide":"left"}
+	]
+}

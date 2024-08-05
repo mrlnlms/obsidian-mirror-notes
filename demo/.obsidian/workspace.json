@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-07-25_v16-finalmente/test-note.md",
+                "file": "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "test-note"
+              "title": "banner-test-note"
             }
           }
         ]
@@ -184,12 +184,17 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
+    "2024-08-05_v18-build-styles/_historico/type-project-test.md",
+    "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
+    "2024-07-25_v16-finalmente/test-note.md",
+    "2024-08-05_v18-build-styles/test-note.md",
+    "2024-08-05_v18-build-styles/_historico",
+    "2024-08-05_v18-build-styles",
     "2024-07-26_v17-settings-final/test-note.md",
     "2024-07-26_v17-settings-final/_historico/html-prototype.html",
     "2024-07-26_v17-settings-final/_historico",
     "2024-07-26_v17-settings-final",
     "2024-07-24_v15-setting-model-3/test-note.md",
-    "2024-07-25_v16-finalmente/test-note.md",
     "2024-07-25_v16-finalmente",
     "2024-07-23_v14-setting-model-2/test-note.md",
     "2024-07-24_v15-setting-model-3",
@@ -202,8 +207,6 @@
     "2024-07-19_v11-settings-yaml/test-note.md",
     "2024-07-19_v11-settings-yaml/_historico/settings-ui-snapshot.md",
     "2024-07-20_v12-utils-autocomplete/main.js",
-    "2024-07-20_v12-utils-autocomplete/_historico",
-    "2024-07-20_v12-utils-autocomplete",
     "2024-06-08_v10-v1-final/test-note.md",
     "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md",
     "2024-06-08_v10-v1-final/_historico/milestone-script-final.md",
@@ -216,9 +219,6 @@
     "2024-06-07_v5-cm-scroller/test-note.md",
     "2024-06-06_v4-toolbar/test-note.md",
     "2024-06-06_v3-yaml-check/test-note.md",
-    "2024-06-06_v2-ribbon-button/test-note.md",
-    "2024-06-06_v1-skeleton/test-note.md",
-    "2024-08-05_v18-build-styles/test-note.md",
-    "2024-08-05_v18-build-styles/type-project-test.md"
+    "2024-06-06_v2-ribbon-button/test-note.md"
   ]
 }

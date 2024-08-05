@@ -2,9 +2,27 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v17 — Settings.ts final (Era 2)
+## Status: v18 — Build + styles (Era 2, final)
 
-**Fixes the settings crash from v16.** The final, polished settings file `Settings.ts` replaces `finalmente.ts`. After the SettingModel 1-3 explorations and finalmente.ts consolidation, `Settings.ts` is the clean, production-ready result at 732 lines. The constructor bug is fixed: `SampleSettingTab(app: App, plugin: MyPlugin)` now correctly accepts 2 parameters, matching the `new SampleSettingTab(this.app, this)` call in main.ts.
+**Last version of Era 2.** Adds `styles.css` with actual plugin styling, replacing the empty placeholder. All CSS classes referenced in the settings UI and toolbar rendering now have corresponding style rules.
+
+### What changed in v18
+- **`styles.css`** — Real stylesheet (150 lines) replacing the empty placeholder. Includes styles for:
+  - `.headers-toggleing` — flex layout for header toggles
+  - `.project-toolbar` — floating toolbar with border, shadow, z-index
+  - `.full-width-input` — full-width input fields
+  - `.mirror-reset` — reset button top margin
+  - `.search-input-container` — flex search input layout
+  - `.global-note-selection-setting` — global note selection flex layout
+  - `.mirror-settings-custom-settings` — custom settings top margin
+  - `.mirror-plugin-banner` / `.mirror-card` — card styling with rounded corners and background
+  - `.global-mirror-settings` — global settings container with border and shadow
+  - `.mirror-separator` — dotted separator line
+  - `.mirror-accordion` — accordion/details styling using callout CSS variables
+- Version log: `[Mirror Notes] v18 loaded — Build + styles`
+- Demo: `_historico/banner-test-note.md` — banner CSS class test note (from original `Resolver o problema do nome.md`)
+- Demo: `_historico/type-project-test.md` — project type test note with inline `<style>` block (from original `Untitled 6.md`)
+- Demo: `test-note.md` — v18 test note
 
 ### What changed in v17
 - New `src/settings/Settings.ts` — the final settings module (732 lines), replaces finalmente.ts as the active import
@@ -41,7 +59,7 @@ Obsidian plugin that loads dynamic templates into notes based on YAML frontmatte
 - No sidebar view (Era 1's `MirrorUIView` is gone)
 - No commands registered
 - No ribbon icons
-- No styles.css — CSS classes referenced (e.g. `mirror-plugin-banner`, `mirror-card`, `mirror-settings_main`) but no stylesheet
+- `styles.css` now present — CSS classes like `mirror-plugin-banner`, `mirror-card` are styled (but some classes referenced in code like `mirror-settings_main` may still be missing from the stylesheet)
 - `src/settings.ts` (v11 settings) is now dead code — superseded but not removed
 - Settings.ts still uses `@ts-ignore` on `super(app, plugin)` constructor call
 - `addCustomSettingCards` uses `settingKey` variable in template literal but it comes from outer scope

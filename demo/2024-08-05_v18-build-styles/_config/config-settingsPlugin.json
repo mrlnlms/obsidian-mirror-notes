@@ -1,0 +1,113 @@
+{
+  "enable_getting_started": false,
+  "global_settings": false,
+  "enable_global_live_preview_mode": true,
+  "global_settings_live_preview_note": "templates/ui-live_preview-mode.md",
+  "global_settings_live_preview_pos": "top",
+  "enable_global_preview_mode": true,
+  "global_settings_preview_note": "templates/ui-preview-mode.md",
+  "global_settings_preview_pos": "top",
+  "global_settings_overide": false,
+  "global_settings_hide_props": false,
+  "customMirrors": [
+    {
+      "id": "6b8a9ddb-3bde-4c9e-b546-888f46f707af",
+      "name": "Mirror 1",
+      "openview": true,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "CSS.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "CSS.md",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "filterFiles": [],
+      "filterFolders": [],
+      "filterProps": [
+        {
+          "folder": "type",
+          "template": "project"
+        }
+      ]
+    },
+    {
+      "id": "00136263-718b-4c49-8766-c4098dc80c2f",
+      "name": "Mirror 2",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "00_META/Templates/imdbMovies.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "00_META/Templates/imdbMovies.md",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": true,
+      "filterFiles": [],
+      "filterFolders": [
+        {
+          "folder": "Media DB/",
+          "template": ""
+        }
+      ],
+      "filterProps": []
+    },
+    {
+      "id": "c06c9787-25d3-4b1f-b2af-0f77eb767476",
+      "name": "Mirror 3",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "Modular CSS Layout.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "Modular CSS Layout.md",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "filterFiles": [],
+      "filterFolders": [
+        {
+          "folder": "CSS Modular",
+          "template": ""
+        }
+      ],
+      "filterProps": []
+    }
+  ],
+  "mySetting": "default",
+  "templates_folder": "",
+  "enable_folder_templates": true,
+  "folder_templates": [
+    {
+      "folder": "",
+      "template": ""
+    }
+  ],
+  "user_scripts_folder": "",
+  "enable_global_settings": false,
+  "enable_custom_settings": false,
+  "filter_files": [
+    {
+      "folder": "",
+      "template": ""
+    }
+  ],
+  "filter_folders": [
+    {
+      "folder": "",
+      "template": ""
+    }
+  ],
+  "filter_props": [
+    {
+      "folder": "",
+      "template": ""
+    }
+  ],
+  "filter_props_values": [
+    {
+      "folder": "",
+      "template": ""
+    }
+  ]
+}
