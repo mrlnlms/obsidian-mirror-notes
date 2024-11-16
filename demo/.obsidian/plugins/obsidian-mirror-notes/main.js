@@ -2152,7 +2152,7 @@ var MirrorUIPlugin = class extends import_obsidian4.Plugin {
     this.cssClassesMap = /* @__PURE__ */ new Map();
   }
   async onload() {
-    console.log("[Mirror Notes] v18 loaded \u2014 Build + styles");
+    console.log("[Mirror Notes] v19 loaded \u2014 styles.css update");
     await this.loadSettings();
     this.addSettingTab(new SampleSettingTab(this.app, this));
     this.registerEvent(

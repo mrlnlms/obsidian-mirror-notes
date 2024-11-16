@@ -2,9 +2,24 @@
 
 Obsidian plugin that loads dynamic templates into notes based on YAML frontmatter.
 
-## Status: v18 — Build + styles (Era 2, final)
+## Status: v19 — styles.css update (Era 3)
 
-**Last version of Era 2.** Adds `styles.css` with actual plugin styling, replacing the empty placeholder. All CSS classes referenced in the settings UI and toolbar rendering now have corresponding style rules.
+**First version of Era 3.** Replaces the v18 styles.css with the obsidianMirrorUi plugin stylesheet. The CSS shifts from a settings-panel-focused design to a form-based layout system.
+
+### What changed in v19
+- **`styles.css`** — New stylesheet from obsidianMirrorUi replacing v18 CSS. Key changes:
+  - `.project-toolbar` — changed from `display: contents` to `display: grid`
+  - Removed: `.headers-toggleing`, `.sobe`, `.full-width-input`, `.mirror-reset`, `.search-input-container`, `.global-note-selection-setting`, `.mirror-settings-custom-settings`, `.mirror-plugin-banner`, `.mirror-card`, `.global-mirror-settings`, `.mirror-separator`, `.mirror-acordion-summary`, `.mirror-accordion`
+  - Added: `.campo` — form field styling with `flex: 1` and block display override
+  - Added: `.elemento-geral` — card container with flex, border-radius, background
+  - Added: `.form-content` — flex column layout for form content
+  - Added: `.templates` / `.yaml` — flex row layouts with gap
+  - Added: `.botoes` — button group with flex column and centered alignment
+  - Retained large block of commented-out CSS from earlier iterations
+- Version log: `[Mirror Notes] v19 loaded — styles.css update`
+- Demo: `_historico/css-multi-column-experiments.md` — Modular CSS Layout callout experiments (from original `Modular CSS Layout.md`, Nov 24 2024)
+- Demo: `_historico/type-global-test.md` — Global type frontmatter test (from original `Untitled 10.md`, Nov 24 2024)
+- Demo: `test-note.md` — v19 test note
 
 ### What changed in v18
 - **`styles.css`** — Real stylesheet (150 lines) replacing the empty placeholder. Includes styles for:
@@ -59,7 +74,7 @@ Obsidian plugin that loads dynamic templates into notes based on YAML frontmatte
 - No sidebar view (Era 1's `MirrorUIView` is gone)
 - No commands registered
 - No ribbon icons
-- `styles.css` now present — CSS classes like `mirror-plugin-banner`, `mirror-card` are styled (but some classes referenced in code like `mirror-settings_main` may still be missing from the stylesheet)
+- `styles.css` replaced with obsidianMirrorUi version — many v18 classes removed (`.mirror-plugin-banner`, `.mirror-card`, `.mirror-accordion`, etc.), new form-layout classes added (`.campo`, `.elemento-geral`, `.botoes`); some classes referenced in code may no longer be styled
 - `src/settings.ts` (v11 settings) is now dead code — superseded but not removed
 - Settings.ts still uses `@ts-ignore` on `super(app, plugin)` constructor call
 - `addCustomSettingCards` uses `settingKey` variable in template literal but it comes from outer scope

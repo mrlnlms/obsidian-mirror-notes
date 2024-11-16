@@ -7,7 +7,7 @@ export default class MirrorUIPlugin extends Plugin {
     cssClassesMap: Map<string, string[]> = new Map();
 
     async onload() {
-        console.log('[Mirror Notes] v18 loaded — Build + styles');
+        console.log('[Mirror Notes] v19 loaded — styles.css update');
 
         await this.loadSettings();
         this.addSettingTab(new SampleSettingTab(this.app, this));
