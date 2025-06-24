@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2024-08-05_v18-build-styles/_historico/type-project-test.md",
+                "file": "2025-06-24_v20-cm6-integration/test-note.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "type-project-test"
+              "title": "test-note"
             }
           }
         ]
@@ -184,8 +184,11 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
-    "2024-08-05_v18-build-styles/test-note.md",
+    "templates/test-template.md",
+    "2025-06-24_v20-cm6-integration/test-note.md",
     "2024-08-05_v18-build-styles/_historico/type-project-test.md",
+    "2025-06-24_v20-cm6-integration",
+    "2024-08-05_v18-build-styles/test-note.md",
     "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
     "2024-11-16_v19-css-update/test-note.md",
     "2024-11-16_v19-css-update/_historico/type-global-test.md",
@@ -204,7 +207,6 @@
     "2024-07-23_v14-setting-model-2/test-note.md",
     "2024-07-24_v15-setting-model-3",
     "2024-07-22_v13-setting-model-1/test-note.md",
-    "2024-07-23_v14-setting-model-2",
     "2024-07-20_v12-utils-autocomplete/test-note.md",
     "templates/ui-live_preview-mode.md",
     "2024-07-20_v12-utils-autocomplete/_historico/css-snippets-reference.md",
@@ -217,8 +219,6 @@
     "2024-06-07_v9-full-routing/test-note.md",
     "2024-06-07_v8-mode-detection/test-note.md",
     "2024-06-07_v7-settings-tab/test-note.md",
-    "2024-06-07_v6-mirror-ui-plugin/test-note.md",
-    "templates/ui-preview-mode.md",
-    "2024-06-07_v5-cm-scroller/test-note.md"
+    "2024-06-07_v6-mirror-ui-plugin/test-note.md"
   ]
 }

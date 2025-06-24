@@ -1,7 +1,6 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
-import { copyFileSync } from "fs";
 
 const banner =
 `/*
@@ -12,25 +11,11 @@ if you want to view the source, please visit the github repository of this plugi
 
 const prod = (process.argv[2] === "production");
 
-// Plugin to copy main.js to demo vault on every build
-const copyToDemo = {
-	name: "copy-to-demo",
-	setup(build) {
-		build.onEnd(() => {
-			try {
-				copyFileSync("main.js", "demo/.obsidian/plugins/obsidian-mirror-notes/main.js");
-			} catch (e) {
-				// demo folder may not exist yet
-			}
-		});
-	},
-};
-
 const context = await esbuild.context({
 	banner: {
 		js: banner,
 	},
-	entryPoints: ["src/main.ts"],
+	entryPoints: ["main.ts"],
 	bundle: true,
 	external: [
 		"obsidian",
@@ -53,7 +38,7 @@ const context = await esbuild.context({
 	sourcemap: prod ? false : "inline",
 	treeShaking: true,
 	outfile: "main.js",
-	plugins: [copyToDemo],
+	minify: prod,
 });
 
 if (prod) {

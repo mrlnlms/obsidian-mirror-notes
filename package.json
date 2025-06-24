@@ -1,15 +1,15 @@
 {
-	"name": "obsidian-mirror-notes",
+	"name": "obsidian-sample-plugin",
 	"version": "1.0.0",
-	"description": "Mirror Notes — dynamic template injection based on YAML frontmatter",
+	"description": "This is a sample plugin for Obsidian (https://obsidian.md)",
 	"main": "main.js",
 	"scripts": {
 		"dev": "node esbuild.config.mjs",
-		"build": "node esbuild.config.mjs production",
+		"build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production",
 		"version": "node version-bump.mjs && git add manifest.json versions.json"
 	},
 	"keywords": [],
-	"author": "MOSx (Marlon Lemes)",
+	"author": "",
 	"license": "MIT",
 	"devDependencies": {
 		"@types/node": "^16.11.6",
@@ -22,6 +22,7 @@
 		"typescript": "4.7.4"
 	},
 	"dependencies": {
-		"@popperjs/core": "^2.11.8"
+		"@codemirror/state": "^6.5.2",
+		"@codemirror/view": "^6.37.2"
 	}
 }
