@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "2025-06-24_v20-cm6-integration/test-note.md",
+                "file": "2025-06-24_v21-settings-v110/test-note.md",
                 "mode": "source",
                 "source": false
               },
@@ -184,13 +184,16 @@
   },
   "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
+    "templates/ui-live_preview-mode.md",
     "templates/test-template.md",
+    "2024-11-16_v19-css-update/test-note.md",
     "2025-06-24_v20-cm6-integration/test-note.md",
+    "2025-06-24_v21-settings-v110/test-note.md",
+    "2025-06-24_v21-settings-v110",
     "2024-08-05_v18-build-styles/_historico/type-project-test.md",
     "2025-06-24_v20-cm6-integration",
     "2024-08-05_v18-build-styles/test-note.md",
     "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
-    "2024-11-16_v19-css-update/test-note.md",
     "2024-11-16_v19-css-update/_historico/type-global-test.md",
     "2024-11-16_v19-css-update/_historico/css-multi-column-experiments.md",
     "2024-11-16_v19-css-update/_historico",
@@ -205,10 +208,8 @@
     "2024-07-24_v15-setting-model-3/test-note.md",
     "2024-07-25_v16-finalmente",
     "2024-07-23_v14-setting-model-2/test-note.md",
-    "2024-07-24_v15-setting-model-3",
     "2024-07-22_v13-setting-model-1/test-note.md",
     "2024-07-20_v12-utils-autocomplete/test-note.md",
-    "templates/ui-live_preview-mode.md",
     "2024-07-20_v12-utils-autocomplete/_historico/css-snippets-reference.md",
     "2024-07-19_v11-settings-yaml/test-note.md",
     "2024-07-19_v11-settings-yaml/_historico/settings-ui-snapshot.md",
@@ -218,7 +219,6 @@
     "2024-06-08_v10-v1-final/_historico/html-injection-tests.md",
     "2024-06-07_v9-full-routing/test-note.md",
     "2024-06-07_v8-mode-detection/test-note.md",
-    "2024-06-07_v7-settings-tab/test-note.md",
-    "2024-06-07_v6-mirror-ui-plugin/test-note.md"
+    "2024-06-07_v7-settings-tab/test-note.md"
   ]
 }

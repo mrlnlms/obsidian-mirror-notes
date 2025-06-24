@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"@codemirror/state": "^6.5.2",
-		"@codemirror/view": "^6.37.2"
+		"@codemirror/view": "^6.37.2",
+		"@popperjs/core": "^2.11.8"
 	}
 }

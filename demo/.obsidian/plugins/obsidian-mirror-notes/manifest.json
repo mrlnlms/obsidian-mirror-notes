@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
-	"version": "1.0.0",
+	"id": "mirror-notes",
+	"name": "Mirror Notes",
+	"version": "1.1.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
-	"fundingUrl": "https://obsidian.md/pricing",
+	"description": "Display dynamic templates in your notes based on frontmatter properties",
+	"author": "mrlnlms",
+	"authorUrl": "https://github.com/mrlnlms",
+	"fundingUrl": "https://github.com/mrlnlms/mirror-notes",
 	"isDesktopOnly": false
 }

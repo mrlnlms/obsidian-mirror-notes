@@ -2,9 +2,9 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v20 — CM6 Integration (Era 4)
+## Versao Atual: v21 — Settings + v1.1.0 (Era 4)
 
-**Era 4 comeca aqui.** Rewrite completo da arquitetura usando CodeMirror 6.
+**Settings tab retorna com arquitetura CM6.** Plugin rebatizado de `sample-plugin` para `mirror-notes` v1.1.0.
 
 ### Historico de Eras
 
@@ -42,19 +42,42 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - WidgetType para decoracoes inline (mirrorWidget.ts)
   - Deteccao de frontmatter `type: project`
   - Renderizacao de templates markdown com substituicao de variaveis
+- **v21: Settings + v1.1.0** -- Settings tab com CM6!
+  - manifest.json rebatizado: `sample-plugin` -> `mirror-notes` v1.1.0
+  - settings.ts completo: MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab
+  - utils/file-suggest.ts e utils/suggest.ts para autocomplete
+  - YAMLSuggest.ts para sugestoes de propriedades YAML
+  - utils.ts com funcoes utilitarias (wrapAround)
+  - metadataCache integration com debounce conservador (500ms)
+  - User interaction tracking (evita updates enquanto digita)
+  - forceMirrorUpdateEffect para atualizacoes forcadas do estado
+  - Editor setup simplificado (mirrorDecorations removido — agora via StateField)
+  - Delays reduzidos de 50ms para 25ms (melhor responsividade)
+  - Arquivos de referencia: Settings_REFERENCIA.ts, styles_REFERENCIA.css, main_REF.js
+  - Nova dependencia: @popperjs/core para posicionamento
+  - styles.css expandido significativamente (347 linhas de mudancas)
 
-## Estrutura do Projeto (v20)
+## Estrutura do Projeto (v21)
 
 ```
-main.ts                       # Plugin principal — setup de editores CM6
+main.ts                       # Plugin principal — setup CM6 + settings + metadata sync
+settings.ts                   # Settings tab completo (631 linhas)
+YAMLSuggest.ts                # Sugestoes de propriedades YAML
+utils.ts                      # Funcoes utilitarias
+utils/
+  file-suggest.ts             # FileSuggest, FolderSuggest, YamlPropertySuggest
+  suggest.ts                  # Base suggest abstraction
 src/
   editor/
-    mirrorState.ts            # StateField + StateEffects
-    mirrorViewPlugin.ts       # ViewPlugin — widget DOM acima do editor
+    mirrorState.ts            # StateField + StateEffects + forceMirrorUpdateEffect
+    mirrorViewPlugin.ts       # ViewPlugin — widget DOM
     mirrorWidget.ts           # WidgetType — decoracao inline
-styles.css                    # Estilos CM6 (animacoes, widgets)
-manifest.json
-package.json                  # +@codemirror/state, +@codemirror/view
+Settings_REFERENCIA.ts        # Arquivo de referencia
+styles_REFERENCIA.css         # Arquivo de referencia
+main_REF.js                   # Arquivo de referencia (build compilado)
+styles.css                    # Estilos CM6 (expandido)
+manifest.json                 # mirror-notes v1.1.0
+package.json                  # +@popperjs/core
 esbuild.config.mjs            # CM6 externals configurados
 ```
 

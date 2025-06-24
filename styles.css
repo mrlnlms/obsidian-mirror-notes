@@ -1,49 +1,332 @@
-/*
-
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
-
-If your plugin does not need CSS, delete this file.
-
-*/
-/* Estilo para a linha especial do Mirror UI */
-.cm-mirror-ui-line {
-  position: relative;
-  pointer-events: none;
+/* Esconder a linha âncora */
+.cm-line.mirror-ui-anchor-line {
+  height: 0;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+  line-height: 0;
 }
 
-/* Widget do Mirror UI */
-.mirror-ui-line-widget {
-  /* Garantir que não interfira com a edição */
+/* Widget injetado - melhorias para estabilidade */
+.mirror-ui-injected-widget {
+  /* Garantir que não seja tratado como texto */
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Permitir interação */
   pointer-events: auto !important;
+  
+  /* Estabilidade visual */
+  contain: layout style paint;
+  will-change: auto;
 }
 
-/* Prevenir seleção de texto no widget */
-.mirror-ui-line-widget * {
+/* Prevenir seleção de texto, exceto em inputs */
+.mirror-ui-injected-widget *:not(input):not(textarea) {
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Permitir interação com elementos específicos */
-.mirror-ui-line-widget button,
-.mirror-ui-line-widget input,
-.mirror-ui-line-widget a {
-  pointer-events: auto;
-  user-select: auto;
+/* Manter o widget visível mesmo com mudanças no editor */
+.mirror-ui-injected-widget {
+  z-index: 1;
 }
 
-/* Animações suaves */
-.mirror-ui-line-widget {
-  animation: fadeIn 0.2s ease-in-out;
+.project-toolbar {
+    width: auto;
+    height: auto;
+    padding: 3px;
+    display: contents;
+    user-select: none;
+    border-radius: 6px;
+    position: absolute;
+    transition: 200ms ease;
+    min-width: fit-content;
+    justify-content: space-around;
+    z-index: var(--layer-status-bar);
+    box-shadow: 0px 3px 32px rgb(31 38 135 / 15%);
+    border: 1px solid var(--background-modifier-border);
+    position: inherit;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
+.campo .setting-item {
+  display: block !important; /* Override with !important to ensure specificity */
+  border-top: 0px !important; /* Override with !important to ensure specificity */
+  padding: 0;
+  padding-bottom: 15px !important;
+}
+
+.elemento-geral {
+  margin-bottom: 20px;
+  display: flex;
+  width: 100%;
+  /* border: 1px solid #ccc;  */
+  border-radius: 8px; /* Cantos arredondados */
+  background-color: var(--color-base-20);
+  padding: 15px;
+  padding-bottom: 0px;
+}
+
+.form-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.templates,
+.yaml {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+.campo {
+  flex: 1; /* Cada campo ocupa metade do espaço disponível */
+}
+
+.campo label {
+  /* font-weight: bold; */
+  display: block;
+  margin-bottom: 5px;
+}
+
+.campo input[type='text'] {
+  width: 100%;
+}
+
+.botoes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-left: 20px;
+}
+
+.headers-toggleing{
+  display: flex;
+  justify-content: space-between;
+}
+
+.sobe{
+  margin-top: -1000px;
+}
+
+.full-width-input {
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width */
+}
+
+.mirror-reset{
+  margin-top: 20px;
+}
+
+.search-input-container {
+  display: flex;
+  align-items: center;
+}
+
+.search-input-container input[type="search"] {
+  flex-grow: 1;
+}
+
+.global-note-selection-setting{
+  display: flex;
+  justify-content: space-between;
+} 
+
+.mirror-settings-custom-settings{
+  margin-top: 20px;
+}
+
+.mirror-plugin-banner {
+    padding: 20px;
+    padding-top: 10px;
+    /* display: flex; */
+    /* width: 100%; */
+    /* border: 1px solid #ccc;  */
+    border-radius: 8px; /* Cantos arredondados */
+    background-color: var(--color-base-20);
+   /*  padding: 15px;
+    padding-bottom: 0px; */
+}
+
+.mirror-card {
+    padding: 20px;
+    padding-top: 10px;
+    /* display: flex; */
+    /* width: 100%; */
+    /* border: 1px solid #ccc;  */
+    border-radius: 8px; /* Cantos arredondados */
+    background-color: var(--color-base-20);
+   /*  padding: 15px;
+    padding-bottom: 0px; */
+    margin-top: 10px;
+    /* margin-bottom: 5px; */
+}
+
+.global-note-selection-setting >  .setting-item {
+    display: block;
+    border-top: 0px !important;
+    /* padding: 0px !important; */
+    width: calc(100%);
+}
+
+.live-preview-mode-template-field > .setting-item {
+    display: block;
+}
+
+.live-preview-mode-template-mirror-note-template-field > .setting-item  > .setting-item-control{
+    display: block;
+}
+
+.preview-mode-template-mirror-note-template-field > .setting-item {
+  display: block;
+}
+
+.global-mirror-settings{
+  border-radius: 8px; /* Cantos arredondados */
+  box-shadow: 0px 3px 32px rgb(31 38 135 / 15%);
+  /* border: 1px solid var(--background-modifier-border); */
+  border: 1px solid var(--color-base-20);
+  /* background-color: var(--color-base-20); */
+  padding: 25px;
+}
+
+.mirror-separator{
+  border: 1px dotted var(--color-base-30);
+}
+
+.mirror-acordion-summary{
+  font-weight:bold;
+}
+
+.mirror-accordion details {
+  overflow: hidden;
+  border-style: solid;
+  border-color: rgba(var(--callout-color), var(--callout-border-opacity));
+  border-width: var(--callout-border-width);
+  border-radius: var(--callout-radius);
+  background-color: rgba(var(--callout-color), 0.05);
+  padding: 1em;
+  
+  margin-block: 1em;
+  margin-inline: -1em;
+
+  --callout-color: 255,255,255;
+  &.warning {
+      --callout-color: var(--callout-warning);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+
+  summary {
+      font-weight: 600;
   }
+}
+
+/* Widget em posição bottom - usando side: -1 para não interferir */
+.mirror-position-bottom {
+  /* Comportamento normal de bloco */
+  position: relative !important;
+  display: block !important;
+  clear: both !important;
+  
+  /* Margens para separação visual */
+  margin-top: 15px !important;
+  margin-bottom: 15px !important;
+  
+  /* Prevenir interferência com edição */
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  
+  /* Estabilidade de renderização */
+  contain: layout style paint;
+  will-change: auto;
+  box-sizing: border-box;
+  
+  /* Estilo visual */
+  width: 100%;
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 15px;
+}
+
+.mirror-position-bottom > * {
+  /* Permitir interação com o conteúdo interno do widget */
+  pointer-events: auto !important;
+}
+
+/* Widget em posição top - melhorias para estabilidade */
+.mirror-position-top {
+  margin-top: 10px !important;
+  margin-bottom: 20px !important;
+  
+  /* Estabilidade de renderização */
+  contain: layout style paint;
+  will-change: auto;
+  
+  /* Evitar layout shifts */
+  min-height: 100px;
+  box-sizing: border-box;
+  
+  /* Garantir posicionamento estável */
+  position: relative;
+  display: block;
+}
+
+/* Forçar o widget a criar seu próprio contexto de linha */
+.cm-line:has(.mirror-ui-widget) {
+  display: block !important;
+  min-height: auto !important;
+}
+
+/* Prevenir que o widget seja editável */
+.mirror-ui-widget {
+  /* Melhorar estabilidade visual */
+  contain: layout style paint;
+  will-change: auto;
+  
+  /* Evitar interferência com seleção de texto */
+  user-select: none;
+  -webkit-user-select: none;
+  
+  /* Garantir que não cause reflows */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Melhorias específicas para o spacer do bottom */
+.mirror-bottom-spacer {
+  contain: strict;
+  will-change: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Prevenir animações desnecessárias durante edição */
+.mirror-ui-widget * {
+  transition: none !important;
+  animation: none !important;
+}
+
+/* Garantir que o widget não cause scroll jumps */
+.mirror-ui-widget {
+  scroll-margin: 0;
+  scroll-padding: 0;
+}
+
+/* Otimizações para performance de renderização */
+.mirror-ui-widget,
+.mirror-ui-widget * {
+  backface-visibility: hidden;
+  perspective: 1000px;
+  transform: translateZ(0);
+}
+
+/* Prevenir re-layouts causados por mudanças de fonte */
+.mirror-ui-widget {
+  font-family: var(--font-interface);
+  font-size: var(--font-ui-medium);
+  line-height: var(--line-height-normal);
 }
