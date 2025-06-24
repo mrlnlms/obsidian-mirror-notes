@@ -80,6 +80,28 @@ function getApplicableConfig(plugin: MirrorUIPlugin, file: TFile | null, frontma
 }
 
 // =================================================================================
+// LIMPEZA DE WIDGETS ÓRFÃOS
+// =================================================================================
+function cleanOrphanWidgets(view: EditorView) {
+    const activeWidgetIds = new Set<string>();
+    
+    // Coletar IDs de widgets ativos do estado
+    const fieldState = view.state.field(mirrorStateField, false);
+    if (fieldState && fieldState.mirrorState.widgetId) {
+        activeWidgetIds.add(fieldState.mirrorState.widgetId);
+    }
+    
+    // Remover widgets que não estão no estado ativo
+    view.dom.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
+        const widgetId = widget.getAttribute('data-widget-id');
+        if (widgetId && !activeWidgetIds.has(widgetId)) {
+            console.log(`[MirrorNotes] Removing orphan widget: ${widgetId}`);
+            widget.remove();
+        }
+    });
+}
+
+// =================================================================================
 // WIDGETS
 // =================================================================================
 
@@ -102,6 +124,9 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
+    // Limpar widgets órfãos antes de criar novo
+    cleanOrphanWidgets(view);
+    
     const cacheKey = this.getCacheKey();
     
     // Tentar reutilizar DOM existente
@@ -342,12 +367,6 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
         lastForcedUpdateMap.set(filePath, now);
     }
 
-    // 4. Se foi um forced update, mas sem mudanças reais, ignorar
-    if (forcedUpdate && docText === value.lastDocText) {
-        console.log(`[MirrorNotes] Forced update ignored - no real changes`);
-        return fieldState;
-    }
-
     // 5. Debounce específico por arquivo (mais agressivo)
     const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
     if (!forcedUpdate && now - lastFileUpdate < UPDATE_DEBOUNCE) {
@@ -392,7 +411,50 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // Atualizar debounce só se vamos realmente processar
     fileDebounceMap.set(filePath, now);
     
-    // 8. Verificar se a configuração mudou
+    // 🔥 8. TRATAMENTO ESPECIAL PARA FORCED UPDATE
+    if (forcedUpdate) {
+        console.log(`[MirrorNotes] Forced update - recreating widget unconditionally`);
+        
+        // Recarregar configuração SEMPRE em forced update
+        const freshConfig = getApplicableConfig(plugin, file, value.frontmatter || newFrontmatter);
+        
+        // Log para debug
+        console.log(`[MirrorNotes] Forced update config:`, {
+            oldPosition: value.config?.position,
+            newPosition: freshConfig?.position,
+            oldTemplate: value.config?.templatePath,
+            newTemplate: freshConfig?.templatePath
+        });
+        
+        const newMirrorState = {
+            enabled: !!freshConfig,
+            config: freshConfig,
+            frontmatter: value.frontmatter || newFrontmatter, // Manter frontmatter existente se não mudou
+            frontmatterHash: value.frontmatterHash || newFrontmatterHash,
+            widgetId: generateWidgetId(), // Novo ID força recriação total
+            lastDocText: docText
+        };
+        
+        // Limpar cache do widget antigo
+        const fileWidgets = Array.from(widgetInstanceCache.keys()).filter(key => key.includes(value.widgetId));
+        fileWidgets.forEach(key => {
+            widgetInstanceCache.delete(key);
+        });
+        
+        // Limpar DOM caches também
+        MirrorTemplateWidget.domCache.clear();
+        MirrorTemplateWidget.lastRenderedContent.clear();
+        
+        // Reconstruir decorations
+        const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
+        
+        return {
+            mirrorState: newMirrorState,
+            decorations: newDecorations
+        };
+    }
+    
+    // 9. Verificar se a configuração mudou (caminho normal, não-forçado)
     const config = getApplicableConfig(plugin, file, newFrontmatter);
     
     const enabledChanged = value.enabled !== !!config;
@@ -400,9 +462,9 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const templateChanged = value.config?.templatePath !== config?.templatePath;
     const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
     
-    // 9. Só criar novo widget se realmente necessário
-    if (enabledChanged || positionChanged || templateChanged || hidePropsChanged || forcedUpdate) {
-        console.log(`[MirrorNotes] Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}, forced:${forcedUpdate}`);
+    // 10. Só criar novo widget se realmente necessário
+    if (enabledChanged || positionChanged || templateChanged || hidePropsChanged) {
+        console.log(`[MirrorNotes] Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}`);
         
         // Limpar cache apenas se for mudança significativa
         if (enabledChanged || positionChanged || templateChanged) {
@@ -417,7 +479,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
             config: config,
             frontmatter: newFrontmatter,
             frontmatterHash: newFrontmatterHash,
-            widgetId: generateWidgetId(),
+            widgetId: positionChanged ? generateWidgetId() : value.widgetId, // Novo ID apenas se posição mudou
             lastDocText: docText
         };
         
@@ -430,7 +492,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
         };
     }
     
-    // 10. Apenas frontmatter mudou, manter mesmo widget mas atualizar dados
+    // 11. Apenas frontmatter mudou, manter mesmo widget mas atualizar dados
     const newMirrorState = {
         ...value,
         frontmatter: newFrontmatter,
@@ -537,12 +599,6 @@ function buildDecorations(state: EditorState, mirrorState: MirrorState, plugin: 
 
   return builder.finish();
 }
-
-// =================================================================================
-// DECORATIONS - REMOVIDO! Agora fornecido diretamente pelo StateField
-// =================================================================================
-// O StateField agora fornece as decorations diretamente via provide()
-// Isso é mais eficiente e segue o padrão do CodeMarker
 
 // =================================================================================
 // HELPERS

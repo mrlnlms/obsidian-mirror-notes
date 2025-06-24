@@ -1,7 +1,8 @@
 import MirrorUIPlugin from "./main";
-import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting } from "obsidian";
+import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView } from "obsidian";
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "./utils/file-suggest";
 import { wrapAround } from "./utils";
+import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
 
 export interface FolderTemplate {
     folder: string;
@@ -61,6 +62,26 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         this.plugin = plugin;
     }
 
+    private updateAllEditors() {
+        console.log('[MirrorNotes] Settings changed, forcing update on all editors');
+        console.log('[MirrorNotes] Current settings:', this.plugin.settings);
+        
+        setTimeout(() => {
+            this.plugin.app.workspace.iterateAllLeaves(leaf => {
+                if (leaf.view instanceof MarkdownView && leaf.view.file) {
+                    // @ts-ignore
+                    const cm = leaf.view.editor?.cm;
+                    if (cm) {
+                        cm.dispatch({
+                            effects: forceMirrorUpdateEffect.of()
+                        });
+                        console.log(`[MirrorNotes] Updated editor for: ${leaf.view.file.path}`);
+                    }
+                }
+            });
+        }, 100);
+    }
+
     display(): void {
         const {containerEl} = this;
         containerEl.empty();
@@ -98,6 +119,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             this.plugin.settings.global_settings = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 })
                 .setClass("toggle-header");
@@ -115,6 +137,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             this.plugin.settings.enable_global_live_preview_mode = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 });
                 
@@ -129,6 +152,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             .onChange((value) => {
                                 this.plugin.settings.global_settings_live_preview_note = value;
                                 this.plugin.saveSettings();
+                                this.updateAllEditors();
                             });
                         // @ts-ignore
                         cb.containerEl.addClass("full-width-input");
@@ -138,10 +162,11 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.addOption("bottom", "Bottom of note")
                         cb.addOption("left", "Left of note")
                         cb.addOption("right", "Right of note")
-                        cb.setValue(this.plugin.settings.global_settings_preview_pos);
+                        cb.setValue(this.plugin.settings.global_settings_live_preview_pos);
                         cb.onChange(async (value) => {
-                            this.plugin.settings.global_settings_preview_pos = value;
+                            this.plugin.settings.global_settings_live_preview_pos = value;
                             await this.plugin.saveSettings();
+                            this.updateAllEditors();
                         });
                     })
                     .infoEl.remove();
@@ -157,6 +182,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             this.plugin.settings.enable_global_preview_mode = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 });
 
@@ -171,6 +197,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             .onChange((value) => {
                                 this.plugin.settings.global_settings_preview_note = value;
                                 this.plugin.saveSettings();
+                                this.updateAllEditors();
                             });
                         // @ts-ignore
                         cb.containerEl.addClass("full-width-input");
@@ -184,6 +211,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.onChange(async (value) => {
                             this.plugin.settings.global_settings_live_preview_pos = value;
                             await this.plugin.saveSettings();
+                            this.updateAllEditors();
                         });
                     })
                     .infoEl.remove();
@@ -197,6 +225,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         this.plugin.settings.global_settings_overide = value;
                         this.plugin.saveSettings();
                         this.display();
+                        this.updateAllEditors();
                     });
                 }) 
                 .setClass("toogle-header");
@@ -210,6 +239,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         this.plugin.settings.global_settings_hide_props = value;
             this.plugin.saveSettings();
                         this.display();
+                        this.updateAllEditors();
                     });
                 })
                 .setClass("toogle-header");
@@ -256,6 +286,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 button.onClick(async () => {
                     await this.plugin.resetSettings();
                     this.display();
+                    this.updateAllEditors();
                 });
             })
             .setClass("mirror-reset");
@@ -307,6 +338,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors.splice(index, 1);
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 })
             if(!customMirrors[index].openview) return;
@@ -322,6 +354,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors[index].enable_custom_live_preview_mode = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 })
             if(customMirrors[index].enable_custom_live_preview_mode){
@@ -334,6 +367,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             .onChange((value) => {
                                 customMirrors[index].custom_settings_live_preview_note = value;
                                 this.plugin.saveSettings();
+                                this.updateAllEditors();
                             });
                         // @ts-ignore
                         cb.containerEl.addClass("full-width-input");
@@ -347,6 +381,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.onChange(async (value) => {
                             customMirrors[index].custom_settings_live_preview_pos = value;
                             await this.plugin.saveSettings();
+                            this.updateAllEditors();
                         });
                     })
                     .infoEl.remove();
@@ -361,6 +396,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors[index].enable_custom_preview_mode = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 });
             const noteSetting = globalMirrorSettings.createEl("div", { cls: "global-note-selection-setting" });
@@ -373,6 +409,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             .onChange((value) => {
                                 customMirrors[index].custom_settings_preview_note = value;
                                 this.plugin.saveSettings();
+                                this.updateAllEditors();
                             });
                         // @ts-ignore
                         cb.containerEl.addClass("full-width-input");
@@ -386,6 +423,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.onChange(async (value) => {
                             customMirrors[index].custom_settings_preview_pos = value;
                             await this.plugin.saveSettings();
+                            this.updateAllEditors();
                         });
                     })
                     .infoEl.remove();
@@ -595,6 +633,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         customMirrors[index].custom_settings_hide_props = value;
                         this.plugin.saveSettings();
                         this.display();
+                        this.updateAllEditors();
                     });
                 })
                 .setClass("toogle-header");
@@ -608,6 +647,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors[index].custom_settings_overide = value;
                             this.plugin.saveSettings();
                             this.display();
+                            this.updateAllEditors();
                         });
                 })
                 .setClass("toogle-header");
