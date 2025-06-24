@@ -2,28 +2,37 @@ import { StateField, StateEffect, EditorState, RangeSetBuilder, Transaction } fr
 import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
 import { TFile, MarkdownRenderer } from 'obsidian';
-import { CustomMirror } from 'settings';
-import { ApplicableMirrorConfig, MirrorState, MirrorFieldState } from "./mirrorTypes";
-import { buildDecorations, cleanOrphanWidgets } from "./mirrorDecorations";
-import { getApplicableConfig } from "./mirrorConfig";
+import { CustomMirror } from '../../settings';
 
 // =================================================================================
 // INTERFACES E TIPOS
 // =================================================================================
+interface ApplicableMirrorConfig {
+  templatePath: string;
+  position: 'top' | 'bottom' | 'left' | 'right';
+  hideProps: boolean;
+}
+
+export interface MirrorState {
+  enabled: boolean;
+  config: ApplicableMirrorConfig | null;
+  frontmatter: any;
+  widgetId: string;
+  lastDocText?: string; // Cache do texto do documento para detectar mudanças reais
+}
 
 // Effects
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
 export const toggleWidgetEffect = StateEffect.define<boolean>();
 export const forceMirrorUpdateEffect = StateEffect.define<void>();
 
-// Cache global mais persistente
+// Cache global para evitar recriação
 const widgetInstanceCache = new Map<string, MirrorTemplateWidget>();
-const configCache = new Map<string, { config: ApplicableMirrorConfig | null, frontmatterHash: string }>();
 
 // =================================================================================
 // LÓGICA DE MATCHING
 // =================================================================================
-function getApplicableConfig2(plugin: MirrorUIPlugin, file: TFile | null, frontmatter: any): ApplicableMirrorConfig | null {
+function getApplicableConfig(plugin: MirrorUIPlugin, file: TFile | null, frontmatter: any): ApplicableMirrorConfig | null {
     if (!file) return null;
 
     const settings = plugin.settings;
@@ -68,21 +77,35 @@ function getApplicableConfig2(plugin: MirrorUIPlugin, file: TFile | null, frontm
 }
 
 // =================================================================================
-// LIMPEZA DE WIDGETS ÓRFÃOS
-// =================================================================================
-
-// =================================================================================
 // WIDGETS
 // =================================================================================
+class BottomSpacerWidget extends WidgetType {
+  toDOM(): HTMLElement {
+    const div = document.createElement('div');
+    div.className = 'mirror-bottom-spacer';
+    div.style.cssText = `
+      height: 30px;
+      width: 100%;
+      display: block;
+      clear: both;
+      user-select: none;
+      pointer-events: none;
+    `;
+    return div;
+  }
+  
+  eq(other: WidgetType): boolean {
+    return other instanceof BottomSpacerWidget;
+  }
+}
 
 export class MirrorTemplateWidget extends WidgetType {
   public static domCache = new Map<string, HTMLElement>();
   public static lastRenderedContent = new Map<string, string>();
-  public static renderingPromises = new Map<string, Promise<void>>();
   
   constructor(
     private plugin: MirrorUIPlugin,
-    private state: MirrorState, // Agora recebe MirrorState diretamente
+    private state: any,
     private config: ApplicableMirrorConfig,
     private widgetId: string
   ) {
@@ -94,9 +117,6 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    // Limpar widgets órfãos antes de criar novo
-    cleanOrphanWidgets(view);
-    
     const cacheKey = this.getCacheKey();
     
     // Tentar reutilizar DOM existente
@@ -159,25 +179,6 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   async updateContentIfNeeded(container: HTMLElement, view: EditorView) {
-    const cacheKey = this.getCacheKey();
-    
-    // Verificar se já está renderizando para evitar renders concorrentes
-    if (MirrorTemplateWidget.renderingPromises.has(cacheKey)) {
-      return MirrorTemplateWidget.renderingPromises.get(cacheKey);
-    }
-
-    const renderPromise = this.doUpdateContent(container, view);
-    MirrorTemplateWidget.renderingPromises.set(cacheKey, renderPromise);
-    
-    try {
-      await renderPromise;
-    } finally {
-      MirrorTemplateWidget.renderingPromises.delete(cacheKey);
-    }
-  }
-
-  private async doUpdateContent(container: HTMLElement, view: EditorView) {
-    const cacheKey = this.getCacheKey();
     try {
       const templateFile = this.plugin.app.vault.getAbstractFileByPath(this.config.templatePath);
       
@@ -199,18 +200,16 @@ export class MirrorTemplateWidget extends WidgetType {
         });
       }
       
-      // Criar hash do conteúdo para verificar mudanças
-      const contentHash = this.simpleHash(processedContent);
-      
       // Verificar se o conteúdo mudou
+      const cacheKey = this.getCacheKey();
       const lastContent = MirrorTemplateWidget.lastRenderedContent.get(cacheKey);
       
-      if (lastContent === contentHash) {
+      if (lastContent === processedContent) {
         return; // Conteúdo não mudou, não re-renderizar
       }
       
       // Atualizar cache
-      MirrorTemplateWidget.lastRenderedContent.set(cacheKey, contentHash);
+      MirrorTemplateWidget.lastRenderedContent.set(cacheKey, processedContent);
       
       // Renderizar novo conteúdo
       container.innerHTML = '';
@@ -233,31 +232,19 @@ export class MirrorTemplateWidget extends WidgetType {
     }
   }
 
-  private simpleHash(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash; // Convert to 32bit integer
-    }
-    return hash.toString();
-  }
-
   eq(other: WidgetType): boolean {
     if (!(other instanceof MirrorTemplateWidget)) return false;
     
     const otherWidget = other as MirrorTemplateWidget;
-    // Widgets são iguais se têm o mesmo ID e configuração
-    return this.widgetId === otherWidget.widgetId && 
-           this.config.templatePath === otherWidget.config.templatePath &&
-           this.config.position === otherWidget.config.position;
+    // Widgets são iguais se têm o mesmo ID
+    return this.widgetId === otherWidget.widgetId;
   }
   
   destroy() {
-    // NÃO limpar cache imediatamente - deixar para garbage collection natural
-    // const cacheKey = this.getCacheKey();
-    // MirrorTemplateWidget.domCache.delete(cacheKey);
-    // MirrorTemplateWidget.lastRenderedContent.delete(cacheKey);
+    // Limpar cache quando widget for destruído
+    const cacheKey = this.getCacheKey();
+    MirrorTemplateWidget.domCache.delete(cacheKey);
+    MirrorTemplateWidget.lastRenderedContent.delete(cacheKey);
   }
 }
 
@@ -265,161 +252,115 @@ export class MirrorTemplateWidget extends WidgetType {
 // STATE FIELD
 // =================================================================================
 let lastUpdateTime = 0;
-const UPDATE_DEBOUNCE = 500; // Aumentado para 500ms - mais conservador
-const fileDebounceMap = new Map<string, number>(); // Debounce por arquivo
-const lastForcedUpdateMap = new Map<string, number>(); // Track forced updates por arquivo
+const UPDATE_DEBOUNCE = 50; // 50ms debounce
 
-// 🔥 NOVO: StateField para rastrear decorations separadamente (inspirado no CodeMarker)
-export const mirrorStateField = StateField.define<MirrorFieldState>({
-  create(state: EditorState): MirrorFieldState {
+export const mirrorStateField = StateField.define<MirrorState>({
+  create(state: EditorState): MirrorState {
     const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
     const file = plugin?.app.workspace.getActiveFile();
     const frontmatter = parseFrontmatter(state.doc.toString());
-    const frontmatterHash = hashObject(frontmatter);
     const config = getApplicableConfig(plugin, file, frontmatter);
 
-    const mirrorState = {
+    return {
       enabled: !!config,
       config: config,
       frontmatter: frontmatter,
-      frontmatterHash: frontmatterHash,
       widgetId: generateWidgetId(),
       lastDocText: state.doc.toString()
     };
-
-    // Criar decorations iniciais
-    const decorations = buildDecorations(state, mirrorState, plugin);
-
-    return {
-      mirrorState,
-      decorations
-    };
   },
 
-  update(fieldState: MirrorFieldState, tr: Transaction): MirrorFieldState {
-    const { mirrorState: value } = fieldState;
-    
-    // 🔥 IMPORTANTE: Mapear decorations através das mudanças (como o CodeMarker faz!)
-    let decorations = fieldState.decorations.map(tr.changes);
-
-    // 1. Verificar se foi um update forçado (só aceitar se for realmente necessário)
-    let forcedUpdate = false;
+  update(value: MirrorState, tr: Transaction): MirrorState {
+    // 1. Verificar se foi um update forçado
     for (const effect of tr.effects) {
         if (effect.is(forceMirrorUpdateEffect)) {
-            forcedUpdate = true;
-            break;
+            const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
+            const file = plugin?.app.workspace.getActiveFile();
+            const cache = file ? plugin?.app.metadataCache.getFileCache(file) : null;
+            const newFrontmatter = cache?.frontmatter || parseFrontmatter(tr.state.doc.toString());
+            const config = getApplicableConfig(plugin, file, newFrontmatter);
+            
+            console.log(`[MirrorNotes] Forced update - creating new widget`);
+            
+            // Limpar caches ao forçar update
+            widgetInstanceCache.clear();
+            MirrorTemplateWidget.domCache.clear();
+            MirrorTemplateWidget.lastRenderedContent.clear();
+            
+            return {
+                enabled: !!config,
+                config: config,
+                frontmatter: newFrontmatter,
+                widgetId: generateWidgetId(),
+                lastDocText: tr.state.doc.toString()
+            };
         }
     }
 
-    // 2. Se o documento não mudou e não foi forçado, manter estado
-    if (!tr.docChanged && !forcedUpdate) {
-        return fieldState; // Retornar fieldState completo
+    // 2. Se o documento não mudou, manter estado
+    if (!tr.docChanged) {
+        return value;
     }
 
+    // Debounce para evitar muitas atualizações
+    const now = Date.now();
+    if (now - lastUpdateTime < UPDATE_DEBOUNCE) {
+        return value;
+    }
+    lastUpdateTime = now;
+
+    const docText = tr.state.doc.toString();
+    
+    // 3. Verificar rapidamente se a mudança pode afetar o widget
+    let possibleFrontmatterChange = false;
+    tr.changes.iterChangedRanges((fromA, toA) => {
+        // Se mudança nas primeiras 20 linhas, pode ser frontmatter
+        if (fromA < 500) { // ~20 linhas
+            possibleFrontmatterChange = true;
+        }
+    });
+    
+    if (!possibleFrontmatterChange) {
+        // Mudança muito abaixo, não pode afetar frontmatter
+        return { ...value, lastDocText: docText };
+    }
+    
+    // 4. Verificar se o conteúdo realmente mudou (não apenas posição do cursor)
+    if (docText === value.lastDocText) {
+        return value;
+    }
+
+    // 5. Verificar se a mudança afeta o frontmatter
+    const frontmatterMatch = docText.match(/^---\n[\s\S]*?\n---/);
+    
+    if (!frontmatterMatch) {
+        // Sem frontmatter, apenas atualizar lastDocText
+        return { ...value, lastDocText: docText };
+    }
+    
+    // Verificar se alguma mudança tocou a região do frontmatter
+    let changeInFrontmatter = false;
+    tr.changes.iterChangedRanges((fromA, toA) => {
+        if (fromA < frontmatterMatch[0].length) {
+            changeInFrontmatter = true;
+        }
+    });
+    
+    if (!changeInFrontmatter) {
+        // Mudança fora do frontmatter, apenas atualizar lastDocText
+        return { ...value, lastDocText: docText };
+    }
+    
+    // 6. Frontmatter pode ter mudado, verificar
+    const newFrontmatter = parseFrontmatter(docText);
+    if (JSON.stringify(newFrontmatter) === JSON.stringify(value.frontmatter)) {
+        // Frontmatter não mudou realmente
+        return { ...value, lastDocText: docText };
+    }
+    
+    // 7. Verificar se a configuração mudou
     const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
     const file = plugin?.app.workspace.getActiveFile();
-    const filePath = file?.path || 'unknown';
-    const docText = tr.state.doc.toString();
-    const now = Date.now(); // Declarar aqui no início
-
-    // 3. Se foi um forced update, verificar se é muito frequente
-    if (forcedUpdate) {
-        const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
-        if (now - lastForcedUpdate < 1000) { // Não aceitar forced updates mais de 1x por segundo
-            console.log(`[MirrorNotes] Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
-            return fieldState;
-        }
-        lastForcedUpdateMap.set(filePath, now);
-    }
-
-    // 5. Debounce específico por arquivo (mais agressivo)
-    const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
-    if (!forcedUpdate && now - lastFileUpdate < UPDATE_DEBOUNCE) {
-        return fieldState;
-    }
-    
-    // 6. Verificar se realmente precisamos processar esta mudança
-    let changeInFrontmatterRegion = false;
-    let frontmatterEndPos = 0;
-    
-    // Encontrar onde termina o frontmatter
-    const frontmatterMatch = docText.match(/^---\n[\s\S]*?\n---/);
-    if (frontmatterMatch) {
-      frontmatterEndPos = frontmatterMatch[0].length;
-    }
-    
-    // Se houve mudança no documento, verificar se afeta frontmatter
-    if (tr.docChanged) {
-      tr.changes.iterChangedRanges((fromA, toA) => {
-        if (fromA <= frontmatterEndPos + 50) { // +50 chars de buffer
-          changeInFrontmatterRegion = true;
-        }
-      });
-      
-      // Se não há mudança na região do frontmatter, apenas atualizar lastDocText
-      if (!changeInFrontmatterRegion && !forcedUpdate) {
-        const newMirrorState = { ...value, lastDocText: docText };
-        return { mirrorState: newMirrorState, decorations };
-      }
-    }
-    
-    // 7. Verificar se o frontmatter realmente mudou
-    const newFrontmatter = parseFrontmatter(docText);
-    const newFrontmatterHash = hashObject(newFrontmatter);
-    
-    if (newFrontmatterHash === value.frontmatterHash && !forcedUpdate) {
-        // Frontmatter não mudou e não foi forçado, apenas atualizar lastDocText
-        const newMirrorState = { ...value, lastDocText: docText };
-        return { mirrorState: newMirrorState, decorations };
-    }
-    
-    // Atualizar debounce só se vamos realmente processar
-    fileDebounceMap.set(filePath, now);
-    
-    // 🔥 8. TRATAMENTO ESPECIAL PARA FORCED UPDATE
-    if (forcedUpdate) {
-        console.log(`[MirrorNotes] Forced update - recreating widget unconditionally`);
-        
-        // Recarregar configuração SEMPRE em forced update
-        const freshConfig = getApplicableConfig(plugin, file, value.frontmatter || newFrontmatter);
-        
-        // Log para debug
-        console.log(`[MirrorNotes] Forced update config:`, {
-            oldPosition: value.config?.position,
-            newPosition: freshConfig?.position,
-            oldTemplate: value.config?.templatePath,
-            newTemplate: freshConfig?.templatePath
-        });
-        
-        const newMirrorState = {
-            enabled: !!freshConfig,
-            config: freshConfig,
-            frontmatter: value.frontmatter || newFrontmatter, // Manter frontmatter existente se não mudou
-            frontmatterHash: value.frontmatterHash || newFrontmatterHash,
-            widgetId: generateWidgetId(), // Novo ID força recriação total
-            lastDocText: docText
-        };
-        
-        // Limpar cache do widget antigo
-        const fileWidgets = Array.from(widgetInstanceCache.keys()).filter(key => key.includes(value.widgetId));
-        fileWidgets.forEach(key => {
-            widgetInstanceCache.delete(key);
-        });
-        
-        // Limpar DOM caches também
-        MirrorTemplateWidget.domCache.clear();
-        MirrorTemplateWidget.lastRenderedContent.clear();
-        
-        // Reconstruir decorations
-        const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
-        
-        return {
-            mirrorState: newMirrorState,
-            decorations: newDecorations
-        };
-    }
-    
-    // 9. Verificar se a configuração mudou (caminho normal, não-forçado)
     const config = getApplicableConfig(plugin, file, newFrontmatter);
     
     const enabledChanged = value.enabled !== !!config;
@@ -427,52 +368,150 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const templateChanged = value.config?.templatePath !== config?.templatePath;
     const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
     
-    // 10. Só criar novo widget se realmente necessário
     if (enabledChanged || positionChanged || templateChanged || hidePropsChanged) {
-        console.log(`[MirrorNotes] Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}`);
+        console.log(`[MirrorNotes] Config changed - creating new widget`);
         
-        // Limpar cache apenas se for mudança significativa
-        if (enabledChanged || positionChanged || templateChanged) {
-          const fileWidgets = Array.from(widgetInstanceCache.keys()).filter(key => key.includes(value.widgetId));
-          fileWidgets.forEach(key => {
-            widgetInstanceCache.delete(key);
-          });
-        }
+        // Limpar cache ao mudar configuração
+        widgetInstanceCache.clear();
+        MirrorTemplateWidget.domCache.clear();
+        MirrorTemplateWidget.lastRenderedContent.clear();
         
-        const newMirrorState = {
+        return {
             enabled: !!config,
             config: config,
             frontmatter: newFrontmatter,
-            frontmatterHash: newFrontmatterHash,
-            widgetId: positionChanged ? generateWidgetId() : value.widgetId, // Novo ID apenas se posição mudou
+            widgetId: generateWidgetId(),
             lastDocText: docText
-        };
-        
-        // Reconstruir decorations
-        const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
-        
-        return {
-            mirrorState: newMirrorState,
-            decorations: newDecorations
         };
     }
     
-    // 11. Apenas frontmatter mudou, manter mesmo widget mas atualizar dados
-    const newMirrorState = {
+    // 8. Apenas frontmatter mudou, manter mesmo widget
+    return {
         ...value,
         frontmatter: newFrontmatter,
-        frontmatterHash: newFrontmatterHash,
         lastDocText: docText
     };
-    
-    return {
-        mirrorState: newMirrorState,
-        decorations
-    };
-  },
+  }
+});
+
+// =================================================================================
+// DECORATIONS com cache agressivo
+// =================================================================================
+let lastWidgetId: string | null = null;
+let lastDecorations: DecorationSet | null = null;
+
+export const mirrorDecorations = EditorView.decorations.compute([mirrorStateField], state => {
+  const { enabled, config, widgetId } = state.field(mirrorStateField);
+
+  if (!enabled || !config) {
+    // Limpar cache se desabilitado
+    lastWidgetId = null;
+    lastDecorations = null;
+    return Decoration.none;
+  }
+
+  // Se o widgetId não mudou, retornar decorações em cache
+  if (widgetId === lastWidgetId && lastDecorations) {
+    return lastDecorations;
+  }
   
-  // 🔥 NOVO: Fornecer decorations via facet (como o CodeMarker faz)
-  provide: field => EditorView.decorations.from(field, state => state.decorations)
+  console.log(`[MirrorNotes] Building new decorations for widget: ${widgetId}`);
+
+  const builder = new RangeSetBuilder<Decoration>();
+  const doc = state.doc;
+  const docLength = doc.length;
+  
+  // Encontrar posição do frontmatter
+  let frontmatterEndPos = 0;
+  let frontmatterEndLine = 0;
+  let hasFrontmatter = false;
+  
+  const firstLine = doc.line(1);
+  if (firstLine.text === '---') {
+    hasFrontmatter = true;
+    for (let i = 2; i <= doc.lines; i++) {
+      const line = doc.line(i);
+      if (line.text === '---') {
+        frontmatterEndLine = i;
+        frontmatterEndPos = line.to + 1;
+        break;
+      }
+    }
+  }
+
+  const plugin = (window as any).mirrorUIPluginInstance;
+  
+  try {
+    // Criar ou reutilizar widget
+    let widget = widgetInstanceCache.get(widgetId);
+    if (!widget) {
+      widget = new MirrorTemplateWidget(plugin, state.field(mirrorStateField), config, widgetId);
+      widgetInstanceCache.set(widgetId, widget);
+    }
+    
+    if (config.position === 'top') {
+      const topPos = Math.min(frontmatterEndPos, docLength);
+      
+      builder.add(
+        topPos,
+        topPos,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 0
+        })
+      );
+      
+    } else if (config.position === 'bottom') {
+      // Adicionar espaçador
+      builder.add(
+        docLength,
+        docLength,
+        Decoration.widget({
+          widget: new BottomSpacerWidget(),
+          side: 1,
+          block: true
+        })
+      );
+      
+      // Adicionar widget principal
+      builder.add(
+        docLength,
+        docLength,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 1
+        })
+      );
+    }
+    
+    // Esconder propriedades se configurado
+    if (config.hideProps && hasFrontmatter && frontmatterEndLine > 0) {
+      for (let lineNum = 1; lineNum <= frontmatterEndLine && lineNum <= doc.lines; lineNum++) {
+        const line = doc.line(lineNum);
+        builder.add(
+          line.from,
+          line.from,
+          Decoration.line({
+            attributes: { style: 'display: none;' }
+          })
+        );
+      }
+    }
+    
+  } catch (e) {
+    console.error('[MirrorNotes] Error building decorations:', e);
+    return Decoration.none;
+  }
+
+  const decorations = builder.finish();
+  
+  // Guardar no cache
+  lastWidgetId = widgetId;
+  lastDecorations = decorations;
+  
+  return decorations;
 });
 
 // =================================================================================
@@ -503,17 +542,6 @@ function parseFrontmatter(content: string): any {
   }
 }
 
-function hashObject(obj: any): string {
-  const str = JSON.stringify(obj, Object.keys(obj).sort());
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString();
-}
-
 function generateWidgetId(): string {
   return `mirror-widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 }
@@ -527,6 +555,4 @@ if ((window as any).mirrorUICleanup) {
   widgetInstanceCache.clear();
   MirrorTemplateWidget.domCache.clear();
   MirrorTemplateWidget.lastRenderedContent.clear();
-  fileDebounceMap.clear();
-  lastForcedUpdateMap.clear();
 };

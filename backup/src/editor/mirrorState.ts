@@ -3,13 +3,25 @@ import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/v
 import MirrorUIPlugin from '../../main';
 import { TFile, MarkdownRenderer } from 'obsidian';
 import { CustomMirror } from 'settings';
-import { ApplicableMirrorConfig, MirrorState, MirrorFieldState } from "./mirrorTypes";
-import { buildDecorations, cleanOrphanWidgets } from "./mirrorDecorations";
-import { getApplicableConfig } from "./mirrorConfig";
 
 // =================================================================================
 // INTERFACES E TIPOS
 // =================================================================================
+interface ApplicableMirrorConfig {
+  templatePath: string;
+  position: 'top' | 'bottom' | 'left' | 'right';
+  hideProps: boolean;
+}
+
+export interface MirrorState {
+  enabled: boolean;
+  config: ApplicableMirrorConfig | null;
+  frontmatter: any;
+  widgetId: string;
+  lastDocText?: string;
+  frontmatterHash?: string; // Hash do frontmatter para detectar mudanças reais
+  lastContentHash?: string; // Hash do conteúdo do template para evitar re-renderização
+}
 
 // Effects
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
@@ -23,7 +35,7 @@ const configCache = new Map<string, { config: ApplicableMirrorConfig | null, fro
 // =================================================================================
 // LÓGICA DE MATCHING
 // =================================================================================
-function getApplicableConfig2(plugin: MirrorUIPlugin, file: TFile | null, frontmatter: any): ApplicableMirrorConfig | null {
+function getApplicableConfig(plugin: MirrorUIPlugin, file: TFile | null, frontmatter: any): ApplicableMirrorConfig | null {
     if (!file) return null;
 
     const settings = plugin.settings;
@@ -70,6 +82,24 @@ function getApplicableConfig2(plugin: MirrorUIPlugin, file: TFile | null, frontm
 // =================================================================================
 // LIMPEZA DE WIDGETS ÓRFÃOS
 // =================================================================================
+function cleanOrphanWidgets(view: EditorView) {
+    const activeWidgetIds = new Set<string>();
+    
+    // Coletar IDs de widgets ativos do estado
+    const fieldState = view.state.field(mirrorStateField, false);
+    if (fieldState && fieldState.mirrorState.widgetId) {
+        activeWidgetIds.add(fieldState.mirrorState.widgetId);
+    }
+    
+    // Remover widgets que não estão no estado ativo
+    view.dom.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
+        const widgetId = widget.getAttribute('data-widget-id');
+        if (widgetId && !activeWidgetIds.has(widgetId)) {
+            console.log(`[MirrorNotes] Removing orphan widget: ${widgetId}`);
+            widget.remove();
+        }
+    });
+}
 
 // =================================================================================
 // WIDGETS
@@ -177,7 +207,6 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   private async doUpdateContent(container: HTMLElement, view: EditorView) {
-    const cacheKey = this.getCacheKey();
     try {
       const templateFile = this.plugin.app.vault.getAbstractFileByPath(this.config.templatePath);
       
@@ -203,6 +232,7 @@ export class MirrorTemplateWidget extends WidgetType {
       const contentHash = this.simpleHash(processedContent);
       
       // Verificar se o conteúdo mudou
+      const cacheKey = this.getCacheKey();
       const lastContent = MirrorTemplateWidget.lastRenderedContent.get(cacheKey);
       
       if (lastContent === contentHash) {
@@ -270,6 +300,11 @@ const fileDebounceMap = new Map<string, number>(); // Debounce por arquivo
 const lastForcedUpdateMap = new Map<string, number>(); // Track forced updates por arquivo
 
 // 🔥 NOVO: StateField para rastrear decorations separadamente (inspirado no CodeMarker)
+interface MirrorFieldState {
+  mirrorState: MirrorState;
+  decorations: DecorationSet;
+}
+
 export const mirrorStateField = StateField.define<MirrorFieldState>({
   create(state: EditorState): MirrorFieldState {
     const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
@@ -474,6 +509,96 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
   // 🔥 NOVO: Fornecer decorations via facet (como o CodeMarker faz)
   provide: field => EditorView.decorations.from(field, state => state.decorations)
 });
+
+// =================================================================================
+// BUILD DECORATIONS (movido para função separada)
+// =================================================================================
+function buildDecorations(state: EditorState, mirrorState: MirrorState, plugin: MirrorUIPlugin): DecorationSet {
+  const { enabled, config, widgetId, frontmatterHash } = mirrorState;
+
+  if (!enabled || !config) {
+    return Decoration.none;
+  }
+
+  console.log(`[MirrorNotes] Building decorations for position: ${config.position}`);
+
+  const builder = new RangeSetBuilder<Decoration>();
+  const doc = state.doc;
+  const docLength = doc.length;
+  
+  // Encontrar posição do frontmatter
+  let frontmatterEndPos = 0;
+  let frontmatterEndLine = 0;
+  let hasFrontmatter = false;
+  
+  const firstLine = doc.line(1);
+  if (firstLine.text === '---') {
+    hasFrontmatter = true;
+    for (let i = 2; i <= doc.lines; i++) {
+      const line = doc.line(i);
+      if (line.text === '---') {
+        frontmatterEndLine = i;
+        frontmatterEndPos = line.to + 1;
+        break;
+      }
+    }
+  }
+  
+  try {
+    // Reutilizar widget existente baseado no widgetId
+    let widget = widgetInstanceCache.get(widgetId);
+    if (!widget) {
+      widget = new MirrorTemplateWidget(plugin, mirrorState, config, widgetId);
+      widgetInstanceCache.set(widgetId, widget);
+    }
+    
+    if (config.position === 'top') {
+      const topPos = Math.min(frontmatterEndPos, docLength);
+      
+      builder.add(
+        topPos,
+        topPos,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 0
+        })
+      );
+      
+    } else if (config.position === 'bottom') {
+      // 🔥 Para bottom: sempre inserir no final absoluto
+      builder.add(
+        docLength,
+        docLength,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 1 // Widget aparece DEPOIS da posição
+        })
+      );
+    }
+    
+    // Esconder propriedades se configurado
+    if (config.hideProps && hasFrontmatter && frontmatterEndLine > 0) {
+      for (let lineNum = 1; lineNum <= frontmatterEndLine && lineNum <= doc.lines; lineNum++) {
+        const line = doc.line(lineNum);
+        builder.add(
+          line.from,
+          line.from,
+          Decoration.line({
+            attributes: { style: 'display: none;' }
+          })
+        );
+      }
+    }
+    
+  } catch (e) {
+    console.error('[MirrorNotes] Error building decorations:', e);
+    return Decoration.none;
+  }
+
+  return builder.finish();
+}
 
 // =================================================================================
 // HELPERS

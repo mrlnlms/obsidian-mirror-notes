@@ -2,9 +2,9 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v22 — Posicionamento (Era 4)
+## Versao Atual: v23 — Modularizacao (Era 4)
 
-**Posicionamento relativo as linhas do editor.** Settings agora disparam atualizacao imediata dos widgets.
+**Modularizacao em arquivos menores e verificacao de performance.** Codigo refatorado para melhor organizacao.
 
 ### Historico de Eras
 
@@ -53,3 +53,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - Path de config usa manifest.id em vez de hardcoded sample-plugin
   - Forced update recria widgets incondicionalmente com config fresca
   - Fix: global_settings_preview_pos -> global_settings_live_preview_pos
+- **v23: Modularizacao** -- Refatoracao em arquivos menores + performance
+  - Novo mirrorConfig.ts: constantes e configuracao extraidas
+  - Novo mirrorDecorations.ts: logica de decoracoes extraida
+  - Novo mirrorTypes.ts: definicoes de tipos compartilhados
+  - Novo mirrorUtils.ts: funcoes utilitarias extraidas
+  - mirrorState.ts simplificado com imports modulares
+  - mirrorWidget.ts refatorado com helpers extraidos
+  - Diretorio backup/ com copias de referencia pre-modularizacao

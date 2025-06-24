@@ -1,0 +1,150 @@
+.headers-toggleing{
+  display: flex;
+  justify-content: space-between;
+}
+/*
+
+This CSS file will be included with your plugin, and
+available in the app when your plugin is enabled.
+
+If your plugin does not need CSS, delete this file.
+
+*/
+/* .divider{
+
+} */
+.sobe{
+  margin-top: -1000px;
+}
+.project-toolbar {
+  width: auto;
+  height: auto;
+  padding: 3px;
+  display: contents;
+  user-select: none;
+  border-radius: 6px;
+  position: absolute;
+  transition: 200ms ease;
+  min-width: fit-content;
+  justify-content: space-around;
+  z-index: var(--layer-status-bar);
+  box-shadow: 0px 3px 32px rgb(31 38 135 / 15%);
+  border: 1px solid var(--background-modifier-border);
+  position: inherit;
+}
+
+.full-width-input {
+  width: 100%;
+  box-sizing: border-box; /* Ensures padding and border are included in the element's total width */
+}
+
+.mirror-reset{
+  margin-top: 20px;
+}
+.search-input-container {
+  display: flex;
+  align-items: center;
+}
+
+.search-input-container input[type="search"] {
+  flex-grow: 1;
+}
+.global-note-selection-setting{
+
+  display: flex;
+  justify-content: space-between;
+  
+} 
+
+.mirror-settings-custom-settings{
+  margin-top: 20px;
+}
+.mirror-plugin-banner {
+    padding: 20px;
+    padding-top: 10px;
+    /* display: flex; */
+    /* width: 100%; */
+    /* border: 1px solid #ccc;  */
+    border-radius: 8px; /* Cantos arredondados */
+    background-color: var(--color-base-20);
+   /*  padding: 15px;
+    padding-bottom: 0px; */
+  }
+
+  .mirror-card {
+    padding: 20px;
+    padding-top: 10px;
+    /* display: flex; */
+    /* width: 100%; */
+    /* border: 1px solid #ccc;  */
+    border-radius: 8px; /* Cantos arredondados */
+    background-color: var(--color-base-20);
+   /*  padding: 15px;
+    padding-bottom: 0px; */
+    margin-top: 10px;
+    /* margin-bottom: 5px; */
+  }
+
+/*   .toogle-header{
+     border: 0px;
+  } */
+
+/*   .headers-toggleing{
+    display: flex;
+    justify-content: space-between;
+  } */
+
+.global-note-selection-setting >  .setting-item {
+    display: block;
+    border-top: 0px !important;
+    /* padding: 0px !important; */
+    width: calc(100%);
+}
+.live-preview-mode-template-field > .setting-item {
+    display: block;
+}
+
+.live-preview-mode-template-mirror-note-template-field > .setting-item  > .setting-item-control{
+    display: block;
+}
+.preview-mode-template-mirror-note-template-field > .setting-item {
+  display: block;
+}
+
+.global-mirror-settings{
+  border-radius: 8px; /* Cantos arredondados */
+  box-shadow: 0px 3px 32px rgb(31 38 135 / 15%);
+  /* border: 1px solid var(--background-modifier-border); */
+  border: 1px solid var(--color-base-20);
+  /* background-color: var(--color-base-20); */
+  padding: 25px;
+}
+
+.mirror-separator{
+  border: 1px dotted var(--color-base-30);
+}
+
+.mirror-acordion-summary{
+  font-weight:bold;
+}
+.mirror-accordion details {
+  overflow: hidden;
+  border-style: solid;
+  border-color: rgba(var(--callout-color), var(--callout-border-opacity));
+  border-width: var(--callout-border-width);
+  border-radius: var(--callout-radius);
+  background-color: rgba(var(--callout-color), 0.05);
+  padding: 1em;
+  
+  margin-block: 1em;
+  margin-inline: -1em;
+
+  --callout-color: 255,255,255;
+  &.warning {
+      --callout-color: var(--callout-warning);
+  }
+
+  summary {
+      font-weight: 600;
+  }
+} 
