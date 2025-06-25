@@ -65,6 +65,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
     private updateAllEditors() {
         console.log('[MirrorNotes] Settings changed, forcing update on all editors');
         console.log('[MirrorNotes] Current settings:', this.plugin.settings);
+        console.log('[MirrorNotes] Settings changed, forcing update on all editors'); // Log temporário
         
         setTimeout(() => {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
@@ -220,9 +221,9 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 .setName("Hide properties")
                 .setDesc("If set ON, it hides the properties on the target pages.")
                 .addToggle((cb) => {
-                    cb.setValue(this.plugin.settings.global_settings_overide)
+                    cb.setValue(this.plugin.settings.global_settings_hide_props)
                     .onChange((value) => {
-                        this.plugin.settings.global_settings_overide = value;
+                        this.plugin.settings.global_settings_hide_props = value;
                         this.plugin.saveSettings();
                         this.display();
                         this.updateAllEditors();
@@ -234,10 +235,10 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 .setName("Replace custom Mirrors")
                 .setDesc("Por padrão, custom Mirrors sobrescrevem o global Mirror. Com esta opção, o plugin irá sobrescrever os custom Mirros, a menos que estes estejam setados para sobrecrever esta função.")
                 .addToggle((cb) => {
-                    cb.setValue(this.plugin.settings.global_settings_hide_props)
+                    cb.setValue(this.plugin.settings.global_settings_overide)
                     .onChange((value) => {
-                        this.plugin.settings.global_settings_hide_props = value;
-            this.plugin.saveSettings();
+                        this.plugin.settings.global_settings_overide = value;
+                        this.plugin.saveSettings();
                         this.display();
                         this.updateAllEditors();
                     });

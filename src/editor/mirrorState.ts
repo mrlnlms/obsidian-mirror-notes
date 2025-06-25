@@ -487,10 +487,25 @@ function parseFrontmatter(content: string): any {
     const result: any = {};
     
     yaml.split('\n').forEach(line => {
-      const colonIndex = line.indexOf(':');
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return;
+      
+      // Processar listas (linhas que começam com -)
+      if (trimmedLine.startsWith('-')) {
+        const listItem = trimmedLine.substring(1).trim();
+        if (listItem) {
+          // Se já existe uma lista, adicionar ao array, senão criar novo array
+          if (!result.tags) result.tags = [];
+          result.tags.push(listItem);
+        }
+        return;
+      }
+      
+      // Processar propriedades simples (linhas com :)
+      const colonIndex = trimmedLine.indexOf(':');
       if (colonIndex > 0) {
-        const key = line.substring(0, colonIndex).trim();
-        const value = line.substring(colonIndex + 1).trim();
+        const key = trimmedLine.substring(0, colonIndex).trim();
+        const value = trimmedLine.substring(colonIndex + 1).trim();
         if (key && value) {
           result[key] = value.replace(/^[\"']|[\"']$/g, '');
         }

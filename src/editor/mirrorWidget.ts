@@ -30,7 +30,10 @@ export class MirrorTemplateWidget extends WidgetType {
     const cacheKey = this.getCacheKey();
     let container = MirrorTemplateWidget.domCache.get(cacheKey);
 
+    console.log(`[MirrorNotes] Widget toDOM - cacheKey: ${cacheKey}, hasContainer: ${!!container}`);
+
     if (!container) {
+      console.log(`[MirrorNotes] Creating new widget container for: ${cacheKey}`);
       container = document.createElement("div");
       container.className = `mirror-ui-widget elemento-geral mirror-position-${this.config.position}`;
       container.setAttribute("data-widget-id", this.widgetId);
@@ -90,15 +93,19 @@ export class MirrorTemplateWidget extends WidgetType {
   private async doUpdateContent(container: HTMLElement, view: EditorView) {
     const cacheKey = this.getCacheKey();
     try {
+      console.log(`[MirrorNotes] Loading template: ${this.config.templatePath}`);
       const templateFile = this.plugin.app.vault.getAbstractFileByPath(this.config.templatePath);
       if (!templateFile || !(templateFile instanceof TFile)) {
         const errorMsg = `Template not found: ${this.config.templatePath}`;
+        console.error(`[MirrorNotes] ${errorMsg}`);
         if (container.innerHTML !== `<div style="color: var(--text-error);">${errorMsg}</div>`) {
           container.innerHTML = `<div style="color: var(--text-error);">${errorMsg}</div>`;
         }
         return;
       }
+      console.log(`[MirrorNotes] Template file found: ${templateFile.path}`);
       const templateContent = await this.plugin.app.vault.read(templateFile);
+      console.log(`[MirrorNotes] Template content length: ${templateContent.length}`);
       let processedContent = templateContent;
       if (this.state.frontmatter && Object.keys(this.state.frontmatter).length > 0) {
         processedContent = templateContent.replace(/\{\{(\w+)\}\}/g, (match, key) => {
@@ -108,6 +115,7 @@ export class MirrorTemplateWidget extends WidgetType {
       const contentHash = this.simpleHash(processedContent);
       const lastContent = MirrorTemplateWidget.lastRenderedContent.get(cacheKey);
       if (lastContent === contentHash) {
+        console.log(`[MirrorNotes] Content unchanged, skipping render`);
         return;
       }
       MirrorTemplateWidget.lastRenderedContent.set(cacheKey, contentHash);
@@ -118,12 +126,14 @@ export class MirrorTemplateWidget extends WidgetType {
 
       const activeFile = this.plugin.app.workspace.getActiveFile();
       if (activeFile) {
+        console.log(`[MirrorNotes] Rendering markdown for active file: ${activeFile.path}`);
         await MarkdownRenderer.renderMarkdown(
           processedContent,
           contentDiv,
           activeFile.path,
           this.plugin
         );
+        console.log(`[MirrorNotes] Markdown rendered successfully`);
       }
     } catch (error) {
       console.error("Error rendering template:", error);

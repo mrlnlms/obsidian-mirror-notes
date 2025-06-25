@@ -2,9 +2,9 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v23 — Modularizacao (Era 4)
+## Versao Atual: v24 — Fix YAML (Era 4)
 
-**Modularizacao em arquivos menores e verificacao de performance.** Codigo refatorado para melhor organizacao.
+**Fix YAML frontmatter parsing, settings toggle bug, e nova logica de prioridade custom vs global mirrors.**
 
 ### Historico de Eras
 
@@ -61,3 +61,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - mirrorState.ts simplificado com imports modulares
   - mirrorWidget.ts refatorado com helpers extraidos
   - Diretorio backup/ com copias de referencia pre-modularizacao
+- **v24: Fix YAML** -- Fix YAML frontmatter + settings + prioridade
+  - parseFrontmatter() agora suporta listas YAML (linhas com `-`). Obsidian padronizou `tags` como lista (`tags:\n  - tag1\n  - tag2`) e o parser anterior nao lidava com esse formato.
+  - Fix toggle swap: Hide Properties e Replace Custom Mirrors estavam trocados
+  - Nova logica de prioridade custom vs global mirrors em mirrorConfig.ts
+  - HideFrontmatterWidget usa Decoration.replace em vez de display:none por linha
+  - Debug logging extensivo em mirrorWidget.ts e mirrorDecorations.ts
+  - **Nota:** A partir da Era 4, o trigger do mirror nao e mais `type: project` hardcoded. Agora usa filtros configuraveis nos settings (filterFiles, filterFolders, filterProps com key+value).
+  - **Bug conhecido:** filterProps so funciona com valores simples (ex: `type: projects`). Listas YAML (ex: `tags:\n  - tag1`) sao parseadas mas o matching usa `===` (string vs array = sempre false). Alem disso, `parseFrontmatter()` joga todas as listas em `result.tags` hardcoded, ignorando a key real da lista.

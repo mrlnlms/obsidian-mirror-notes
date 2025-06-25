@@ -9,7 +9,7 @@ export default class MirrorUIPlugin extends Plugin {
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
 
   async onload() {
-    console.log('[Mirror Notes] v23 loaded — Modularização');
+    console.log('[Mirror Notes] v24 loaded — Fix YAML');
     (window as any).mirrorUIPluginInstance = this;
     await this.loadSettings();
     

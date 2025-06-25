@@ -13,7 +13,9 @@ export function getApplicableConfig(
 
   const settings = plugin.settings;
 
-  // 1. Check Custom Mirrors
+  // 1. Primeiro, verificar se há custom mirrors aplicáveis
+  let applicableCustomMirror: ApplicableMirrorConfig | null = null;
+  
   for (const mirror of settings.customMirrors) {
     const hasFileMatch = mirror.filterFiles.some(f => f.folder && f.folder === file.name);
     const hasFolderMatch = mirror.filterFolders.some(f => f.folder && file.path.startsWith(f.folder));
@@ -21,33 +23,56 @@ export function getApplicableConfig(
 
     if (hasFileMatch || hasFolderMatch || hasPropMatch) {
       if (mirror.enable_custom_live_preview_mode && mirror.custom_settings_live_preview_note) {
-        return {
+        applicableCustomMirror = {
           templatePath: mirror.custom_settings_live_preview_note,
           position: mirror.custom_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
           hideProps: mirror.custom_settings_hide_props
         };
+        break;
       }
     }
   }
 
-  // 2. Check Global Mirror
-  if (settings.global_settings && settings.enable_global_live_preview_mode && settings.global_settings_live_preview_note) {
-    const hasOverridingCustomMirror = settings.customMirrors.some(mirror => {
-      const hasMatch = mirror.filterFiles.some(f => f.folder && f.folder === file.name) ||
-        mirror.filterFolders.some(f => f.folder && file.path.startsWith(f.folder)) ||
-        mirror.filterProps.some(p => p.folder && frontmatter[p.folder] === p.template);
+  // 2. Verificar se global mirror está ativo
+  const globalMirrorActive = settings.global_settings && 
+                            settings.enable_global_live_preview_mode && 
+                            settings.global_settings_live_preview_note;
 
-      return hasMatch && mirror.custom_settings_overide && settings.global_settings_overide;
-    });
-
-    if (!hasOverridingCustomMirror) {
-      return {
-        templatePath: settings.global_settings_live_preview_note,
-        position: settings.global_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
-        hideProps: settings.global_settings_hide_props
-      };
+  // 3. LÓGICA DE PRIORIDADE
+  if (applicableCustomMirror) {
+    // Se global NÃO tem "Replace custom Mirrors" → Custom sempre vence
+    if (!settings.global_settings_overide) {
+      return applicableCustomMirror;
+    }
+    
+    // Se global TEM "Replace custom Mirrors" → Só custom com override vence
+    if (settings.global_settings_overide) {
+      // Encontrar o custom mirror aplicável para verificar seu override
+      const customMirror = settings.customMirrors.find(mirror => {
+        const hasFileMatch = mirror.filterFiles.some(f => f.folder && f.folder === file.name);
+        const hasFolderMatch = mirror.filterFolders.some(f => f.folder && file.path.startsWith(f.folder));
+        const hasPropMatch = mirror.filterProps.some(p => p.folder && frontmatter[p.folder] === p.template);
+        return (hasFileMatch || hasFolderMatch || hasPropMatch) && 
+               mirror.enable_custom_live_preview_mode && 
+               mirror.custom_settings_live_preview_note;
+      });
+      
+      if (customMirror && customMirror.custom_settings_overide) {
+        return applicableCustomMirror; // Custom com override vence
+      }
     }
   }
 
+  // 4. Se chegou aqui, aplicar global mirror (se ativo)
+  if (globalMirrorActive) {
+    console.log(`[MirrorNotes] Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
+    return {
+      templatePath: settings.global_settings_live_preview_note,
+      position: settings.global_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
+      hideProps: settings.global_settings_hide_props
+    };
+  }
+
+  console.log(`[MirrorNotes] No mirror applied to: ${file.path}, globalActive: ${globalMirrorActive}`);
   return null;
 } 
