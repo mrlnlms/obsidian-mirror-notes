@@ -9,7 +9,7 @@ export default class MirrorUIPlugin extends Plugin {
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
 
   async onload() {
-    console.log('[Mirror Notes] v24 loaded — Fix YAML');
+    console.log('[Mirror Notes] v25 loaded — Fix hideProps');
     (window as any).mirrorUIPluginInstance = this;
     await this.loadSettings();
     
@@ -84,6 +84,8 @@ export default class MirrorUIPlugin extends Plugin {
                 cm.dispatch({
                   effects: forceMirrorUpdateEffect.of()
                 });
+                // Atualizar hideProps também
+                this.updateHidePropsForView(activeView);
               } else {
                 console.log('[MirrorNotes] Metadata changed but user is active, skipping update');
               }
@@ -114,6 +116,8 @@ export default class MirrorUIPlugin extends Plugin {
                   cm.dispatch({
                     effects: forceMirrorUpdateEffect.of()
                   });
+                  // Atualizar hideProps também
+                  this.updateHidePropsForView(leaf.view as MarkdownView);
                 }
               }
             });
@@ -156,6 +160,32 @@ export default class MirrorUIPlugin extends Plugin {
     await this.saveSettings();
   }
 
+  // Método para atualizar o estado do hideProps
+  updateHidePropsForView(view: MarkdownView) {
+    if (!view || !view.file) return;
+    
+    // @ts-ignore
+    const cm = view.editor?.cm;
+    if (!cm) return;
+    
+    const fieldState = cm.state.field(mirrorStateField, false);
+    if (!fieldState) return;
+    
+    const { mirrorState } = fieldState;
+    const shouldHide = mirrorState.enabled && mirrorState.config?.hideProps;
+    
+    // Encontrar o container correto
+    const viewContent = view.containerEl.querySelector('.view-content');
+    if (!viewContent) return;
+    
+    if (shouldHide) {
+      console.log(`[MirrorNotes] Hiding properties for: ${view.file.path}`);
+      viewContent.classList.add('mirror-hide-properties');
+    } else {
+      viewContent.classList.remove('mirror-hide-properties');
+    }
+  }
+
   setupEditor(view: MarkdownView) {
     const file = view.file;
     if (!file) return;
@@ -183,6 +213,11 @@ export default class MirrorUIPlugin extends Plugin {
         ])
       });
     }
+    
+    // Atualizar estado do hideProps
+    setTimeout(() => {
+      this.updateHidePropsForView(view);
+    }, 100);
   }
 
   onunload() {
@@ -193,7 +228,12 @@ export default class MirrorUIPlugin extends Plugin {
       widget.remove();
     });
     
-    // 2. Remover extensões do CodeMirror de TODOS os editores
+    // 2. Remover classes de hideProps
+    document.querySelectorAll('.mirror-hide-properties').forEach(el => {
+      el.classList.remove('mirror-hide-properties');
+    });
+    
+    // 3. Remover extensões do CodeMirror de TODOS os editores
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof MarkdownView) {
         // @ts-ignore
@@ -212,20 +252,20 @@ export default class MirrorUIPlugin extends Plugin {
       }
     });
     
-    // 3. Limpar caches globais
+    // 4. Limpar caches globais
     if ((window as any).mirrorUICleanup) {
       (window as any).mirrorUICleanup();
     }
     
-    // 4. Limpar referências
+    // 5. Limpar referências
     this.activeEditors.clear();
     
-    // 5. Limpar timeouts
+    // 6. Limpar timeouts
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
     
-    // 6. Limpar referência global
+    // 7. Limpar referência global
     delete (window as any).mirrorUIPluginInstance;
     
     console.log('[MirrorNotes] Plugin unloaded successfully');

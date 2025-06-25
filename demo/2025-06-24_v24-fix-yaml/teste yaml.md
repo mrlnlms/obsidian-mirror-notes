@@ -1,5 +1,3 @@
 ---
-tags:
-  - tag1
-  - tag2
+type: project
 ---

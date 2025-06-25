@@ -65,7 +65,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
     private updateAllEditors() {
         console.log('[MirrorNotes] Settings changed, forcing update on all editors');
         console.log('[MirrorNotes] Current settings:', this.plugin.settings);
-        console.log('[MirrorNotes] Settings changed, forcing update on all editors'); // Log temporário
         
         setTimeout(() => {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
@@ -76,6 +75,8 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cm.dispatch({
                             effects: forceMirrorUpdateEffect.of()
                         });
+                        // IMPORTANTE: Esta linha faz o hideProps funcionar
+                        this.plugin.updateHidePropsForView(leaf.view);
                         console.log(`[MirrorNotes] Updated editor for: ${leaf.view.file.path}`);
                     }
                 }

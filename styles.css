@@ -7,6 +7,78 @@
   line-height: 0;
 }
 
+/* Frontmatter Hider - Esconde as primeiras N linhas quando ativo */
+.mirror-frontmatter-hider {
+  display: none; /* O widget em si é invisível */
+}
+
+/* Quando o frontmatter hider está presente, esconder as linhas do frontmatter */
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="3"]) .cm-line:nth-of-type(-n+3) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="4"]) .cm-line:nth-of-type(-n+4) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="5"]) .cm-line:nth-of-type(-n+5) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="6"]) .cm-line:nth-of-type(-n+6) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="7"]) .cm-line:nth-of-type(-n+7) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="8"]) .cm-line:nth-of-type(-n+8) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="9"]) .cm-line:nth-of-type(-n+9) {
+  display: none !important;
+  height: 0 !important;
+}
+
+.cm-editor:has(.mirror-frontmatter-hider[data-lines="10"]) .cm-line:nth-of-type(-n+10) {
+  display: none !important;
+  height: 0 !important;
+}
+
+/* Para frontmatters maiores, adicionar mais regras conforme necessário */
+
+/* Alternativa se :has() não for suportado */
+.cm-line.mirror-hidden-frontmatter-line {
+  display: none !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  overflow: hidden !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  max-height: 0 !important;
+}
+
+/* Garantir que apenas as linhas com a classe sejam afetadas */
+.cm-line:not(.mirror-hidden-frontmatter-line) {
+  display: block !important;
+  height: auto !important;
+}
+
+/* Garantir que o widget permaneça visível */
+.mirror-ui-widget {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 /* Widget injetado - melhorias para estabilidade */
 .mirror-ui-injected-widget {
   /* Garantir que não seja tratado como texto */
@@ -329,4 +401,45 @@
   font-family: var(--font-interface);
   font-size: var(--font-ui-medium);
   line-height: var(--line-height-normal);
+}
+
+/* Adicione estas linhas ao final do arquivo styles.css */
+
+/* Forçar decorações de replace a serem invisíveis */
+.cm-content .cm-widget.cm-replace {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  overflow: hidden !important;
+}
+
+/* Esconder linhas que contêm replace widgets */
+.cm-line:has(.cm-widget.cm-replace) {
+  display: none !important;
+  height: 0 !important;
+  line-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Garantir que o conteúdo substituído não apareça */
+.cm-content .cm-replaced {
+  display: none !important;
+}
+
+/* ========== HIDE PROPERTIES FEATURE ========== */
+/* Esconder metadata-container quando hideProps está ativo */
+.view-content.mirror-hide-properties .metadata-container {
+  display: none !important;
+}
+
+/* Garantir que widgets continuem visíveis */
+.view-content.mirror-hide-properties .mirror-ui-widget {
+  display: block !important;
 }

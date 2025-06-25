@@ -6,39 +6,6 @@ import { MirrorTemplateWidget } from "./mirrorWidget";
 import { getApplicableConfig } from "./mirrorConfig";
 import { mirrorStateField } from "./mirrorState";
 
-// Widget para esconder o frontmatter
-class HideFrontmatterWidget extends WidgetType {
-  toDOM() {
-    const span = document.createElement('span');
-    span.style.display = 'none';
-    return span;
-  }
-
-  eq(other: WidgetType): boolean {
-    return other instanceof HideFrontmatterWidget;
-  }
-
-  updateDOM(dom: HTMLElement): boolean {
-    return false; // Não precisa atualizar
-  }
-
-  get estimatedHeight(): number {
-    return 0;
-  }
-
-  get lineBreaks(): number {
-    return 0;
-  }
-
-  ignoreEvent(): boolean {
-    return true;
-  }
-
-  destroy(dom: HTMLElement): void {
-    // Não precisa fazer nada
-  }
-}
-
 // Limpeza de widgets órfãos
 export function cleanOrphanWidgets(view: EditorView) {
   const activeWidgetIds = new Set<string>();
@@ -95,78 +62,35 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
       console.log(`[MirrorNotes] Using cached widget instance for: ${widgetId}`);
     }
 
-    // Se hideProps está ativo, NÃO adicionar o widget no top
-    // porque ele vai conflitar com o frontmatter oculto
-    if (config.hideProps && hasFrontmatter && frontmatterEndLine > 0) {
-      console.log(`[MirrorNotes] Hiding frontmatter: lines 1-${frontmatterEndLine}, position: ${config.position}`);
-      
-      // Esconder o frontmatter primeiro
-      const frontmatterStart = doc.line(1).from;
-      const frontmatterEnd = doc.line(frontmatterEndLine).to;
-      
+    // IMPORTANTE: Sempre adicionar o widget normalmente, independente de hideProps
+    // O hideProps é tratado via CSS no main.ts
+    if (config.position === 'top') {
+      const topPos = Math.min(frontmatterEndPos, docLength);
+      console.log(`[MirrorNotes] Adding widget at top position: ${topPos}`);
       builder.add(
-        frontmatterStart,
-        frontmatterEnd,
-        Decoration.replace({
-          widget: new HideFrontmatterWidget()
+        topPos,
+        topPos,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 0
         })
       );
-
-      // Se a posição é 'top', adicionar o widget DEPOIS do frontmatter
-      if (config.position === 'top') {
-        console.log(`[MirrorNotes] Adding widget after frontmatter at position: ${frontmatterEnd}`);
-        builder.add(
-          frontmatterEnd,
-          frontmatterEnd,
-          Decoration.widget({
-            widget: widget,
-            block: true,
-            side: 0
-          })
-        );
-      } else if (config.position === 'bottom') {
-        console.log(`[MirrorNotes] Adding widget at bottom`);
-        builder.add(
-          docLength,
-          docLength,
-          Decoration.widget({
-            widget: widget,
-            block: true,
-            side: 1
-          })
-        );
-      }
-    } else {
-      console.log(`[MirrorNotes] Normal behavior - hideProps: ${config.hideProps}, hasFrontmatter: ${hasFrontmatter}, position: ${config.position}`);
-      // Comportamento normal quando hideProps está desativado
-      if (config.position === 'top') {
-        const topPos = Math.min(frontmatterEndPos, docLength);
-        console.log(`[MirrorNotes] Adding widget at top position: ${topPos}`);
-        builder.add(
-          topPos,
-          topPos,
-          Decoration.widget({
-            widget: widget,
-            block: true,
-            side: 0
-          })
-        );
-      } else if (config.position === 'bottom') {
-        console.log(`[MirrorNotes] Adding widget at bottom`);
-        builder.add(
-          docLength,
-          docLength,
-          Decoration.widget({
-            widget: widget,
-            block: true,
-            side: 1
-          })
-        );
-      }
+    } else if (config.position === 'bottom') {
+      console.log(`[MirrorNotes] Adding widget at bottom`);
+      builder.add(
+        docLength,
+        docLength,
+        Decoration.widget({
+          widget: widget,
+          block: true,
+          side: 1
+        })
+      );
     }
   } catch (e) {
     console.error('[MirrorNotes] Error building decorations:', e);
     return Decoration.none;
   }
   return builder.finish();
-} 
+}
