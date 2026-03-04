@@ -1,6 +1,20 @@
 import esbuild from "esbuild";
 import process from "process";
 import builtins from "builtin-modules";
+import { copyFileSync, mkdirSync } from "fs";
+
+const copyToDemo = {
+	name: "copy-to-demo",
+	setup(build) {
+		build.onEnd(() => {
+			const dest = "demo/.obsidian/plugins/mirror-notes";
+			mkdirSync(dest, { recursive: true });
+			copyFileSync("main.js", `${dest}/main.js`);
+			copyFileSync("manifest.json", `${dest}/manifest.json`);
+			copyFileSync("styles.css", `${dest}/styles.css`);
+		});
+	},
+};
 
 const banner =
 `/*
@@ -39,6 +53,7 @@ const context = await esbuild.context({
 	treeShaking: true,
 	outfile: "main.js",
 	minify: prod,
+	plugins: [copyToDemo],
 });
 
 if (prod) {

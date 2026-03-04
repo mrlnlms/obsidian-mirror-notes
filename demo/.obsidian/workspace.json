@@ -11,32 +11,13 @@
             "id": "777f646b02a3ae8a",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "2025-06-24_v24-fix-yaml/test-note.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "test-note"
-            }
-          },
-          {
-            "id": "dd0cec89993088b8",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "2025-06-24_v24-fix-yaml/teste yaml.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "teste yaml"
+              "title": "New tab"
             }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -189,7 +170,6 @@
   },
   "left-ribbon": {
     "hiddenItems": {
-      "obsidian42-brat:BRAT": false,
       "switcher:Open quick switcher": false,
       "graph:Open graph view": false,
       "canvas:Create new canvas": false,
@@ -197,43 +177,47 @@
       "bases:Create new base": false
     }
   },
-  "active": "dd0cec89993088b8",
+  "active": "777f646b02a3ae8a",
   "lastOpenFiles": [
+    "project-roadmap.md",
+    "development-diary.md",
+    "readme-era2-obsidianMirrorUi.md",
+    "readme-era2-settingsPlugin.md",
     "2025-06-24_v25-fix-hideprops/test-note.md",
-    "2025-06-24_v25-fix-hideprops",
-    "2025-06-24_v24-fix-yaml/test-note.md",
+    "2024-08-05_v18-build-styles/_historico/readme-era2-settingsPlugin.md",
+    "2024-08-05_v18-build-styles/_historico/type-project-test.md",
+    "2024-08-05_v18-build-styles/_historico/development-diary.md",
+    "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
+    "2024-08-05_v18-build-styles/_historico/architecture-diagram.canvas",
+    "2024-08-05_v18-build-styles/_demo-notes/type-global-pesquisa.md",
+    "2024-08-05_v18-build-styles/_demo-notes/type-project-job-previewer.md",
+    "2024-08-05_v18-build-styles/_demo-notes/meiuca-superapp-mosxbanner.md",
+    "2024-08-05_v18-build-styles/_demo-notes/meiuca-innovation-mosxbanner.md",
+    "2024-08-05_v18-build-styles/_demo-notes/meiuca-benchmark-mosxbanner.md",
+    "2024-08-05_v18-build-styles/_demo-notes/imdb-movies-template.md",
+    "2024-08-05_v18-build-styles/_demo-notes/codes-banner-cssclasses-test.md",
+    "2024-08-05_v18-build-styles/_config/metadata-field-project.md",
+    "2024-08-05_v18-build-styles/_config/metadata-field-global.md",
+    "2024-07-26_v17-settings-final/_historico/project-roadmap.md",
+    "2024-07-19_v11-settings-yaml/_historico/readme-era2-obsidianMirrorUi.md",
+    "2024-07-19_v11-settings-yaml/_historico/settings-ui-snapshot.md",
+    "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md",
+    "2024-06-08_v10-v1-final/_historico/milestone-script-final.md",
+    "2024-06-08_v10-v1-final/_historico/html-injection-tests.md",
     "2025-06-24_v23-modularizacao/test-note.md",
     "2025-06-24_v24-fix-yaml/teste yaml.md",
-    "templates/test-template.md",
-    "2025-06-24_v22-posicionamento/test-note.md",
+    "2025-06-24_v25-fix-hideprops",
     "2025-06-24_v24-fix-yaml",
-    "2025-06-24_v21-settings-v110/test-note.md",
     "2025-06-24_v23-modularizacao",
     "2025-06-24_v22-posicionamento",
-    "templates/ui-live_preview-mode.md",
-    "2024-11-16_v19-css-update/test-note.md",
-    "2025-06-24_v20-cm6-integration/test-note.md",
     "2025-06-24_v21-settings-v110",
-    "2024-08-05_v18-build-styles/_historico/type-project-test.md",
     "2025-06-24_v20-cm6-integration",
-    "2024-08-05_v18-build-styles/test-note.md",
-    "2024-08-05_v18-build-styles/_historico/banner-test-note.md",
-    "2024-11-16_v19-css-update/_historico/type-global-test.md",
-    "2024-11-16_v19-css-update/_historico/css-multi-column-experiments.md",
     "2024-11-16_v19-css-update/_historico",
     "2024-11-16_v19-css-update",
-    "2024-07-25_v16-finalmente/test-note.md",
-    "2024-08-05_v18-build-styles/_historico",
-    "2024-08-05_v18-build-styles",
-    "2024-07-26_v17-settings-final/test-note.md",
-    "2024-07-24_v15-setting-model-3/test-note.md",
-    "2024-07-23_v14-setting-model-2/test-note.md",
-    "2024-07-22_v13-setting-model-1/test-note.md",
-    "2024-07-20_v12-utils-autocomplete/test-note.md",
-    "2024-07-20_v12-utils-autocomplete/_historico/css-snippets-reference.md",
-    "2024-07-19_v11-settings-yaml/test-note.md",
-    "2024-07-19_v11-settings-yaml/_historico/settings-ui-snapshot.md",
-    "2024-06-08_v10-v1-final/test-note.md",
-    "2024-06-08_v10-v1-final/_historico/milestone-script-v1.md"
+    "2024-08-05_v18-build-styles/_assets/google-drive-icon.png",
+    "2024-08-05_v18-build-styles/_assets/banner.png",
+    "2024-08-05_v18-build-styles/_assets/banner-alan-wake.png",
+    "2024-08-05_v18-build-styles/_assets",
+    "2024-08-05_v18-build-styles/_config/config-settingsPlugin.json"
   ]
 }

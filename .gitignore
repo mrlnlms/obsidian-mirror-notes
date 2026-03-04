@@ -25,3 +25,7 @@ data.json
 .hotreload
 demo/.obsidian/plugins/hot-reload/
 demo/.obsidian/plugins/obsidian42-brat/
+
+# Internal docs (not versioned)
+docs/learnings.md
+docs/notes.md

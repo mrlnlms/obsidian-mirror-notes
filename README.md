@@ -1,109 +1,158 @@
 # Mirror Notes Plugin
 
-Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
+A powerful Obsidian plugin that displays dynamic templates in your notes based on frontmatter properties. Change a YAML value, and the rendered content updates automatically — no manual copy-paste, no stale templates.
 
-## Versao Atual: v25 — Fix hideProps (Era 4) — FINAL
+## Features
 
-**Substitui Decoration.replace por CSS-based property hiding. HideFrontmatterWidget removido, decorations simplificadas.**
+- **Dynamic Template Injection**: Automatically display templates in your notes based on YAML frontmatter
+- **Multiple Mirror Configurations**: Create custom mirrors for different types of notes
+- **Flexible Filtering**: Filter by file name, folder path, or YAML properties
+- **Template Variables**: Use `{{variable}}` syntax to inject frontmatter values into templates
+- **Position Control**: Place templates at the top or bottom of your notes
+- **Hide Properties Option**: Optionally hide the frontmatter section in notes with mirrors
+- **Live Preview Support**: Works seamlessly in Obsidian's Live Preview mode
+- **Performance Optimized**: Intelligent caching and debouncing for smooth editing
 
-### Historico de Eras
+## Installation
 
-#### Era 1: Prototype Sprint (Jun 6-8, 2024)
-- v1: Skeleton: Notice, stubs
-- v2: Ribbon button + tooltip
-- v3: YAML type check
-- v4: ProjectToolbarPlugin + MarkdownRenderer
-- v5: cm-scroller targeting
-- v6: MirrorUIPlugin class with settings, view, ribbon
-- v7: Settings tab enabled
-- v8: Mode detection (eventTests, bugs: null guards missing)
-- v9: Full routing + debug (addToolbar restored, mode routing, excessive Notices)
-- v10: v1 final + primeiro _historico files
+### Manual Installation
+1. Download the latest release from the [GitHub releases page](https://github.com/mrlnlms/mirror-notes/releases)
+2. Extract the files to your vault's `.obsidian/plugins/mirror-notes/` folder
+3. Reload Obsidian
+4. Enable the plugin in Settings > Community Plugins
 
-#### Era 2: Settings Evolution (Jul 19 - Aug 5, 2024)
-- v11: settings.ts + YAMLSuggest (Era 2 start, rewrite completo)
-- v12: utils/ autocomplete (TextInputSuggest, FileSuggest, FolderSuggest, YamlPropertySuggest)
-- v13: SettingModel1 (primeiro modelo alternativo, usa utils do v12)
-- v14: SettingModel2 (31KB, Getting Started banner, global/custom mirrors, cards)
-- v15: SettingModel3 (checkpoint, identico ao v14)
-- v16: finalmente.ts wired into main.ts (bug: constructor 1 param, crash no settings)
-- v17: Settings.ts final (fix constructor crash, versao limpa 732 linhas)
-- v18: Build + styles.css (Era 2 complete)
+## Usage
 
-#### Era 3: CSS (Nov 2024)
-- v19: styles.css rewrite (grid layout, novas classes form-layout)
+### Basic Setup
 
-#### Era 4: CM6 Rewrite (Jun 24, 2025)
-- **v20: CM6 integration** — Rewrite completo!
-  - Todo o codigo de settings/utils da Era 3 removido
-  - Nova arquitetura baseada em CodeMirror 6
-  - StateField para gerenciamento de estado (mirrorState.ts)
-  - ViewPlugin para renderizacao de widgets (mirrorViewPlugin.ts)
-  - WidgetType para decoracoes inline (mirrorWidget.ts)
-  - Deteccao de frontmatter via filtros configuraveis
-  - Renderizacao de templates markdown com substituicao de variaveis {{var}}
-- **v21: Settings + v1.1.0** — Settings tab com CM6!
-  - Settings tab completo com configuracoes globais e customizadas
-  - Plugin renomeado de sample-plugin para mirror-notes v1.1.0
-  - manifest.json e package.json atualizados
-  - @popperjs/core adicionado, autocomplete de volta
-  - Arquivos de referencia: Settings_REFERENCIA.ts, styles_REFERENCIA.css, main_REF.js
-- **v22: Posicionamento** — Posicionamento relativo + settings reactivity
-  - Limpeza de widgets orfaos (cleanOrphanWidgets)
-  - onunload melhorado: remove widgets e reconfigura CodeMirror
-  - Settings disparam forceMirrorUpdateEffect via updateAllEditors()
-  - Path de config usa manifest.id em vez de hardcoded sample-plugin
-- **v23: Modularizacao** — Refatoracao em arquivos menores
-  - Novo mirrorConfig.ts: constantes e configuracao extraidas
-  - Novo mirrorDecorations.ts: logica de decoracoes extraida
-  - Novo mirrorTypes.ts: definicoes de tipos compartilhados
-  - Novo mirrorUtils.ts: funcoes utilitarias extraidas
-  - mirrorState.ts simplificado com imports modulares
-  - Diretorio backup/ com copias de referencia pre-modularizacao
-- **v24: Fix YAML** — Fix YAML frontmatter + settings + prioridade
-  - parseFrontmatter() agora suporta listas YAML (linhas com `-`)
-  - Obsidian padronizou `tags` como lista e o parser anterior nao lidava
-  - Fix toggle swap: Hide Properties e Replace Custom Mirrors estavam trocados
-  - Nova logica de prioridade custom vs global mirrors em mirrorConfig.ts
-  - HideFrontmatterWidget usa Decoration.replace em vez de display:none por linha
-  - Filtros configuraveis substituem `type: project` hardcoded (filterFiles, filterFolders, filterProps)
-- **v25: Fix hideProps — FINAL VERSION**
-  - Novo updateHidePropsForView() em main.ts: toggle CSS class `.mirror-hide-properties`
-  - HideFrontmatterWidget removido inteiro de mirrorDecorations.ts
-  - Decorations simplificadas de ~120 pra ~35 linhas
-  - styles.css: `.mirror-hide-properties .metadata-container { display: none }`, seletores com `:has()`
-  - settings.ts chama updateHidePropsForView() apos force update
+1. Create a template file (e.g., `templates/project-template.md`)
+2. Open Mirror Notes settings
+3. Create a new mirror configuration
+4. Set up filters (by file, folder, or property)
+5. Select your template file
+6. Choose the position (top or bottom)
 
-### Bugs conhecidos (v25)
+### Example
 
-- **Hide Properties nao funciona**: `updateHidePropsForView()` dispara (visivel nos logs) mas o seletor CSS `.mirror-hide-properties .metadata-container { display: none }` nao bate com a estrutura DOM atual do Obsidian. Frontmatter continua visivel.
-- **filterProps nao funciona com listas YAML**: Matching usa `===` (string vs array = sempre false). So valores simples funcionam (ex: `type: projects`).
-- **parseFrontmatter hardcoda listas em `result.tags`**: Todas as linhas com `-` sao jogadas em `result.tags`, ignorando a key real da lista.
+Create a template at `templates/project-dashboard.md`:
+```markdown
+## Project Dashboard
 
-### Arquitetura (v25)
+**Project:** {{title}}
+**Status:** {{status}}
+**Priority:** {{priority}}
+
+### Quick Actions
+- [ ] Review progress
+- [ ] Update timeline
+- [ ] Check dependencies
+```
+
+Configure a mirror to show this template in all notes with `type: project` in their frontmatter.
+
+Your project notes will automatically display the dashboard:
+```markdown
+---
+title: Website Redesign
+type: project
+status: in-progress
+priority: high
+---
+
+# Project Content
+
+Your regular note content here...
+```
+
+## Use Cases
+
+### Reusable Content Blocks
+Share common sections across related notes. Create a "Research Methodology" template and filter by `type: research` — every research note gets the methodology section automatically. Update the template once, every note reflects the change.
+
+### Project Dashboards
+Add status dashboards to project notes. Filter by folder (`Projects/`) or property (`type: project`) and inject a template with `{{status}}`, `{{deadline}}`, `{{owner}}` variables pulled from each note's frontmatter.
+
+### Hierarchical Organization
+Different templates for different categories:
+```
+Global Mirror       → Company header (all notes)
+  └── type: thesis  → Thesis template (overrides global)
+  └── type: article → Article template (overrides global)
+  └── status: draft → Draft warning banner
+```
+Custom mirrors override global ones when configured with the override toggle.
+
+### Academic Workflows
+Maintain consistent structure across thesis chapters, articles, and reading notes. Each note type gets its own template with the right fields, checklists, and structure — all driven by a single YAML property.
+
+## Configuration
+
+### Global Mirror
+- Enable a template that appears in all notes
+- Can be overridden by custom mirrors
+
+### Custom Mirrors
+Create multiple mirrors with different configurations:
+- **Filter by File**: Target specific file names
+- **Filter by Folder**: Apply to all notes in a folder
+- **Filter by Properties**: Match YAML frontmatter values
+
+### Settings
+- **Position**: Top or Bottom of the note
+- **Hide Properties**: Hide the frontmatter section
+- **Override**: Control mirror priority (custom vs global)
+
+## Known Issues (v25)
+
+- **Hide Properties not working**: The CSS-based approach (`updateHidePropsForView()` adds `.mirror-hide-properties` class) fires correctly but the CSS selector does not match the current Obsidian DOM structure. Frontmatter remains visible.
+- **YAML list filtering broken**: `filterProps` matching uses strict equality (`===`), which fails for array values like `tags: [tag1, tag2]`. Only simple string properties work (e.g., `type: projects`).
+- **parseFrontmatter hardcodes lists to tags**: All YAML list items (lines starting with `-`) are pushed to `result.tags` regardless of the actual property key.
+
+## Development
+
+### How It Works
+
+Mirror Notes uses CodeMirror 6 extensions to inject content directly into the editor. A **StateField** parses the document's frontmatter and matches it against configured filters. When a match is found, a **ViewPlugin** creates decorations, and a **WidgetType** renders the template markdown with `{{variable}}` substitution from the note's frontmatter values. The plugin never modifies the note's content — it only adds visual elements to the editor DOM.
+
+### Architecture
 
 ```
-main.ts                          — MirrorUIPlugin (CM6 extensions, settings, hideProps)
-settings.ts                      — MirrorUISettingsTab (global/custom mirrors, filters)
-YAMLSuggest.ts                   — YAML property suggestions
-utils.ts                         — Utility functions
-utils/file-suggest.ts            — FileSuggest, FolderSuggest, YamlPropertySuggest
-utils/suggest.ts                 — Abstract suggest base class
+main.ts                          — Plugin lifecycle, CM6 setup, hideProps
+settings.ts                      — Settings tab (global/custom mirrors, filters)
 src/editor/mirrorState.ts        — CM6 StateField + StateEffects + parseFrontmatter
 src/editor/mirrorViewPlugin.ts   — CM6 ViewPlugin (widget rendering)
-src/editor/mirrorWidget.ts       — CM6 WidgetType (template rendering + {{var}} substitution)
+src/editor/mirrorWidget.ts       — CM6 WidgetType (template + {{var}} substitution)
 src/editor/mirrorConfig.ts       — Configuration + filter matching logic
 src/editor/mirrorDecorations.ts  — Decoration builder
 src/editor/mirrorTypes.ts        — Shared type definitions
 src/editor/mirrorUtils.ts        — Editor utility functions
 styles.css                       — Plugin styles + hideProps CSS
-backup/                          — Pre-modularization reference copies
 ```
 
-## Development
-
+### Building from Source
 ```bash
+git clone https://github.com/mrlnlms/mirror-notes
 npm install
 npm run build    # production build
 npm run dev      # watch mode
 ```
+
+## Version History
+
+25 versions across 4 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+
+| Era | Period | Summary |
+|-----|--------|---------|
+| Era 1: Prototype Sprint | Jun 2024 | v1-v10 — First working prototype |
+| Era 2: Settings Evolution | Jul-Aug 2024 | v11-v18 — Settings UI, autocomplete, build system |
+| Era 3: CSS | Nov 2024 | v19 — Styles rewrite |
+| Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite (current) |
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/mrlnlms/mirror-notes/issues)
+- **Source**: [GitHub](https://github.com/mrlnlms/mirror-notes)
+
+## License
+
+MIT License - see [LICENSE](LICENSE) for details.
