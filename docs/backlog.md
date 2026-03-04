@@ -14,6 +14,7 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 - [ ] Painel de status mostrando espelhos ativos na nota atual
 - [ ] Busca e filtros dentro da lista de espelhos no settings
 - [ ] Posicionamento left/right (hoje so top/bottom)
+- [ ] **Suporte a Reading View** — mirrors so funcionam em Live Preview (CM6). Reading View nao renderiza nenhum widget. Limitacao arquitetural da Era 4.
 
 ## Features — Gestao
 
@@ -27,6 +28,9 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 - [ ] Performance para vaults grandes (cache de frontmatter, lazy matching)
 - [ ] Validacao avancada de configuracoes (detectar templates inexistentes, filtros vazios)
 - [ ] Sistema de logs para debugging (toggle no settings)
+- [ ] **Remover `window.mirrorUIPluginInstance`** — hack global expondo a instancia do plugin. Substituir por acesso via `app.plugins.plugins['mirror-notes']` ou API propria
+- [ ] **Fix `StateEffect.reconfigure([])` no onunload** — remove TODAS as extensoes CM6 do editor, nao so as do mirror. Deveria remover apenas as extensoes registradas pelo plugin
+- [ ] **Debounce/delay hardcoded** — valores fixos (25ms file-open, 500ms metadata, 1000ms inatividade) podem nao funcionar em vaults grandes/lentos. Considerar tornar configuravel ou usar heuristicas adaptativas
 - [ ] **Atualizar dependencias** — pacotes defasados desde 2022-2023:
   - Seguro (patch/minor): `@codemirror/state` 6.5.2→6.5.4, `@codemirror/view` 6.37→6.39, `obsidian` 1.8→1.12, `tslib` 2.4→2.8
   - Requer teste (major): `typescript` 4.7→5.9, `esbuild` 0.17→0.27, `eslint` plugins 5→8, `@types/node` 16→25, `builtin-modules` 3→5
@@ -40,4 +44,4 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 
 ---
 
-Origem: features extraidas do README-v18 (visao de produto da Era 2) + bugs documentados da v25.
+Origem: features extraidas do README-v18 (visao de produto da Era 2) + bugs documentados da v25 + revisao tecnica completa do projeto (v22-v25).
