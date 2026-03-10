@@ -80,6 +80,44 @@ styles.css                       — Plugin styles + hideProps CSS
 
 ---
 
+## Aprendizados CM6 — Widget Containment (v25.1)
+
+Widgets CM6 (`Decoration.widget` com `block: true`) que renderizam conteudo dinamico via `MarkdownRenderer` **nao podem usar containment de paint/layout**.
+
+**Problema**: `contain: layout style paint` + `overflow: hidden` + `transform: translateZ(0)` criam um contexto de composicao isolado (como um "iframe virtual"). Quando o editor redimensiona (ex: sidebar abre/fecha), o container do widget mantem as dimensoes do momento da renderizacao inicial. O conteudo existe no DOM mas fica invisivel atras de uma "mascara fixa" — clipping vertical e lateral.
+
+**Causa raiz**: `contain: paint` impede que o browser repinte o conteudo quando o layout externo muda. `overflow: hidden` corta tudo que sai dos bounds originais. `transform: translateZ(0)` nos filhos cria camadas de composicao separadas que nao reagem a mudancas do pai.
+
+**Fix**: Remover todas essas propriedades dos seletores `.mirror-ui-widget`, `.mirror-position-top`, `.mirror-position-bottom`:
+- `contain: layout style paint` → `contain: none`
+- `overflow: hidden` → `overflow: visible`
+- `transform: translateZ(0)` + `perspective` + `backface-visibility` → removidos
+
+**Regra**: Widgets CM6 com conteudo dinamico (Dataview, meta-bind, callouts) precisam fluir naturalmente com o editor. Containment de paint/layout e otimizacoes de GPU (translateZ) sao incompativeis com conteudo que precisa reflowir durante resize.
+
+**Testado**: Dataview TABLE renderizado via MarkdownRenderer dentro de widget block, com sidebar aberta/fechada. Fix confirmado.
+
+## Bug aberto: CM6 DOM sync remove widget (v25.1)
+
+**Sintoma**: Widget do Mirror Notes desaparece ao digitar rapido em campos meta-bind que editam YAML. Nenhum log do plugin e emitido no momento do desaparecimento.
+
+**Investigacao**:
+1. Logs do StateField mostram que nenhum rebuild/recreate e disparado
+2. `forceMirrorUpdateEffect` corretamente detecta "config unchanged, keeping widget alive"
+3. Debounce e checks de frontmatter funcionam — o StateField nao destroi o widget
+4. MutationObserver no DOM capturou o momento exato: o widget e removido do `.cm-content.cm-lineWrapping` pelo proprio CM6
+
+**Causa raiz**: Quando meta-bind edita o YAML (document change), o CM6 re-renderiza a regiao do `.cm-content` como parte do DOM sync. O block widget (`Decoration.widget({ block: true })`) posicionado logo apos o frontmatter e removido do DOM durante esse sync. O CM6 mantem a decoration no state, mas nao chama `toDOM()` novamente para re-inserir o elemento.
+
+**Hipoteses para fix** (nao testadas):
+- ViewPlugin com `update()` que detecta widget ausente no DOM e re-insere
+- MutationObserver no main.ts que re-dispara `setupEditor()` quando widget e removido
+- Trocar `Decoration.widget` por abordagem DOM pura (como Virtual Content faz) — eliminaria o problema mas perderia vantagens do CM6
+
+**Contexto**: Esse e o trade-off central da arquitetura CM6 vs DOM. O Virtual Content (referencia) nao tem esse problema porque injeta diretamente no DOM fora do CM6.
+
+---
+
 ## Notas tecnicas
 
 - O plugin nunca modifica o conteudo da nota — so adiciona elementos visuais ao DOM do editor
@@ -99,3 +137,9 @@ npm run dev      # esbuild watch mode + copy to demo vault
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.
+
+---
+
+## Referencias
+
+- **[Virtual Content](https://github.com/Signynt/virtual-content)** — Plugin Obsidian que renderiza conteudo markdown virtual (header, footer, sidebar) sem modificar os arquivos. Regras baseadas em pastas, tags, properties e queries Dataview. Logica AND/OR, matching recursivo, toggle por regra. Referencia direta pro Mirror Notes — resolve o mesmo problema (injecao visual de conteudo) com abordagem diferente (regras configuradas no settings vs templates no frontmatter).

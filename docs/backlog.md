@@ -23,6 +23,10 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 - [ ] Dashboard de uso com estatisticas de espelhamento (quantas notas cada mirror atinge)
 - [ ] Historico de mudancas em notas espelho
 
+## Bugs (v25.1 — investigando)
+
+- [ ] **Widget some ao digitar rapido no meta-bind** — CM6 remove o widget DOM do `.cm-content` durante DOM sync quando meta-bind edita YAML rapidamente. Confirmado via MutationObserver: parent é `cm-content cm-lineWrapping`. StateField mantem decorations, mas CM6 nao chama `toDOM()` novamente. Causa raiz: CM6 re-renderiza regiao do frontmatter e descarta block widget adjacente sem re-inserir.
+
 ## Melhorias Tecnicas
 
 - [ ] Performance para vaults grandes (cache de frontmatter, lazy matching)
@@ -38,7 +42,8 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 
 ## Integracao
 
-- [ ] Suporte a Dataview queries dentro de templates
+- [x] Suporte a Dataview queries dentro de templates — funciona via MarkdownRenderer (testado v25.1)
+- [ ] Suporte a Meta Bind inputs dentro de templates — em teste (v25.1)
 - [ ] Compatibilidade com Templater syntax
 - [ ] API para outros plugins interagirem com mirrors
 
