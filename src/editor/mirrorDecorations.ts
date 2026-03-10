@@ -5,6 +5,7 @@ import MirrorUIPlugin from "../../main";
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { getApplicableConfig } from "./mirrorConfig";
 import { mirrorStateField } from "./mirrorState";
+import { Logger } from '../logger';
 
 // Limpeza de widgets órfãos
 export function cleanOrphanWidgets(view: EditorView) {
@@ -16,7 +17,7 @@ export function cleanOrphanWidgets(view: EditorView) {
   view.dom.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
     const widgetId = widget.getAttribute('data-widget-id');
     if (widgetId && !activeWidgetIds.has(widgetId)) {
-      console.log(`[MirrorNotes] Removing orphan widget: ${widgetId}`);
+      Logger.log(`Removing orphan widget: ${widgetId}`);
       widget.remove();
     }
   });
@@ -28,7 +29,7 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
   if (!enabled || !config) {
     return Decoration.none;
   }
-  console.log(`[MirrorNotes] Building decorations for position: ${config.position}`);
+  Logger.log(`Building decorations for position: ${config.position}`);
   const builder = new RangeSetBuilder<Decoration>();
   const doc = state.doc;
   const docLength = doc.length;
@@ -53,20 +54,20 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
   try {
     let widget = (MirrorTemplateWidget as any).widgetInstanceCache?.get?.(widgetId);
     if (!widget) {
-      console.log(`[MirrorNotes] Creating new widget instance for: ${widgetId}`);
+      Logger.log(`Creating new widget instance for: ${widgetId}`);
       widget = new MirrorTemplateWidget(plugin, mirrorState, config, widgetId);
       if ((MirrorTemplateWidget as any).widgetInstanceCache) {
         (MirrorTemplateWidget as any).widgetInstanceCache.set(widgetId, widget);
       }
     } else {
-      console.log(`[MirrorNotes] Using cached widget instance for: ${widgetId}`);
+      Logger.log(`Using cached widget instance for: ${widgetId}`);
     }
 
     // IMPORTANTE: Sempre adicionar o widget normalmente, independente de hideProps
     // O hideProps é tratado via CSS no main.ts
     if (config.position === 'top') {
       const topPos = Math.min(frontmatterEndPos, docLength);
-      console.log(`[MirrorNotes] Adding widget at top position: ${topPos}`);
+      Logger.log(`Adding widget at top position: ${topPos}`);
       builder.add(
         topPos,
         topPos,
@@ -77,7 +78,7 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
         })
       );
     } else if (config.position === 'bottom') {
-      console.log(`[MirrorNotes] Adding widget at bottom`);
+      Logger.log('Adding widget at bottom');
       builder.add(
         docLength,
         docLength,
@@ -89,7 +90,7 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
       );
     }
   } catch (e) {
-    console.error('[MirrorNotes] Error building decorations:', e);
+    Logger.error('Error building decorations:', e);
     return Decoration.none;
   }
   return builder.finish();

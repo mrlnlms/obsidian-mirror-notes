@@ -3,6 +3,7 @@ import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/v
 import MirrorUIPlugin from '../../main';
 import { TFile, MarkdownRenderer } from 'obsidian';
 import { CustomMirror } from '../../settings';
+import { Logger } from '../logger';
 
 // =================================================================================
 // INTERFACES E TIPOS
@@ -227,7 +228,7 @@ export class MirrorTemplateWidget extends WidgetType {
         );
       }
     } catch (error) {
-      console.error('Error rendering template:', error);
+      Logger.error('Error rendering template:', error);
       container.innerHTML = `<div style="color: var(--text-error);">Error: ${error}</div>`;
     }
   }
@@ -280,7 +281,7 @@ export const mirrorStateField = StateField.define<MirrorState>({
             const newFrontmatter = cache?.frontmatter || parseFrontmatter(tr.state.doc.toString());
             const config = getApplicableConfig(plugin, file, newFrontmatter);
             
-            console.log(`[MirrorNotes] Forced update - creating new widget`);
+            Logger.log('Forced update - creating new widget');
             
             // Limpar caches ao forçar update
             widgetInstanceCache.clear();
@@ -369,7 +370,7 @@ export const mirrorStateField = StateField.define<MirrorState>({
     const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
     
     if (enabledChanged || positionChanged || templateChanged || hidePropsChanged) {
-        console.log(`[MirrorNotes] Config changed - creating new widget`);
+        Logger.log('Config changed - creating new widget');
         
         // Limpar cache ao mudar configuração
         widgetInstanceCache.clear();
@@ -415,7 +416,7 @@ export const mirrorDecorations = EditorView.decorations.compute([mirrorStateFiel
     return lastDecorations;
   }
   
-  console.log(`[MirrorNotes] Building new decorations for widget: ${widgetId}`);
+  Logger.log(`Building new decorations for widget: ${widgetId}`);
 
   const builder = new RangeSetBuilder<Decoration>();
   const doc = state.doc;
@@ -501,7 +502,7 @@ export const mirrorDecorations = EditorView.decorations.compute([mirrorStateFiel
     }
     
   } catch (e) {
-    console.error('[MirrorNotes] Error building decorations:', e);
+    Logger.error('Error building decorations:', e);
     return Decoration.none;
   }
 

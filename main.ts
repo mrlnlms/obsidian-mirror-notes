@@ -2,6 +2,7 @@ import { Plugin, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from './src/editor/mirrorState';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
+import { Logger } from './src/logger';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -9,9 +10,14 @@ export default class MirrorUIPlugin extends Plugin {
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
 
   async onload() {
-    console.log('[Mirror Notes] v25 loaded — Fix hideProps');
     (window as any).mirrorUIPluginInstance = this;
     await this.loadSettings();
+
+    // Init logger
+    // @ts-ignore — basePath exists at runtime
+    Logger.init(this.app.vault.adapter.basePath);
+    Logger.setEnabled(this.settings.debug_logging);
+    Logger.log('v25 loaded');
     
     // Configurar editores ao mudar
     this.registerEvent(
@@ -80,14 +86,14 @@ export default class MirrorUIPlugin extends Plugin {
               
               // Muito mais conservador: 1 segundo desde última interação
               if (now - lastInteraction > 1000) {
-                console.log('[MirrorNotes] Metadata changed, updating mirror');
+                Logger.log('Metadata changed, updating mirror');
                 cm.dispatch({
                   effects: forceMirrorUpdateEffect.of()
                 });
                 // Atualizar hideProps também
                 this.updateHidePropsForView(activeView);
               } else {
-                console.log('[MirrorNotes] Metadata changed but user is active, skipping update');
+                Logger.log('Metadata changed but user is active, skipping update');
               }
               
               metadataUpdateTimeout = null;
@@ -107,7 +113,7 @@ export default class MirrorUIPlugin extends Plugin {
           }
           
           this.settingsUpdateDebounce = setTimeout(() => {
-            console.log('[MirrorNotes] Settings changed, updating all editors');
+            Logger.log('Settings changed, updating all editors');
             this.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.file) {
                 // @ts-ignore
@@ -179,7 +185,7 @@ export default class MirrorUIPlugin extends Plugin {
     if (!viewContent) return;
     
     if (shouldHide) {
-      console.log(`[MirrorNotes] Hiding properties for: ${view.file.path}`);
+      Logger.log(`Hiding properties for: ${view.file.path}`);
       viewContent.classList.add('mirror-hide-properties');
     } else {
       viewContent.classList.remove('mirror-hide-properties');
@@ -198,20 +204,23 @@ export default class MirrorUIPlugin extends Plugin {
     const hasOurExtension = cm.state.field(mirrorStateField, false);
     
     if (!hasOurExtension) {
+      Logger.log(`setupEditor: adding StateField for ${file.path}`);
       // Limpar qualquer widget órfão antes de adicionar novo
       const editorEl = cm.dom;
       if (editorEl) {
         editorEl.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
-          console.log('[MirrorNotes] Removing orphan widget');
+          Logger.log('Removing orphan widget');
           widget.remove();
         });
       }
-      
+
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
           mirrorStateField
         ])
       });
+    } else {
+      Logger.log(`setupEditor: StateField already present for ${file.path}, skipping`);
     }
     
     // Atualizar estado do hideProps
@@ -221,7 +230,7 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   onunload() {
-    console.log('[MirrorNotes] Unloading plugin...');
+    Logger.log('Unloading plugin...');
     
     // 1. Limpar todos os widgets DOM antes de descarregar
     document.querySelectorAll('.mirror-ui-widget').forEach(widget => {
@@ -246,7 +255,7 @@ export default class MirrorUIPlugin extends Plugin {
               effects: StateEffect.reconfigure.of([])
             });
           } catch (e) {
-            console.error('[MirrorNotes] Error cleaning editor:', e);
+            Logger.error('Error cleaning editor:', e);
           }
         }
       }
@@ -268,7 +277,8 @@ export default class MirrorUIPlugin extends Plugin {
     // 7. Limpar referência global
     delete (window as any).mirrorUIPluginInstance;
     
-    console.log('[MirrorNotes] Plugin unloaded successfully');
+    Logger.log('Plugin unloaded successfully');
+    Logger.destroy();
   }
 }
 

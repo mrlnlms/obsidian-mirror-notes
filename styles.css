@@ -88,9 +88,7 @@
   /* Permitir interação */
   pointer-events: auto !important;
   
-  /* Estabilidade visual */
-  contain: layout style paint;
-  will-change: auto;
+  contain: none;
 }
 
 /* Prevenir seleção de texto, exceto em inputs */
@@ -311,10 +309,9 @@
   -webkit-user-select: none !important;
   
   /* Estabilidade de renderização */
-  contain: layout style paint;
-  will-change: auto;
+  contain: none;
   box-sizing: border-box;
-  
+
   /* Estilo visual */
   width: 100%;
   background: var(--background-secondary);
@@ -328,20 +325,14 @@
   pointer-events: auto !important;
 }
 
-/* Widget em posição top - melhorias para estabilidade */
+/* Widget em posição top */
 .mirror-position-top {
   margin-top: 10px !important;
   margin-bottom: 20px !important;
-  
-  /* Estabilidade de renderização */
-  contain: layout style paint;
-  will-change: auto;
-  
-  /* Evitar layout shifts */
+
+  contain: none;
   min-height: 100px;
   box-sizing: border-box;
-  
-  /* Garantir posicionamento estável */
   position: relative;
   display: block;
 }
@@ -354,17 +345,12 @@
 
 /* Prevenir que o widget seja editável */
 .mirror-ui-widget {
-  /* Melhorar estabilidade visual */
-  contain: layout style paint;
-  will-change: auto;
-  
-  /* Evitar interferência com seleção de texto */
+  contain: none;
+  overflow: visible;
+
   user-select: none;
   -webkit-user-select: none;
-  
-  /* Garantir que não cause reflows */
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 /* Melhorias específicas para o spacer do bottom */
@@ -388,13 +374,8 @@
   scroll-padding: 0;
 }
 
-/* Otimizações para performance de renderização */
-.mirror-ui-widget,
-.mirror-ui-widget * {
-  backface-visibility: hidden;
-  perspective: 1000px;
-  transform: translateZ(0);
-}
+/* Removido: transform: translateZ(0) + perspective criavam contextos de composição
+   isolados que causavam efeito de "máscara" no widget durante resize */
 
 /* Prevenir re-layouts causados por mudanças de fonte */
 .mirror-ui-widget {
@@ -442,4 +423,36 @@
 /* Garantir que widgets continuem visíveis */
 .view-content.mirror-hide-properties .mirror-ui-widget {
   display: block !important;
+}
+
+/* ========== DEBUG: VISUAL OUTLINES ========== */
+/* Ativar: adicionar classe .mirror-debug no body via DevTools */
+/* document.body.classList.toggle('mirror-debug') */
+
+.mirror-debug .mirror-ui-widget {
+  outline: 3px solid red !important;
+}
+
+.mirror-debug .mirror-ui-widget > * {
+  outline: 2px dashed blue !important;
+}
+
+.mirror-debug .mirror-ui-widget table {
+  outline: 2px solid lime !important;
+}
+
+.mirror-debug .mirror-ui-widget .dataview {
+  outline: 2px solid orange !important;
+}
+
+.mirror-debug .cm-content {
+  outline: 1px dotted yellow !important;
+}
+
+.mirror-debug .cm-sizer {
+  outline: 1px dotted cyan !important;
+}
+
+.mirror-debug .cm-editor {
+  outline: 1px dotted magenta !important;
 }

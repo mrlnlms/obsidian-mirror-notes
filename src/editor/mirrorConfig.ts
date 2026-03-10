@@ -2,6 +2,7 @@ import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
 import { ApplicableMirrorConfig } from "./mirrorTypes";
 import { mirrorStateField } from "./mirrorState";
+import { Logger } from '../logger';
 
 // Função para determinar a configuração aplicável para a nota atual
 export function getApplicableConfig(
@@ -65,7 +66,7 @@ export function getApplicableConfig(
 
   // 4. Se chegou aqui, aplicar global mirror (se ativo)
   if (globalMirrorActive) {
-    console.log(`[MirrorNotes] Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
+    Logger.log(`Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
     return {
       templatePath: settings.global_settings_live_preview_note,
       position: settings.global_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
@@ -73,6 +74,6 @@ export function getApplicableConfig(
     };
   }
 
-  console.log(`[MirrorNotes] No mirror applied to: ${file.path}, globalActive: ${globalMirrorActive}`);
+  Logger.log(`No mirror applied to: ${file.path}, globalActive: ${globalMirrorActive}`);
   return null;
 } 

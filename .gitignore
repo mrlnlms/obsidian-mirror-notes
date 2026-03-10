@@ -30,3 +30,7 @@ demo/.obsidian/plugins/obsidian42-brat/
 docs/learnings.md
 docs/notes.md
 docs/dev-history.md
+
+# Debug log
+debug.log
+*.log.old

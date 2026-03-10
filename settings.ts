@@ -3,6 +3,7 @@ import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, Mar
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "./utils/file-suggest";
 import { wrapAround } from "./utils";
 import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
+import { Logger } from './src/logger';
 
 export interface FolderTemplate {
     folder: string;
@@ -11,6 +12,7 @@ export interface FolderTemplate {
 
 export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     enable_getting_started: true,
+    debug_logging: false,
     global_settings: false,
     enable_global_live_preview_mode: false,
     global_settings_live_preview_note: "",
@@ -25,6 +27,7 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
 
 export interface MirrorUIPluginSettings {
     enable_getting_started: boolean;
+    debug_logging: boolean;
     global_settings: boolean;
     enable_global_live_preview_mode: boolean;
     global_settings_live_preview_note: string;
@@ -63,9 +66,9 @@ export class MirrorUISettingsTab extends PluginSettingTab {
     }
 
     private updateAllEditors() {
-        console.log('[MirrorNotes] Settings changed, forcing update on all editors');
-        console.log('[MirrorNotes] Current settings:', this.plugin.settings);
-        
+        Logger.log('Settings changed, forcing update on all editors');
+        Logger.log('Current settings:', this.plugin.settings);
+
         setTimeout(() => {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
                 if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -77,7 +80,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                         // IMPORTANTE: Esta linha faz o hideProps funcionar
                         this.plugin.updateHidePropsForView(leaf.view);
-                        console.log(`[MirrorNotes] Updated editor for: ${leaf.view.file.path}`);
+                        Logger.log(`Updated editor for: ${leaf.view.file.path}`);
                     }
                 }
             });
@@ -109,6 +112,19 @@ export class MirrorUISettingsTab extends PluginSettingTab {
     add_mirror_settings(){
         const mirrorSettings_main = this.containerEl.createEl("div", {cls: "mirror-settings_main"});
         mirrorSettings_main.createEl("h1", {text:"🎛️ Mirror Plugin Settings"})
+
+        new Setting(mirrorSettings_main)
+            .setName("Debug logging")
+            .setDesc("Write logs to debug.log for troubleshooting.")
+            .addToggle((cb) => {
+                cb.setValue(this.plugin.settings.debug_logging)
+                    .onChange((value) => {
+                        this.plugin.settings.debug_logging = value;
+                        this.plugin.saveSettings();
+                        Logger.setEnabled(value);
+                    });
+            });
+
         const globalSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-global-settings"});
         const customSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-custom-settings"});
 
