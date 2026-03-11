@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Features, melhorias e bugs. Atualizado na v25.2.
+Features, melhorias e bugs. Atualizado na v25.3.
 
 ## Bugs
 
@@ -10,7 +10,8 @@ Features, melhorias e bugs. Atualizado na v25.2.
 
 ## Bugs resolvidos
 
-- [x] **Widget sumia ao digitar rapido no meta-bind** — Bug de decoration mapping nos early-returns do StateField.update(). Debounce retornava posicoes antigas. Fix: 2 linhas. ViewPlugin recovery mantido como safety net. (v25.2)
+- [x] **Widget sumia ao digitar rapido no meta-bind** — Bug de decoration mapping nos early-returns do StateField.update(). Debounce retornava posicoes antigas. Fix: 2 linhas. Recovery comentado na v25.3 (nunca disparava). (v25.2)
+- [x] **Dead code em mirrorState.ts** — `getApplicableConfig2()`, `MirrorTemplateWidget` duplicada, utils duplicados. Limpo na v25.3: modularizacao completada, widgetInstanceCache corrigido. (v25.3)
 
 ## Integracao com outros plugins
 
@@ -52,7 +53,6 @@ Features, melhorias e bugs. Atualizado na v25.2.
   - Seguro (patch/minor): `@codemirror/state` 6.5.2→6.5.4, `@codemirror/view` 6.37→6.39, `obsidian` 1.8→1.12, `tslib` 2.4→2.8
   - Requer teste (major): `typescript` 4.7→5.9, `esbuild` 0.17→0.27, `@types/node` 16→25
   - Mover `@codemirror/state` e `@codemirror/view` de dependencies para devDependencies (Obsidian ja fornece em runtime)
-- [ ] **Dead code em mirrorState.ts** — `getApplicableConfig2()`, `MirrorTemplateWidget` duplicada, `parseFrontmatter/hashObject` duplicados do refactoring v23
 - [ ] **Posicoes fora do .cm-content** — acima das properties, acima dos backlinks. Requer camada DOM (ver analise no technical-notes.md)
 
 ## Integracao — Futuro

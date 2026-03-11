@@ -2,9 +2,26 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v25 — Fix hideProps (Era 4)
+## Versao Atual: v25.3 — Cleanup modularizacao (Era 4)
 
-**Substitui Decoration.replace por CSS-based property hiding. HideFrontmatterWidget removido, decorations simplificadas.**
+**Completa a modularizacao da v23: remove dead code, corrige widgetInstanceCache, desabilita recovery.**
+
+### O que mudou na v25.3
+
+- Completada modularizacao da v23: mirrorState.ts agora importa de mirrorUtils.ts, mirrorWidget.ts, mirrorConfig.ts
+- Removido `getApplicableConfig2()` de mirrorState.ts (dead code, nunca chamada)
+- Removida classe `MirrorTemplateWidget` duplicada de mirrorState.ts (~185 linhas). A versao ativa e mirrorWidget.ts
+- `widgetInstanceCache` movido pra `MirrorTemplateWidget.widgetInstanceCache` (static em mirrorWidget.ts). Corrige bug: `(as any).widgetInstanceCache` retornava undefined — cache nunca funcionava
+- `parseFrontmatter`, `hashObject`, `generateWidgetId` movidos de mirrorState.ts pra mirrorUtils.ts (versao atualizada com fix YAML)
+- Recovery system (ViewPlugin + widgetRecoveryEffect) comentado — nunca disparava apos fix de decoration mapping
+- Removido import morto de `getApplicableConfig` em mirrorDecorations.ts
+- mirrorState.ts: 583 → 273 linhas (-53%)
+
+### O que mudou na v25.2
+
+- Fix decoration mapping bug: widget nao desaparece mais durante digitacao rapida em meta-bind
+- ViewPlugin recovery implementado como safety net (depois comentado na v25.3)
+- Fix CSS containment: widgets CM6 nao podem usar `contain: paint` com conteudo dinamico
 
 ### O que mudou na v25
 
@@ -33,7 +50,7 @@ Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura,
 
 ---
 
-## Arquitetura (v25)
+## Arquitetura (v25.3)
 
 ```
 main.ts                          — MirrorUIPlugin (lifecycle, CM6 setup, hideProps)
@@ -42,24 +59,24 @@ YAMLSuggest.ts                   — YAML property suggestions
 utils.ts                         — Utility functions
 utils/file-suggest.ts            — FileSuggest, FolderSuggest, YamlPropertySuggest
 utils/suggest.ts                 — Abstract suggest base class
-src/editor/mirrorState.ts        — CM6 StateField + StateEffects + parseFrontmatter
-src/editor/mirrorViewPlugin.ts   — CM6 ViewPlugin (widget rendering)
-src/editor/mirrorWidget.ts       — CM6 WidgetType (template rendering + {{var}} substitution)
-src/editor/mirrorConfig.ts       — Configuration + filter matching logic
-src/editor/mirrorDecorations.ts  — Decoration builder
-src/editor/mirrorTypes.ts        — Shared type definitions
-src/editor/mirrorUtils.ts        — Editor utility functions
+src/editor/mirrorState.ts        — CM6 StateField + StateEffects (273 linhas, hub central)
+src/editor/mirrorWidget.ts       — CM6 WidgetType (template rendering + {{var}} + caches)
+src/editor/mirrorConfig.ts       — getApplicableConfig() — matching logic (file, folder, props)
+src/editor/mirrorDecorations.ts  — buildDecorations() + cleanOrphanWidgets()
+src/editor/mirrorTypes.ts        — Interfaces compartilhadas
+src/editor/mirrorUtils.ts        — parseFrontmatter, hashObject, generateWidgetId
+src/editor/mirrorViewPlugin.ts   — Recovery ViewPlugin (comentado, v25.3)
+src/logger.ts                    — Logger com toggle via settings
 styles.css                       — Plugin styles + hideProps CSS
 ```
 
 ### Fluxo principal
 
 1. `MirrorUIPlugin.setupEditor()` registra `mirrorStateField` como extensao CM6
-2. `mirrorState.ts` — StateField parseia frontmatter do documento e cruza com filtros (file, folder, props)
-3. `mirrorDecorations.ts` — se match, cria Decoration.widget na posicao configurada (top/bottom)
-4. `mirrorViewPlugin.ts` — ViewPlugin aplica as decorations
-5. `mirrorWidget.ts` — WidgetType renderiza o template markdown com substituicao `{{var}}`
-6. `main.ts` — `updateHidePropsForView()` adiciona/remove classe CSS pra esconder frontmatter
+2. `mirrorState.ts` — StateField usa `parseFrontmatter` (mirrorUtils) e `getApplicableConfig` (mirrorConfig)
+3. `mirrorDecorations.ts` — `buildDecorations()` cria `MirrorTemplateWidget` (mirrorWidget) com `Decoration.widget`
+4. `mirrorWidget.ts` — WidgetType renderiza o template markdown com substituicao `{{var}}`
+5. `main.ts` — `updateHidePropsForView()` adiciona/remove classe CSS pra esconder frontmatter
 
 ### Eventos registrados
 
@@ -111,7 +128,7 @@ Widgets CM6 (`Decoration.widget` com `block: true`) que renderizam conteudo dina
 
 **Regra**: Em `StateField.update()`, se voce faz `decorations.map(tr.changes)` no inicio, NUNCA retorne o `fieldState` original quando `tr.docChanged` — sempre retorne com as decorations mapeadas. O mapeamento de posicoes nao pode ser debounced.
 
-**Estado**: ViewPlugin recovery mantido como safety net (nao dispara mais com o fix, mas existe como fallback).
+**Estado**: ViewPlugin recovery comentado na v25.3 (nunca disparava apos o fix). Codigo mantido em mirrorViewPlugin.ts como referencia.
 
 ---
 
