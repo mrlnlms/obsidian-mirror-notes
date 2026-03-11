@@ -2,7 +2,27 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v33 — Refatoracao estrutural
+## Versao Atual: v34 — CI/CD + Release workflow
+
+### v34: CI/CD + Release workflow
+
+**GitHub Actions:**
+- `.github/workflows/release.yml` — cria release automatico no push de tag (`*.*.*`) com main.js, manifest.json, styles.css
+- `.github/workflows/ci.yml` — roda build + lint + test em push/PR pra main
+- Usa `softprops/action-gh-release@v1` + `actions/checkout@v4` + `actions/setup-node@v4` (Node 18)
+
+**Flow de release:**
+- `npm version patch/minor/major` → roda version-bump.mjs (synca manifest.json + versions.json)
+- `git push && git push --tags` → Action cria release no GitHub
+- BRAT: usuario adiciona repo URL e recebe updates
+
+**Skill obsidian-plugin-scaffold atualizada:**
+- Secao CI/CD com templates de release.yml e ci.yml
+- Secao "How to Release" com instrucoes
+- README template com secao Install (BRAT + manual)
+- Project structure atualizado com .github/workflows/
+
+### v33 — Refatoracao estrutural
 
 ### v33: Refatoracao estrutural (zero mudancas de comportamento)
 

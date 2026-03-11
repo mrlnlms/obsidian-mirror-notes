@@ -2,6 +2,12 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v34 — CI/CD + Release workflow
+
+- [x] `.github/workflows/release.yml` — auto-release no push de tag
+- [x] `.github/workflows/ci.yml` — build + lint + test em push/PR
+- [x] Skill `obsidian-plugin-scaffold` atualizada com secao CI/CD
+
 ## Pre-lancamento (must-have)
 
 - [ ] **Sistema de templates pre-configurados (starter configs)** — usuario instala e ja tem exemplos funcionando. So faz sentido quando o plugin estiver pronto pra lancar

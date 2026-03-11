@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v33.
+Trabalho tecnico a ser feito. Atualizado na v34.
 
 ## Pendente
 

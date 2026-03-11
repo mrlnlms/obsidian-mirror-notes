@@ -2,7 +2,28 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v33 — Refatoracao estrutural
+## Versao Atual: v34 — CI/CD + Release workflow
+
+### O que mudou na v34
+
+**Novos arquivos:**
+
+```
+.github/workflows/
+  release.yml    — auto-release no push de tag (main.js, manifest.json, styles.css)
+  ci.yml         — build + lint + test em push/PR pra main
+```
+
+**Release flow:**
+1. `npm version patch` (ou minor/major) → roda version-bump.mjs automaticamente
+2. `git push && git push --tags`
+3. GitHub Action faz checkout → npm install → npm run build → cria release com assets
+
+**CI flow:**
+- Push pra main ou PR: checkout → install → build → lint → test (vitest)
+- Node 18, `--legacy-peer-deps`
+
+---
 
 ### O que mudou na v33
 
