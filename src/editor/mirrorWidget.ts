@@ -1,15 +1,12 @@
 import { WidgetType, EditorView } from "@codemirror/view";
-import { TFile, MarkdownRenderer } from "obsidian";
 import { MirrorState, ApplicableMirrorConfig } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
-import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from './mirrorState';
 import { Logger } from '../logger';
+import { renderMirrorTemplate } from '../rendering/templateRenderer';
 
-// Caches estáticos do widget
+// Caches especificos do CM6 widget
 export class MirrorTemplateWidget extends WidgetType {
   public static domCache = new Map<string, HTMLElement>();
-  public static lastRenderedContent = new Map<string, string>();
-  public static renderingPromises = new Map<string, Promise<void>>();
   public static widgetInstanceCache = new Map<string, MirrorTemplateWidget>();
 
   constructor(
@@ -79,78 +76,17 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   async updateContentIfNeeded(container: HTMLElement, view: EditorView) {
-    const cacheKey = this.getCacheKey();
-    if (MirrorTemplateWidget.renderingPromises.has(cacheKey)) {
-      return MirrorTemplateWidget.renderingPromises.get(cacheKey);
-    }
-    const renderPromise = this.doUpdateContent(container, view);
-    MirrorTemplateWidget.renderingPromises.set(cacheKey, renderPromise);
-    try {
-      await renderPromise;
-    } finally {
-      MirrorTemplateWidget.renderingPromises.delete(cacheKey);
-    }
-  }
+    const activeFile = this.plugin.app.workspace.getActiveFile();
+    if (!activeFile) return;
 
-  private async doUpdateContent(container: HTMLElement, view: EditorView) {
-    const cacheKey = this.getCacheKey();
-    try {
-      Logger.log(`Loading template: ${this.config.templatePath}`);
-      const templateFile = this.plugin.app.vault.getAbstractFileByPath(this.config.templatePath);
-      if (!templateFile || !(templateFile instanceof TFile)) {
-        const errorMsg = `Template not found: ${this.config.templatePath}`;
-        Logger.error(errorMsg);
-        if (container.innerHTML !== `<div style="color: var(--text-error);">${errorMsg}</div>`) {
-          container.innerHTML = `<div style="color: var(--text-error);">${errorMsg}</div>`;
-        }
-        return;
-      }
-      Logger.log(`Template file found: ${templateFile.path}`);
-      const templateContent = await this.plugin.app.vault.read(templateFile);
-      Logger.log(`Template content length: ${templateContent.length}`);
-      let processedContent = templateContent;
-      if (this.state.frontmatter && Object.keys(this.state.frontmatter).length > 0) {
-        processedContent = templateContent.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-          return this.state.frontmatter[key] || match;
-        });
-      }
-      const contentHash = this.simpleHash(processedContent);
-      const lastContent = MirrorTemplateWidget.lastRenderedContent.get(cacheKey);
-      if (lastContent === contentHash) {
-        Logger.log('Content unchanged, skipping render');
-        return;
-      }
-      MirrorTemplateWidget.lastRenderedContent.set(cacheKey, contentHash);
-      container.innerHTML = "";
-      const contentDiv = document.createElement("div");
-      contentDiv.style.cssText = "pointer-events: auto;";
-      container.appendChild(contentDiv);
-
-      const activeFile = this.plugin.app.workspace.getActiveFile();
-      if (activeFile) {
-        Logger.log(`Rendering markdown for active file: ${activeFile.path}`);
-        await MarkdownRenderer.renderMarkdown(
-          processedContent,
-          contentDiv,
-          activeFile.path,
-          this.plugin
-        );
-        Logger.log('Markdown rendered successfully');
-      }
-    } catch (error) {
-      Logger.error('Error rendering template:', error);
-      container.innerHTML = `<div style="color: var(--text-error);">Error: ${error}</div>`;
-    }
-  }
-
-  private simpleHash(str: string): string {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
-    }
-    return hash.toString();
+    await renderMirrorTemplate({
+      plugin: this.plugin,
+      templatePath: this.config.templatePath,
+      variables: this.state.frontmatter || {},
+      sourcePath: activeFile.path,
+      container,
+      cacheKey: this.getCacheKey()
+    });
   }
 
   eq(other: WidgetType): boolean {

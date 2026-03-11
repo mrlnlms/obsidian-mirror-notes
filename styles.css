@@ -425,6 +425,30 @@
   display: block !important;
 }
 
+/* ========== CODE BLOCK PROCESSOR ========== */
+/* Estilo do bloco ```mirror ... ``` renderizado */
+.mirror-code-block {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 15px;
+  margin: 10px 0;
+  box-sizing: border-box;
+  overflow: visible;
+  display: block;
+  width: 100%;
+}
+
+/* Feedback visual de erro no code block */
+.mirror-block-error {
+  color: var(--text-error);
+  font-size: var(--font-ui-small);
+  padding: 10px 15px;
+  background: var(--background-secondary);
+  border: 1px dashed var(--text-error);
+  border-radius: 6px;
+}
+
 /* ========== DEBUG: VISUAL OUTLINES ========== */
 /* Ativar: adicionar classe .mirror-debug no body via DevTools */
 /* document.body.classList.toggle('mirror-debug') */

@@ -1,0 +1,67 @@
+import { TFile } from "obsidian";
+import MirrorUIPlugin from "../../main";
+import { parseBlockContent } from './blockParser';
+import { renderMirrorTemplate } from './templateRenderer';
+import { Logger } from '../logger';
+
+export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
+  plugin.registerMarkdownCodeBlockProcessor("mirror", async (source, el, ctx) => {
+    const config = parseBlockContent(source);
+
+    if ('error' in config) {
+      el.createEl('div', {
+        text: config.error,
+        cls: 'mirror-code-block mirror-block-error'
+      });
+      Logger.error(`Mirror block error: ${config.error}`);
+      return;
+    }
+
+    // Resolver variaveis: inline > source > nota atual
+    const variables = await resolveVariables(plugin, config.inlineVars, config.sourcePath, ctx.sourcePath);
+
+    // Container estilizado (sem .mirror-ui-widget pra nao herdar regras CM6)
+    const container = el.createEl('div', { cls: 'mirror-code-block' });
+
+    // Cache key unico por bloco (path da nota + posicao no documento)
+    const sectionInfo = ctx.getSectionInfo(el);
+    const lineStart = sectionInfo?.lineStart ?? 0;
+    const cacheKey = `block-${ctx.sourcePath}-${lineStart}`;
+
+    await renderMirrorTemplate({
+      plugin,
+      templatePath: config.templatePath,
+      variables,
+      sourcePath: ctx.sourcePath,
+      container,
+      cacheKey
+    });
+  });
+}
+
+async function resolveVariables(
+  plugin: MirrorUIPlugin,
+  inlineVars: Record<string, string>,
+  sourcePath: string | undefined,
+  currentPath: string
+): Promise<Record<string, string>> {
+  // Frontmatter da nota atual
+  const currentFile = plugin.app.vault.getAbstractFileByPath(currentPath);
+  const currentFm = (currentFile instanceof TFile)
+    ? plugin.app.metadataCache.getFileCache(currentFile)?.frontmatter ?? {}
+    : {};
+
+  // Frontmatter da nota source (se especificada)
+  let sourceFm: Record<string, any> = {};
+  if (sourcePath) {
+    const sourceFile = plugin.app.vault.getAbstractFileByPath(sourcePath);
+    if (sourceFile instanceof TFile) {
+      sourceFm = plugin.app.metadataCache.getFileCache(sourceFile)?.frontmatter ?? {};
+    } else {
+      Logger.warn(`Source note not found: ${sourcePath}`);
+    }
+  }
+
+  // Merge: inline > source > current (inline tem prioridade)
+  return { ...currentFm, ...sourceFm, ...inlineVars };
+}

@@ -5,6 +5,7 @@ import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from '.
 // import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
+import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -62,6 +63,9 @@ export default class MirrorUIPlugin extends Plugin {
         this.setupEditor(leaf.view);
       }
     });
+
+    // Registrar code block processor (```mirror ... ```)
+    registerMirrorCodeBlock(this);
 
     // Registrar a aba de configurações
     this.addSettingTab(new MirrorUISettingsTab(this.app, this));

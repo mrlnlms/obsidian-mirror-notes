@@ -3,6 +3,7 @@ import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
 import { ApplicableMirrorConfig, MirrorState, MirrorFieldState } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
+import { clearRenderCache } from "../rendering/templateRenderer";
 import { buildDecorations, cleanOrphanWidgets } from "./mirrorDecorations";
 import { getApplicableConfig } from "./mirrorConfig";
 import { parseFrontmatter, hashObject, generateWidgetId } from "./mirrorUtils";
@@ -191,7 +192,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
 
         // Limpar DOM caches também
         MirrorTemplateWidget.domCache.clear();
-        MirrorTemplateWidget.lastRenderedContent.clear();
+        clearRenderCache();
 
         // Reconstruir decorations
         const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
@@ -268,7 +269,7 @@ if ((window as any).mirrorUICleanup) {
 (window as any).mirrorUICleanup = () => {
   MirrorTemplateWidget.widgetInstanceCache.clear();
   MirrorTemplateWidget.domCache.clear();
-  MirrorTemplateWidget.lastRenderedContent.clear();
+  clearRenderCache();
   fileDebounceMap.clear();
   lastForcedUpdateMap.clear();
 };
