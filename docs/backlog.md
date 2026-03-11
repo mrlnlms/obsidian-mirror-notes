@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v32.
+Trabalho tecnico a ser feito. Atualizado na v33.
 
 ## Pendente
 
@@ -48,3 +48,9 @@ Trabalho tecnico a ser feito. Atualizado na v32.
 - [x] filterProps fix — arrays e booleans (v32)
 - [x] Bug dropdown preview mode — salvar em campo correto (v32)
 - [x] Dropdown de posicoes com labels visuais + helper DRY (v32)
+- [x] Dead code — YAMLSuggest.ts e mirrorViewPlugin.ts deletados (v33)
+- [x] settings.ts monolitico — extrair types, pathValidator, filterBuilder (v33)
+- [x] mirrorState update() — extrair subfuncoes (v33)
+- [x] Dependencia circular mirrorState ↔ mirrorDecorations — eliminada (v33)
+- [x] Root utils/ movido pra src/suggesters/ (v33)
+- [x] @ts-ignore centralizado em obsidianInternals.ts (v33)

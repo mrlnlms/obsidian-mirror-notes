@@ -17,6 +17,15 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 
 - [ ] **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc.
 
+## Concluido: v33 — Refatoracao estrutural
+
+- [x] settings.ts: 813 → ~320 linhas (types, pathValidator, filterBuilder extraidos)
+- [x] mirrorState.ts update(): subfuncoes extraidas (hasForcedUpdate, detectFrontmatterChange, handleForcedUpdate, handleConfigChange)
+- [x] Dependencia circular mirrorState ↔ mirrorDecorations resolvida (decorationBuilder.ts)
+- [x] Dead code removido (YAMLSuggest.ts, mirrorViewPlugin.ts)
+- [x] utils/ → src/suggesters/
+- [x] obsidianInternals.ts centraliza @ts-ignore
+
 ## Concluido: v32 — Position Engine + filterProps Fix
 
 - [x] 6 novas posicoes DOM: above-title, above/below-properties, above/below-backlinks

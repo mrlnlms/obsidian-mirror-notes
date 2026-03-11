@@ -2,7 +2,39 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v32 — Position Engine + filterProps Fix
+## Versao Atual: v33 — Refatoracao estrutural
+
+### O que mudou na v33
+
+**Estrutura de arquivos (pos-refactor):**
+
+```
+settings.ts          — MirrorUISettingsTab (UI), re-exports de types
+src/settings/
+  types.ts           — FolderTemplate, MirrorUIPluginSettings, CustomMirror, DEFAULT_SETTINGS
+  pathValidator.ts   — addPathValidation() (inline warnings em inputs)
+  filterBuilder.ts   — buildFilterSection() (builder pra filterFiles/Folders/Props)
+src/suggesters/
+  suggest.ts         — TextInputSuggest base (Popper-based, ex-utils/suggest.ts)
+  file-suggest.ts    — FileSuggest, FolderSuggest, YamlPropertySuggest
+src/editor/
+  mirrorState.ts     — StateField + helpers extraidos (hasForcedUpdate, detectFrontmatterChange, etc)
+  decorationBuilder.ts — buildDecorations() (ex-mirrorDecorations.ts, sem dep circular)
+src/utils/
+  obsidianInternals.ts — wrappers tipados pra APIs @ts-ignore
+  settingsPaths.ts     — updateSettingsPaths() (inalterado)
+```
+
+**Dependencia circular eliminada:**
+- Antes: mirrorState → mirrorDecorations → mirrorState
+- Agora: mirrorState → decorationBuilder (sem import reverso)
+
+**settings.ts flow:**
+- `addModeToggle()` — metodo generico pra Live Preview / Preview mode (global e custom)
+- `buildFilterSection()` em filterBuilder.ts — recebe tipo (filterFiles/Folders/Props) e gera UI completa
+- `addPathValidation()` extraido — reutilizado por settings.ts e filterBuilder.ts
+
+---
 
 ### O que mudou na v32
 
@@ -265,36 +297,40 @@ titulo: Override Custom
 
 ---
 
-## Arquitetura (v30)
+## Arquitetura (v33)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, hideProps)
-settings.ts                                — MirrorUISettingsTab (global/custom mirrors, filters)
-YAMLSuggest.ts                             — YAML property suggestions
-utils.ts                                   — Utility functions
-utils/file-suggest.ts                      — FileSuggest, FolderSuggest, YamlPropertySuggest
-utils/suggest.ts                           — Abstract suggest base class
+settings.ts                                — MirrorUISettingsTab (UI, delega pra builders)
+src/settings/types.ts                      — Interfaces, defaults, CustomMirror, createDefaultCustomMirror()
+src/settings/filterBuilder.ts              — buildFilterSection() — builder reutilizavel (files/folders/props)
+src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
+src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
+src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
 src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
 src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
+src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
 src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
-src/editor/mirrorState.ts                  — CM6 StateField + StateEffects (hub central)
-src/editor/mirrorWidget.ts           — CM6 WidgetType (delega para templateRenderer)
-src/editor/timingConfig.ts           — TIMING object (constantes centralizadas de debounce/delay)
-src/editor/mirrorConfig.ts           — getApplicableConfig() + configCache + clearConfigCache()
-src/editor/mirrorDecorations.ts      — buildDecorations() + cleanOrphanWidgets()
-src/editor/mirrorTypes.ts            — Interfaces compartilhadas
-src/editor/mirrorUtils.ts            — parseFrontmatter, hashObject, generateWidgetId
-src/editor/mirrorViewPlugin.ts       — Recovery ViewPlugin (comentado, v25.3)
-src/logger.ts                        — Logger com toggle via settings
-styles.css                           — Plugin styles + hideProps + code block CSS
+src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + helpers extraidos
+src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
+src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)
+src/editor/timingConfig.ts                 — TIMING object (constantes centralizadas de debounce/delay)
+src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + clearConfigCache()
+src/editor/mirrorTypes.ts                  — Interfaces compartilhadas
+src/editor/mirrorUtils.ts                  — parseFrontmatter, hashObject, generateWidgetId
+src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
+src/utils/obsidianInternals.ts             — Wrappers tipados pra APIs internas do Obsidian
+src/utils/settingsPaths.ts                 — updateSettingsPaths() — auto-update paths on rename
+src/logger.ts                              — Logger com toggle via settings
+styles.css                                 — Plugin styles + hideProps + code block CSS
 ```
 
 ### Fluxo principal — CM6 widget (Live Preview, via settings)
 
 1. `MirrorUIPlugin.setupEditor()` registra `mirrorStateField` como extensao CM6
 2. `mirrorState.ts` — StateField usa `parseFrontmatter` (mirrorUtils) e `getApplicableConfig` (mirrorConfig)
-3. `mirrorDecorations.ts` — `buildDecorations()` cria `MirrorTemplateWidget` (mirrorWidget) com `Decoration.widget`
+3. `decorationBuilder.ts` — `buildDecorations()` cria `MirrorTemplateWidget` (mirrorWidget) com `Decoration.widget`
 4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
 5. `main.ts` — `updateHidePropsForView()` adiciona/remove classe CSS pra esconder frontmatter
 
@@ -376,7 +412,7 @@ Widgets CM6 (`Decoration.widget` com `block: true`) que renderizam conteudo dina
 
 **Regra**: Em `StateField.update()`, se voce faz `decorations.map(tr.changes)` no inicio, NUNCA retorne o `fieldState` original quando `tr.docChanged` — sempre retorne com as decorations mapeadas. O mapeamento de posicoes nao pode ser debounced.
 
-**Estado**: ViewPlugin recovery comentado na v25.3 (nunca disparava apos o fix). Codigo mantido em mirrorViewPlugin.ts como referencia.
+**Estado**: ViewPlugin recovery comentado na v25.3 (nunca disparava apos o fix). Arquivo deletado na v33 — git mantem o historico.
 
 ---
 
@@ -385,7 +421,7 @@ Widgets CM6 (`Decoration.widget` com `block: true`) que renderizam conteudo dina
 - O plugin nunca modifica o conteudo da nota — so adiciona elementos visuais ao DOM do editor
 - `StateEffect.appendConfig` e usado pra registrar a extensao (nao `reconfigure`)
 - `onunload` faz cleanup completo: widgets DOM, classes CSS, `StateEffect.reconfigure([])`, caches, timeouts
-- `window.mirrorUIPluginInstance` expoe o plugin globalmente (usado internamente)
+- `mirrorPluginFacet` (Facet CM6) substitui o antigo `window.mirrorUIPluginInstance` desde v29
 - Build copia automaticamente `main.js`, `manifest.json` e `styles.css` para `demo/.obsidian/plugins/mirror-notes/` via plugin `copyToDemo` no esbuild
 
 ---

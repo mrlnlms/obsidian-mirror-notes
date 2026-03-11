@@ -2,7 +2,7 @@ import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
 import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
 import { hashObject } from "./mirrorUtils";
-import { CustomMirror, MirrorUIPluginSettings } from "../../settings";
+import { CustomMirror, MirrorUIPluginSettings } from "../settings/types";
 import { Logger } from '../logger';
 
 // =================================================================================

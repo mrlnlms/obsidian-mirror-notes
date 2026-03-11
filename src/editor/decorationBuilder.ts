@@ -1,28 +1,10 @@
 import { EditorState, RangeSetBuilder } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
+import { Decoration, DecorationSet } from "@codemirror/view";
 import { MirrorState } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
 import { MirrorTemplateWidget } from "./mirrorWidget";
-import { mirrorStateField } from "./mirrorState";
 import { Logger } from '../logger';
 
-// Limpeza de widgets órfãos
-export function cleanOrphanWidgets(view: EditorView) {
-  const activeWidgetIds = new Set<string>();
-  const fieldState = view.state.field(mirrorStateField, false);
-  if (fieldState && fieldState.mirrorState.widgetId) {
-    activeWidgetIds.add(fieldState.mirrorState.widgetId);
-  }
-  view.dom.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
-    const widgetId = widget.getAttribute('data-widget-id');
-    if (widgetId && !activeWidgetIds.has(widgetId)) {
-      Logger.log(`Removing orphan widget: ${widgetId}`);
-      widget.remove();
-    }
-  });
-}
-
-// Construção das decorations
 export function buildDecorations(state: EditorState, mirrorState: MirrorState, plugin: MirrorUIPlugin): DecorationSet {
   const { enabled, config, widgetId } = mirrorState;
   if (!enabled || !config) {
@@ -33,7 +15,7 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
   const doc = state.doc;
   const docLength = doc.length;
 
-  // Encontrar posição do frontmatter
+  // Encontrar posicao do frontmatter
   let frontmatterEndPos = 0;
   const firstLine = doc.line(1);
   if (firstLine.text === '---') {
@@ -56,8 +38,6 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
       Logger.log(`Using cached widget instance for: ${widgetId}`);
     }
 
-    // IMPORTANTE: Sempre adicionar o widget normalmente, independente de hideProps
-    // O hideProps é tratado via CSS no main.ts
     if (config.position === 'top') {
       const topPos = Math.min(frontmatterEndPos, docLength);
       Logger.log(`Adding widget at top position: ${topPos}`);

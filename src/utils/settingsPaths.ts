@@ -1,4 +1,4 @@
-import { MirrorUIPluginSettings } from "../../settings";
+import { MirrorUIPluginSettings } from "../settings/types";
 
 export interface UpdatePathsResult {
   changed: boolean;

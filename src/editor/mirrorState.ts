@@ -1,10 +1,10 @@
 import { StateField, StateEffect, EditorState, Transaction, Facet } from "@codemirror/state";
 import { EditorView } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
-import { MirrorFieldState } from "./mirrorTypes";
+import { MirrorFieldState, MirrorState } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { clearRenderCache } from "../rendering/templateRenderer";
-import { buildDecorations } from "./mirrorDecorations";
+import { buildDecorations } from "./decorationBuilder";
 import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
 import { parseFrontmatter, hashObject, generateWidgetId } from "./mirrorUtils";
@@ -14,7 +14,6 @@ import { Logger } from '../logger';
 // INTERFACES E TIPOS
 // =================================================================================
 
-// Facet para injetar o plugin no StateField (substitui window.mirrorUIPluginInstance)
 export const mirrorPluginFacet = Facet.define<MirrorUIPlugin, MirrorUIPlugin | null>({
   combine: values => values[0] ?? null
 });
@@ -23,16 +22,152 @@ export const mirrorPluginFacet = Facet.define<MirrorUIPlugin, MirrorUIPlugin | n
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
 export const toggleWidgetEffect = StateEffect.define<boolean>();
 export const forceMirrorUpdateEffect = StateEffect.define<void>();
-// widgetRecoveryEffect — desabilitado (v25.2), ver mirrorViewPlugin.ts
-// export const widgetRecoveryEffect = StateEffect.define<void>();
+
+// =================================================================================
+// STATE FIELD — HELPERS
+// =================================================================================
+const fileDebounceMap = new Map<string, number>();
+const lastForcedUpdateMap = new Map<string, number>();
+
+/** Check if a forced update was requested in this transaction */
+function hasForcedUpdate(tr: Transaction): boolean {
+  for (const effect of tr.effects) {
+    if (effect.is(forceMirrorUpdateEffect)) return true;
+  }
+  return false;
+}
+
+/** Detect if any change in the transaction touches the frontmatter region */
+function detectFrontmatterChange(tr: Transaction, docText: string): boolean {
+  let frontmatterEndPos = 0;
+  const frontmatterMatch = docText.match(/^---\n[\s\S]*?\n---/);
+  if (frontmatterMatch) {
+    frontmatterEndPos = frontmatterMatch[0].length;
+  }
+
+  let changeInFrontmatterRegion = false;
+  tr.changes.iterChangedRanges((fromA, _toA) => {
+    if (fromA <= frontmatterEndPos + 50) {
+      changeInFrontmatterRegion = true;
+    }
+  });
+  return changeInFrontmatterRegion;
+}
+
+/** Handle a forced update: invalidate cache, compare configs, rebuild if needed */
+function handleForcedUpdate(
+  tr: Transaction,
+  value: MirrorState,
+  decorations: any,
+  plugin: MirrorUIPlugin,
+  file: any,
+  docText: string,
+  newFrontmatter: Record<string, any>,
+  newFrontmatterHash: string
+): MirrorFieldState {
+  clearConfigCache();
+  const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter);
+
+  const configChanged =
+    (!!freshConfig) !== value.enabled ||
+    freshConfig?.position !== value.config?.position ||
+    freshConfig?.templatePath !== value.config?.templatePath ||
+    freshConfig?.hideProps !== value.config?.hideProps;
+
+  if (!configChanged) {
+    Logger.log('Forced update — config unchanged, keeping widget alive');
+    return {
+      mirrorState: {
+        ...value,
+        frontmatter: newFrontmatter || value.frontmatter,
+        frontmatterHash: newFrontmatterHash || value.frontmatterHash,
+        lastDocText: docText
+      },
+      decorations
+    };
+  }
+
+  Logger.log('Forced update — config changed, recreating widget', {
+    oldPosition: value.config?.position,
+    newPosition: freshConfig?.position,
+    oldTemplate: value.config?.templatePath,
+    newTemplate: freshConfig?.templatePath
+  });
+
+  const newMirrorState: MirrorState = {
+    enabled: !!freshConfig,
+    config: freshConfig,
+    frontmatter: newFrontmatter || value.frontmatter,
+    frontmatterHash: newFrontmatterHash || value.frontmatterHash,
+    widgetId: generateWidgetId(),
+    lastDocText: docText
+  };
+
+  clearWidgetCaches(value.widgetId);
+  MirrorTemplateWidget.domCache.clear();
+  clearRenderCache();
+
+  return {
+    mirrorState: newMirrorState,
+    decorations: buildDecorations(tr.state, newMirrorState, plugin)
+  };
+}
+
+/** Handle normal (non-forced) config change */
+function handleConfigChange(
+  tr: Transaction,
+  value: MirrorState,
+  plugin: MirrorUIPlugin,
+  file: any,
+  docText: string,
+  newFrontmatter: Record<string, any>,
+  newFrontmatterHash: string
+): MirrorFieldState | null {
+  const config = getApplicableConfig(plugin, file, newFrontmatter);
+
+  const enabledChanged = value.enabled !== !!config;
+  const positionChanged = value.config?.position !== config?.position;
+  const templateChanged = value.config?.templatePath !== config?.templatePath;
+  const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
+
+  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged) {
+    return null; // No config change
+  }
+
+  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}`);
+
+  if (enabledChanged || positionChanged || templateChanged) {
+    clearWidgetCaches(value.widgetId);
+  }
+
+  const newMirrorState: MirrorState = {
+    enabled: !!config,
+    config: config,
+    frontmatter: newFrontmatter,
+    frontmatterHash: newFrontmatterHash,
+    widgetId: positionChanged ? generateWidgetId() : value.widgetId,
+    lastDocText: docText
+  };
+
+  return {
+    mirrorState: newMirrorState,
+    decorations: buildDecorations(tr.state, newMirrorState, plugin)
+  };
+}
+
+/** Clear widget instance cache entries for a specific widgetId */
+function clearWidgetCaches(widgetId: string): void {
+  const fileWidgets = Array.from(MirrorTemplateWidget.widgetInstanceCache.keys())
+    .filter(key => key.includes(widgetId));
+  fileWidgets.forEach(key => {
+    MirrorTemplateWidget.widgetInstanceCache.delete(key);
+  });
+}
 
 // =================================================================================
 // STATE FIELD
 // =================================================================================
-const fileDebounceMap = new Map<string, number>(); // Debounce por arquivo
-const lastForcedUpdateMap = new Map<string, number>(); // Track forced updates por arquivo
 
-// 🔥 NOVO: StateField para rastrear decorations separadamente (inspirado no CodeMarker)
 export const mirrorStateField = StateField.define<MirrorFieldState>({
   create(state: EditorState): MirrorFieldState {
     const plugin = state.facet(mirrorPluginFacet)!;
@@ -41,7 +176,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const frontmatterHash = hashObject(frontmatter);
     const config = getApplicableConfig(plugin, file, frontmatter);
 
-    const mirrorState = {
+    const mirrorState: MirrorState = {
       enabled: !!config,
       config: config,
       frontmatter: frontmatter,
@@ -50,38 +185,22 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
       lastDocText: state.doc.toString()
     };
 
-    // Criar decorations iniciais
-    const decorations = buildDecorations(state, mirrorState, plugin);
-
     return {
       mirrorState,
-      decorations
+      decorations: buildDecorations(state, mirrorState, plugin)
     };
   },
 
   update(fieldState: MirrorFieldState, tr: Transaction): MirrorFieldState {
     const { mirrorState: value } = fieldState;
-    
-    // 🔥 IMPORTANTE: Mapear decorations através das mudanças (como o CodeMarker faz!)
     const decorations = fieldState.decorations.map(tr.changes);
 
-    // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
-    // Ver mirrorViewPlugin.ts para referencia da implementacao original
-
     const plugin = tr.state.facet(mirrorPluginFacet)!;
+    const forcedUpdate = hasForcedUpdate(tr);
 
-    // 1. Verificar se foi um update forçado (só aceitar se for realmente necessário)
-    let forcedUpdate = false;
-    for (const effect of tr.effects) {
-        if (effect.is(forceMirrorUpdateEffect)) {
-            forcedUpdate = true;
-            break;
-        }
-    }
-
-    // 2. Se o documento não mudou e não foi forçado, manter estado
+    // If nothing changed and not forced, keep state
     if (!tr.docChanged && !forcedUpdate) {
-        return fieldState; // Retornar fieldState completo
+      return fieldState;
     }
 
     const file = plugin?.app.workspace.getActiveFile();
@@ -89,176 +208,62 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const docText = tr.state.doc.toString();
     const now = Date.now();
 
-    // 3. Se foi um forced update, verificar se é muito frequente
+    // Throttle forced updates (max 1/sec)
     if (forcedUpdate) {
-        const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
-        if (now - lastForcedUpdate < TIMING.FORCED_UPDATE_THROTTLE) { // Não aceitar forced updates mais de 1x por segundo
-            Logger.log(`Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
-            return { mirrorState: value, decorations };
-        }
-        lastForcedUpdateMap.set(filePath, now);
+      const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
+      if (now - lastForcedUpdate < TIMING.FORCED_UPDATE_THROTTLE) {
+        Logger.log(`Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
+        return { mirrorState: value, decorations };
+      }
+      lastForcedUpdateMap.set(filePath, now);
     }
 
-    // 5. Debounce específico por arquivo (mais agressivo)
+    // Per-file debounce
     const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
     if (!forcedUpdate && now - lastFileUpdate < TIMING.UPDATE_DEBOUNCE) {
-        return { mirrorState: value, decorations };
+      return { mirrorState: value, decorations };
     }
-    
-    // 6. Verificar se realmente precisamos processar esta mudança
-    let changeInFrontmatterRegion = false;
-    let frontmatterEndPos = 0;
-    
-    // Encontrar onde termina o frontmatter
-    const frontmatterMatch = docText.match(/^---\n[\s\S]*?\n---/);
-    if (frontmatterMatch) {
-      frontmatterEndPos = frontmatterMatch[0].length;
-    }
-    
-    // Se houve mudança no documento, verificar se afeta frontmatter
-    if (tr.docChanged) {
-      tr.changes.iterChangedRanges((fromA, toA) => {
-        if (fromA <= frontmatterEndPos + 50) { // +50 chars de buffer
-          changeInFrontmatterRegion = true;
-        }
-      });
-      
-      // Se não há mudança na região do frontmatter, apenas atualizar lastDocText
-      if (!changeInFrontmatterRegion && !forcedUpdate) {
-        const newMirrorState = { ...value, lastDocText: docText };
-        return { mirrorState: newMirrorState, decorations };
+
+    // Skip if change is outside frontmatter region
+    if (tr.docChanged && !forcedUpdate) {
+      if (!detectFrontmatterChange(tr, docText)) {
+        return { mirrorState: { ...value, lastDocText: docText }, decorations };
       }
     }
-    
-    // 7. Verificar se o frontmatter realmente mudou
+
+    // Check if frontmatter actually changed
     const newFrontmatter = parseFrontmatter(docText);
     const newFrontmatterHash = hashObject(newFrontmatter);
-    
+
     if (newFrontmatterHash === value.frontmatterHash && !forcedUpdate) {
-        // Frontmatter não mudou e não foi forçado, apenas atualizar lastDocText
-        const newMirrorState = { ...value, lastDocText: docText };
-        return { mirrorState: newMirrorState, decorations };
+      return { mirrorState: { ...value, lastDocText: docText }, decorations };
     }
-    
-    // Atualizar debounce só se vamos realmente processar
+
     fileDebounceMap.set(filePath, now);
-    
-    // 🔥 8. TRATAMENTO ESPECIAL PARA FORCED UPDATE
+
+    // Forced update path
     if (forcedUpdate) {
-        // Invalidar cache de config antes de recarregar
-        clearConfigCache();
-        // Recarregar configuração
-        const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter);
-
-        // Verificar se a config realmente mudou (template, position, hideProps, enabled)
-        const configChanged =
-            (!!freshConfig) !== value.enabled ||
-            freshConfig?.position !== value.config?.position ||
-            freshConfig?.templatePath !== value.config?.templatePath ||
-            freshConfig?.hideProps !== value.config?.hideProps;
-
-        if (!configChanged) {
-            // Config não mudou — só frontmatter values mudaram (ex: meta-bind editou YAML)
-            // NÃO recriar widget, só atualizar dados internos
-            Logger.log('Forced update — config unchanged, keeping widget alive');
-            const newMirrorState = {
-                ...value,
-                frontmatter: newFrontmatter || value.frontmatter,
-                frontmatterHash: newFrontmatterHash || value.frontmatterHash,
-                lastDocText: docText
-            };
-            return { mirrorState: newMirrorState, decorations };
-        }
-
-        // Config mudou de verdade — recriar widget
-        Logger.log('Forced update — config changed, recreating widget', {
-            oldPosition: value.config?.position,
-            newPosition: freshConfig?.position,
-            oldTemplate: value.config?.templatePath,
-            newTemplate: freshConfig?.templatePath
-        });
-
-        const newMirrorState = {
-            enabled: !!freshConfig,
-            config: freshConfig,
-            frontmatter: newFrontmatter || value.frontmatter,
-            frontmatterHash: newFrontmatterHash || value.frontmatterHash,
-            widgetId: generateWidgetId(),
-            lastDocText: docText
-        };
-
-        // Limpar cache do widget antigo
-        const fileWidgets = Array.from(MirrorTemplateWidget.widgetInstanceCache.keys()).filter(key => key.includes(value.widgetId));
-        fileWidgets.forEach(key => {
-            MirrorTemplateWidget.widgetInstanceCache.delete(key);
-        });
-
-        // Limpar DOM caches também
-        MirrorTemplateWidget.domCache.clear();
-        clearRenderCache();
-
-        // Reconstruir decorations
-        const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
-
-        return {
-            mirrorState: newMirrorState,
-            decorations: newDecorations
-        };
+      return handleForcedUpdate(tr, value, decorations, plugin, file, docText, newFrontmatter, newFrontmatterHash);
     }
-    
-    // 9. Verificar se a configuração mudou (caminho normal, não-forçado)
-    const config = getApplicableConfig(plugin, file, newFrontmatter);
-    
-    const enabledChanged = value.enabled !== !!config;
-    const positionChanged = value.config?.position !== config?.position;
-    const templateChanged = value.config?.templatePath !== config?.templatePath;
-    const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
-    
-    // 10. Só criar novo widget se realmente necessário
-    if (enabledChanged || positionChanged || templateChanged || hidePropsChanged) {
-        Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}`);
-        
-        // Limpar cache apenas se for mudança significativa
-        if (enabledChanged || positionChanged || templateChanged) {
-          const fileWidgets = Array.from(MirrorTemplateWidget.widgetInstanceCache.keys()).filter(key => key.includes(value.widgetId));
-          fileWidgets.forEach(key => {
-            MirrorTemplateWidget.widgetInstanceCache.delete(key);
-          });
-        }
-        
-        const newMirrorState = {
-            enabled: !!config,
-            config: config,
-            frontmatter: newFrontmatter,
-            frontmatterHash: newFrontmatterHash,
-            widgetId: positionChanged ? generateWidgetId() : value.widgetId, // Novo ID apenas se posição mudou
-            lastDocText: docText
-        };
-        
-        // Reconstruir decorations
-        const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
-        
-        return {
-            mirrorState: newMirrorState,
-            decorations: newDecorations
-        };
+
+    // Normal path: check if config changed
+    const configResult = handleConfigChange(tr, value, plugin, file, docText, newFrontmatter, newFrontmatterHash);
+    if (configResult) {
+      return configResult;
     }
-    
-    // 11. Apenas frontmatter mudou, manter mesmo widget mas atualizar dados
-    const newMirrorState = {
+
+    // Only frontmatter values changed, keep widget
+    return {
+      mirrorState: {
         ...value,
         frontmatter: newFrontmatter,
         frontmatterHash: newFrontmatterHash,
         lastDocText: docText
-    };
-
-    return {
-        mirrorState: newMirrorState,
-        decorations
+      },
+      decorations
     };
   },
-  
-  // 🔥 NOVO: Fornecer decorations via facet (como o CodeMarker faz)
+
   provide: field => EditorView.decorations.from(field, state => state.decorations)
 });
 

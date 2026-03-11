@@ -23,8 +23,7 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    // A função cleanOrphanWidgets(view) deve ser importada de mirrorDecorations.ts depois
-    // cleanOrphanWidgets(view);
+    // cleanOrphanWidgets removido (v33) — nunca era chamado
 
     const cacheKey = this.getCacheKey();
     let container = MirrorTemplateWidget.domCache.get(cacheKey);

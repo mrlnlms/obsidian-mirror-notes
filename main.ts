@@ -1,8 +1,6 @@
 import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
-// Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
-// import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
@@ -10,11 +8,11 @@ import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
-import { MirrorPosition, MARGIN_POSITIONS } from './src/editor/mirrorTypes';
+import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
 import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
-import { parseFrontmatter } from './src/editor/mirrorUtils';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
+import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -28,12 +26,10 @@ export default class MirrorUIPlugin extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    // Init logger
-    // @ts-ignore — basePath exists at runtime
-    Logger.init(this.app.vault.adapter.basePath);
+    Logger.init(getVaultBasePath(this.app));
     Logger.setEnabled(this.settings.debug_logging);
     Logger.log('v25 loaded');
-    
+
     // Configurar editores ao mudar
     this.registerEvent(
       this.app.workspace.on('editor-change', (editor, view) => {
@@ -47,7 +43,6 @@ export default class MirrorUIPlugin extends Plugin {
     this.registerEvent(
       this.app.workspace.on('file-open', (file) => {
         if (file) {
-          // Delay menor para melhor responsividade
           setTimeout(() => {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
@@ -80,13 +75,12 @@ export default class MirrorUIPlugin extends Plugin {
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
           this.setupEditor(leaf.view);
-          // @ts-ignore — previewMode existe em runtime
-          leaf.view.previewMode?.rerender(true);
+          rerenderPreview(leaf.view);
         }
       });
     });
 
-    // Registrar a aba de configurações
+    // Registrar a aba de configuracoes
     this.addSettingTab(new MirrorUISettingsTab(this.app, this));
 
     // Sincronizar com metadataCache de forma mais conservadora
@@ -96,8 +90,7 @@ export default class MirrorUIPlugin extends Plugin {
         // Branch 1: arquivo ativo (CM6 widgets)
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file && file.path === activeView.file.path) {
-          // @ts-ignore
-          const cm = activeView.editor.cm;
+          const cm = getEditorView(activeView);
           if (cm) {
             if (metadataUpdateTimeout) {
               clearTimeout(metadataUpdateTimeout);
@@ -139,28 +132,25 @@ export default class MirrorUIPlugin extends Plugin {
         }
       })
     );
-    
-    // Listener para mudanças nas configurações com debounce maior
+
+    // Listener para mudancas nas configuracoes com debounce maior
     this.registerEvent(
       this.app.vault.on('modify', (file) => {
         if (file.path === `.obsidian/plugins/${this.manifest.id}/data.json`) {
-          // Configurações mudaram, usar debounce para evitar múltiplas atualizações
           if (this.settingsUpdateDebounce) {
             clearTimeout(this.settingsUpdateDebounce);
           }
-          
+
           this.settingsUpdateDebounce = setTimeout(() => {
             Logger.log('Settings changed, updating all editors');
             clearConfigCache();
             this.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.file) {
-                // @ts-ignore
-                const cm = leaf.view.editor?.cm;
+                const cm = getEditorView(leaf.view as MarkdownView);
                 if (cm) {
                   cm.dispatch({
                     effects: forceMirrorUpdateEffect.of()
                   });
-                  // Atualizar hideProps também
                   this.updateHidePropsForView(leaf.view as MarkdownView);
                 }
               }
@@ -176,9 +166,9 @@ export default class MirrorUIPlugin extends Plugin {
       this.app.vault.on('rename', (file, oldPath) => {
         const result = this.updateSettingsPaths(oldPath, file.path);
         if (result.changed) {
-          Logger.log(`Settings paths updated: ${oldPath} → ${file.path}`);
+          Logger.log(`Settings paths updated: ${oldPath} -> ${file.path}`);
           const frag = document.createDocumentFragment();
-          frag.createEl('span', { text: `Mirror Notes: paths updated (${oldPath.split('/').pop()} → ${file.path.split('/').pop()}). ` });
+          frag.createEl('span', { text: `Mirror Notes: paths updated (${oldPath.split('/').pop()} -> ${file.path.split('/').pop()}). ` });
           const link = frag.createEl('a', { text: 'Open settings', attr: { style: 'cursor: pointer; text-decoration: underline;' } });
           link.addEventListener('click', () => {
             this.openSettingsToField(file.path, result.mirrorIndices.length > 0 ? result.mirrorIndices : undefined);
@@ -197,11 +187,11 @@ export default class MirrorUIPlugin extends Plugin {
       })
     );
 
-    // Registrar eventos de interação do usuário para tracking
+    // Registrar eventos de interacao do usuario para tracking
     this.registerDomEvent(document, 'keydown', () => {
       this.updateLastUserInteraction();
     });
-    
+
     this.registerDomEvent(document, 'mousedown', () => {
       this.updateLastUserInteraction();
     });
@@ -231,7 +221,6 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   public openSettingsToField(targetValue: string, mirrorIndices?: number[]): void {
-    // Expandir mirrors afetados se colapsados
     if (mirrorIndices) {
       for (const idx of mirrorIndices) {
         if (this.settings.customMirrors[idx]) {
@@ -241,10 +230,8 @@ export default class MirrorUIPlugin extends Plugin {
       this.saveSettings();
     }
 
-    // @ts-ignore
-    this.app.setting.open();
-    // @ts-ignore
-    this.app.setting.openTabById(this.manifest.id);
+    openSettings(this.app);
+    openSettingsTab(this.app, this.manifest.id);
 
     setTimeout(() => {
       const container = document.querySelector('.mirror-settings_main');
@@ -294,24 +281,21 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
-  // Método para atualizar o estado do hideProps
   updateHidePropsForView(view: MarkdownView) {
     if (!view || !view.file) return;
-    
-    // @ts-ignore
-    const cm = view.editor?.cm;
+
+    const cm = getEditorView(view);
     if (!cm) return;
-    
+
     const fieldState = cm.state.field(mirrorStateField, false);
     if (!fieldState) return;
-    
+
     const { mirrorState } = fieldState;
     const shouldHide = mirrorState.enabled && mirrorState.config?.hideProps;
-    
-    // Encontrar o container correto
+
     const viewContent = view.containerEl.querySelector('.view-content');
     if (!viewContent) return;
-    
+
     if (shouldHide) {
       Logger.log(`Hiding properties for: ${view.file.path}`);
       viewContent.classList.add('mirror-hide-properties');
@@ -320,7 +304,6 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
-  /** Handle DOM-based positions (above-title, above/below-properties, above/below-backlinks) */
   async setupDomPosition(view: MarkdownView) {
     const file = view.file;
     if (!file) return;
@@ -328,22 +311,18 @@ export default class MirrorUIPlugin extends Plugin {
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
     const config = getApplicableConfig(this, file, frontmatter);
     if (!config || !isDomPosition(config.position)) {
-      // Not a DOM position — clean up any existing DOM injection for this file
       removeAllDomMirrors(file.path);
       return;
     }
 
-    // Clear any previous position override (fresh attempt)
     this.positionOverrides.delete(file.path);
 
     const actualPos = await injectDomMirror(this, view, config, frontmatter);
 
-    // If DOM injection fell back to a CM6 position, set override and force StateField rebuild
     if (actualPos !== config.position) {
-      Logger.log(`DOM fallback: ${config.position} → ${actualPos} for ${file.path}`);
+      Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path}`);
       this.positionOverrides.set(file.path, actualPos);
-      // @ts-ignore
-      const cm = view.editor?.cm;
+      const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
       }
@@ -354,16 +333,13 @@ export default class MirrorUIPlugin extends Plugin {
     const file = view.file;
     if (!file) return;
 
-    // @ts-ignore
-    const cm = view.editor.cm;
+    const cm = getEditorView(view);
     if (!cm) return;
 
-    // Verificar se já tem a extensão
     const hasOurExtension = cm.state.field(mirrorStateField, false);
-    
+
     if (!hasOurExtension) {
       Logger.log(`setupEditor: adding StateField for ${file.path}`);
-      // Limpar qualquer widget órfão antes de adicionar novo
       const editorEl = cm.dom;
       if (editorEl) {
         editorEl.querySelectorAll('.mirror-ui-widget').forEach((widget: Element) => {
@@ -382,8 +358,7 @@ export default class MirrorUIPlugin extends Plugin {
     } else {
       Logger.log(`setupEditor: StateField already present for ${file.path}, skipping`);
     }
-    
-    // Atualizar estado do hideProps e DOM positions
+
     setTimeout(() => {
       this.updateHidePropsForView(view);
       this.setupDomPosition(view);
@@ -392,42 +367,32 @@ export default class MirrorUIPlugin extends Plugin {
 
   onunload() {
     Logger.log('Unloading plugin...');
-    
-    // 1. Limpar todos os widgets DOM antes de descarregar
+
     document.querySelectorAll('.mirror-ui-widget').forEach(widget => {
       widget.remove();
     });
-    
-    // 2. Remover classes de hideProps
+
     document.querySelectorAll('.mirror-hide-properties').forEach(el => {
       el.classList.remove('mirror-hide-properties');
     });
-    
-    // 3. Limpar DOM-injected mirrors
-    cleanupAllDomMirrors();
 
-    // 4. Limpar caches globais
+    cleanupAllDomMirrors();
     cleanupMirrorCaches();
 
-    // 5. Limpar referências
     this.activeEditors.clear();
     this.positionOverrides.clear();
-
-    // 6. Limpar registry de dependencias cross-note
     this.sourceDeps.clear();
 
-    // 7. Limpar timeouts
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
     if (this.crossNoteTimeout) {
       clearTimeout(this.crossNoteTimeout);
     }
-    
+
     Logger.log('Plugin unloaded successfully');
     Logger.destroy();
   }
 }
 
-// Exportar para usar no plugin
 export { toggleWidgetEffect } from './src/editor/mirrorState';

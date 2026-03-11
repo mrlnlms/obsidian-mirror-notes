@@ -1,6 +1,6 @@
 import { Editor, MarkdownView, Menu, Modal, Setting } from 'obsidian';
 import MirrorUIPlugin from '../../main';
-import { FileSuggest } from '../../utils/file-suggest';
+import { FileSuggest } from '../suggesters/file-suggest';
 
 // --- Modal ---
 class InsertMirrorBlockModal extends Modal {

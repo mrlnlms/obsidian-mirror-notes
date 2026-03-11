@@ -173,22 +173,31 @@ The plugin never modifies the note's content — it only adds visual elements to
 ### Architecture
 
 ```
-main.ts                              — Plugin lifecycle, CM6 setup, code block, hideProps
-settings.ts                          — Settings tab (global/custom mirrors, filters)
-src/commands/insertMirrorBlock.ts    — Insert mirror block command + modal
-src/rendering/templateRenderer.ts    — Shared rendering engine (CM6 + code block)
+main.ts                                    — Plugin lifecycle, CM6 setup, code block, hideProps
+settings.ts                                — Settings tab UI (delegates to builders)
+src/settings/types.ts                      — Interfaces, defaults, CustomMirror
+src/settings/filterBuilder.ts              — Reusable filter UI builder (files/folders/props)
+src/settings/pathValidator.ts              — Inline path validation for settings inputs
+src/commands/insertMirrorBlock.ts          — Insert mirror block command + modal
+src/rendering/templateRenderer.ts          — Shared rendering engine (CM6 + code block)
 src/rendering/codeBlockProcessor.ts        — Code block processor (```mirror```) + cross-note deps
 src/rendering/blockParser.ts               — Key:value parser for code blocks
+src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
 src/rendering/sourceDependencyRegistry.ts  — Cross-note dependency tracking
-src/editor/mirrorState.ts            — CM6 StateField + StateEffects
-src/editor/mirrorWidget.ts           — CM6 WidgetType (delegates to templateRenderer)
-src/editor/mirrorConfig.ts           — Configuration + filter matching logic
-src/editor/mirrorDecorations.ts      — Decoration builder
-src/editor/mirrorTypes.ts            — Shared type definitions
-src/editor/mirrorUtils.ts            — parseFrontmatter, hashObject, generateWidgetId
-src/editor/timingConfig.ts           — Centralized timing constants
-src/logger.ts                        — Logger with toggle via settings
-styles.css                           — Plugin styles + hideProps + code block CSS
+src/editor/mirrorState.ts                  — CM6 StateField + StateEffects
+src/editor/mirrorWidget.ts                 — CM6 WidgetType (delegates to templateRenderer)
+src/editor/mirrorConfig.ts                 — Configuration + filter matching logic
+src/editor/decorationBuilder.ts            — CM6 Decoration builder
+src/editor/mirrorTypes.ts                  — Shared type definitions
+src/editor/mirrorUtils.ts                  — parseFrontmatter, hashObject, generateWidgetId
+src/editor/timingConfig.ts                 — Centralized timing constants
+src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
+src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
+src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
+src/utils/obsidianInternals.ts             — Typed wrappers for Obsidian internal APIs
+src/utils/settingsPaths.ts                 — Auto-update paths on file/folder rename
+src/logger.ts                              — Logger with toggle via settings
+styles.css                                 — Plugin styles + hideProps + code block CSS
 ```
 
 ### Building from Source
@@ -201,7 +210,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-28 versions across 5 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+33 versions across 5 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -209,7 +218,7 @@ npm run dev      # watch mode
 | Era 2: Settings Evolution | Jul-Aug 2024 | v11-v18 — Settings UI, autocomplete, build system |
 | Era 3: CSS | Nov 2024 | v19 — Styles rewrite |
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
-| Era 5: Code Blocks + Polish | Mar 2026 | v26-v30 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity |
+| Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
 
 ## Support
 

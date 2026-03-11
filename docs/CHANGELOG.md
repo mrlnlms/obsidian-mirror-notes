@@ -2,7 +2,47 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v32 — Position Engine + filterProps Fix
+## Versao Atual: v33 — Refatoracao estrutural
+
+### v33: Refatoracao estrutural (zero mudancas de comportamento)
+
+**Reorganizacao de settings.ts (813 → ~320 linhas):**
+- Interfaces + defaults extraidos pra `src/settings/types.ts`
+- Path validation extraido pra `src/settings/pathValidator.ts`
+- Builder reutilizavel pros 3 filter blocks (files/folders/props) em `src/settings/filterBuilder.ts`
+- Funcao helper `addModeToggle()` elimina duplicacao entre global e custom mirrors
+- Re-exports em settings.ts mantém compatibilidade de imports
+
+**Refatoracao do mirrorState.ts update() (198 → orquestrador enxuto):**
+- `hasForcedUpdate()` — deteccao de effect
+- `detectFrontmatterChange()` — analise de ranges alterados
+- `handleForcedUpdate()` — path completo de forced update
+- `handleConfigChange()` — path normal de config change
+- `clearWidgetCaches()` — limpeza de instance cache
+- Update() agora e um orquestrador que delega pras funcoes acima
+
+**Dependencia circular resolvida:**
+- `mirrorState.ts` ↔ `mirrorDecorations.ts` eliminada
+- `buildDecorations()` movido pra `src/editor/decorationBuilder.ts` (sem import de mirrorState)
+- `mirrorDecorations.ts` deletado (cleanOrphanWidgets nunca era chamado)
+
+**Dead code removido:**
+- `YAMLSuggest.ts` deletado (substituido por `YamlPropertySuggest` em suggesters/)
+- `src/editor/mirrorViewPlugin.ts` deletado (recovery plugin desabilitado desde v25.2)
+
+**Suggesters movidos pra src/:**
+- `utils/suggest.ts` → `src/suggesters/suggest.ts`
+- `utils/file-suggest.ts` → `src/suggesters/file-suggest.ts`
+- Diretorio `utils/` da raiz removido
+
+**Wrapper de APIs internas do Obsidian:**
+- `src/utils/obsidianInternals.ts` — centraliza @ts-ignore em funcoes tipadas
+- `getEditorView()`, `getVaultBasePath()`, `openSettings()`, `openSettingsTab()`, `rerenderPreview()`, `addSearchClass()`
+- main.ts e settings.ts usam os wrappers em vez de @ts-ignore direto
+
+**Verificacao:** 85 testes passando, build limpo, zero mudancas de comportamento
+
+---
 
 ### v32: Position Engine (DOM + Margin) + filterProps Fix
 
