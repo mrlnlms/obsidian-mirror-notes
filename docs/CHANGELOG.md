@@ -81,6 +81,8 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - `configCache` ativado em mirrorConfig.ts (existia em mirrorState.ts mas nunca era usado)
   - Cache por `file.path` + `frontmatterHash` — evita recomputar config a cada keystroke
   - `clearConfigCache()` chamado em forced updates, settings change, e settings tab
+  - Mirror index: `buildMirrorIndex()` constroi Maps de file→mirror e folder→mirror. File match O(1), folder match O(depth). Rebuild lazy via `clearConfigCache()`
+  - Override duplicado eliminado: matching rodava 2x quando `global_settings_overide` ativo. Agora guarda referencia na primeira passada
   - `vault.read()` → `vault.cachedRead()` em templateRenderer.ts (retorna da memoria se arquivo nao mudou)
   - Startup unificado: `iterateAllLeaves` duplicado removido, setupEditor + rerender numa unica passada no onLayoutReady
   - `window.mirrorUIPluginInstance` substituido por `mirrorPluginFacet` (Facet CM6 idiomatico)

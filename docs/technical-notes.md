@@ -17,6 +17,9 @@ Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura,
 - `vault.read()` → `vault.cachedRead()` em templateRenderer.ts — retorna da memoria se arquivo nao mudou
 - Startup unificado: `iterateAllLeaves` duplicado no onload removido, setupEditor + rerender numa unica passada dentro do `onLayoutReady`
 - `UPDATE_DEBOUNCE` local removida de mirrorState.ts (usa `TIMING.UPDATE_DEBOUNCE`)
+- Mirror index em mirrorConfig.ts: `buildMirrorIndex()` constroi `byFile` (Map filename→mirror) e `folderToMirror` (Map folder→mirror, ordenado por especificidade). File match O(1), folder match O(depth). Props continua iterando (precisa do frontmatter)
+- Override duplicado eliminado: antes o matching rodava 2x quando `global_settings_overide` estava ativo (`.find()` reiterava todos os mirrors). Agora `matchedMirror` guarda a referencia na primeira passada
+- Index invalidado junto com cache via `clearConfigCache()` (`mirrorIndex = null`, rebuild lazy)
 - `window.mirrorUIPluginInstance` substituido por `mirrorPluginFacet` (Facet CM6) em mirrorState.ts
   - `state.facet(mirrorPluginFacet)` no create(), `tr.state.facet(mirrorPluginFacet)` no update()
   - Facet registrado junto com StateField via `mirrorPluginFacet.of(this)` no setupEditor()
@@ -144,6 +147,25 @@ styles.css                           — Plugin styles + hideProps + code block 
 - `metadataCache.changed` — force update se usuario inativo >TIMING.USER_INACTIVITY_THRESHOLD (delay TIMING.METADATA_CHANGE_DEBOUNCE)
 - `vault.modify` em `data.json` — re-update ao mudar settings (debounce TIMING.SETTINGS_FILE_DEBOUNCE)
 - DOM: `keydown` + `mousedown` — tracking de ultima interacao do usuario
+
+---
+
+## Performance — Benchmark comparativo (v27)
+
+Numeros estimados para vault com 50 custom mirrors e 30 tabs abertas.
+
+| Operacao | Antes (v26) | Depois (v27) | Reducao |
+|----------|-------------|--------------|---------|
+| Startup (comparacoes de filtro) | 30 × 500 = 15.000 | ~500 (build index) + 30 lookups = 530 | ~28x |
+| Keystroke (cache hit) | 500 comparacoes | 1 Map.get() | ~500x |
+| Settings change (override ativo) | 30 × 500 × 2 = 30.000 | 1 rebuild + 30 lookups = 530 | ~56x |
+| Troca de tab (frontmatter igual) | 500 comparacoes | 1 Map.get() | ~500x |
+| Template read | I/O disco | Memoria (cachedRead) | — |
+| Iteracoes de leaves no startup | 2 × 30 = 60 | 1 × 30 = 30 | 2x |
+
+**Nota**: em vaults pequenos (5 mirrors, 3 tabs) a diferença e imperceptível. Os ganhos escalam com mirrors × tabs.
+
+**Otimizacoes aplicadas**: configCache (Map por file.path + frontmatterHash), mirror index (Map file→mirror + folder→mirror ordenado por especificidade), override duplicado eliminado, cachedRead para templates, startup unificado (1 iteracao).
 
 ---
 
