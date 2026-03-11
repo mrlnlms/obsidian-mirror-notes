@@ -3,6 +3,8 @@ import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, Mar
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "./utils/file-suggest";
 import { wrapAround } from "./utils";
 import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
+import { clearConfigCache } from './src/editor/mirrorConfig';
+import { TIMING } from './src/editor/timingConfig';
 import { Logger } from './src/logger';
 
 export interface FolderTemplate {
@@ -69,6 +71,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         Logger.log('Settings changed, forcing update on all editors');
         Logger.log('Current settings:', this.plugin.settings);
 
+        clearConfigCache();
         setTimeout(() => {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
                 if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -84,7 +87,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     }
                 }
             });
-        }, 100);
+        }, TIMING.SETTINGS_UPDATE_DELAY);
     }
 
     display(): void {

@@ -1,11 +1,13 @@
 import { Plugin, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
-import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from './src/editor/mirrorState';
+import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
 // import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
+import { TIMING } from './src/editor/timingConfig';
+import { clearConfigCache } from './src/editor/mirrorConfig';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -13,7 +15,6 @@ export default class MirrorUIPlugin extends Plugin {
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
 
   async onload() {
-    (window as any).mirrorUIPluginInstance = this;
     await this.loadSettings();
 
     // Init logger
@@ -41,7 +42,7 @@ export default class MirrorUIPlugin extends Plugin {
             if (view) {
               this.setupEditor(view);
             }
-          }, 25);
+          }, TIMING.EDITOR_SETUP_DELAY);
         }
       })
     );
@@ -52,25 +53,19 @@ export default class MirrorUIPlugin extends Plugin {
         if (leaf?.view instanceof MarkdownView) {
           setTimeout(() => {
             this.setupEditor(leaf.view as MarkdownView);
-          }, 25);
+          }, TIMING.EDITOR_SETUP_DELAY);
         }
       })
     );
 
-    // Configurar editores já abertos
-    this.app.workspace.iterateAllLeaves(leaf => {
-      if (leaf.view instanceof MarkdownView && leaf.view.file) {
-        this.setupEditor(leaf.view);
-      }
-    });
-
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
 
-    // Re-renderizar notas abertas apos layout pronto (code blocks ja renderizados antes do plugin)
+    // Configurar editores ja abertos e re-renderizar code blocks apos layout pronto
     this.app.workspace.onLayoutReady(() => {
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
+          this.setupEditor(leaf.view);
           // @ts-ignore — previewMode existe em runtime
           leaf.view.previewMode?.rerender(true);
         }
@@ -101,7 +96,7 @@ export default class MirrorUIPlugin extends Plugin {
               const lastInteraction = this.getLastUserInteraction();
               
               // Muito mais conservador: 1 segundo desde última interação
-              if (now - lastInteraction > 1000) {
+              if (now - lastInteraction > TIMING.USER_INACTIVITY_THRESHOLD) {
                 Logger.log('Metadata changed, updating mirror');
                 cm.dispatch({
                   effects: forceMirrorUpdateEffect.of()
@@ -113,7 +108,7 @@ export default class MirrorUIPlugin extends Plugin {
               }
               
               metadataUpdateTimeout = null;
-            }, 500); // Aumentado para 500ms
+            }, TIMING.METADATA_CHANGE_DEBOUNCE);
           }
         }
       })
@@ -130,6 +125,7 @@ export default class MirrorUIPlugin extends Plugin {
           
           this.settingsUpdateDebounce = setTimeout(() => {
             Logger.log('Settings changed, updating all editors');
+            clearConfigCache();
             this.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.file) {
                 // @ts-ignore
@@ -144,7 +140,7 @@ export default class MirrorUIPlugin extends Plugin {
               }
             });
             this.settingsUpdateDebounce = null;
-          }, 500); // 500ms de debounce para configurações
+          }, TIMING.SETTINGS_FILE_DEBOUNCE);
         }
       })
     );
@@ -232,6 +228,7 @@ export default class MirrorUIPlugin extends Plugin {
 
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
+          mirrorPluginFacet.of(this),
           mirrorStateField
           // mirrorRecoveryPlugin — desabilitado (v25.2)
         ])
@@ -243,7 +240,7 @@ export default class MirrorUIPlugin extends Plugin {
     // Atualizar estado do hideProps
     setTimeout(() => {
       this.updateHidePropsForView(view);
-    }, 100);
+    }, TIMING.HIDE_PROPS_DELAY);
   }
 
   onunload() {
@@ -259,40 +256,16 @@ export default class MirrorUIPlugin extends Plugin {
       el.classList.remove('mirror-hide-properties');
     });
     
-    // 3. Remover extensões do CodeMirror de TODOS os editores
-    this.app.workspace.iterateAllLeaves(leaf => {
-      if (leaf.view instanceof MarkdownView) {
-        // @ts-ignore
-        const cm = leaf.view.editor?.cm;
-        if (cm) {
-          // Tentar remover a extensão se possível
-          try {
-            // Forçar uma atualização vazia para limpar decorations
-            cm.dispatch({
-              effects: StateEffect.reconfigure.of([])
-            });
-          } catch (e) {
-            Logger.error('Error cleaning editor:', e);
-          }
-        }
-      }
-    });
-    
-    // 4. Limpar caches globais
-    if ((window as any).mirrorUICleanup) {
-      (window as any).mirrorUICleanup();
-    }
-    
-    // 5. Limpar referências
+    // 3. Limpar caches globais
+    cleanupMirrorCaches();
+
+    // 4. Limpar referências
     this.activeEditors.clear();
-    
-    // 6. Limpar timeouts
+
+    // 5. Limpar timeouts
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
-    
-    // 7. Limpar referência global
-    delete (window as any).mirrorUIPluginInstance;
     
     Logger.log('Plugin unloaded successfully');
     Logger.destroy();

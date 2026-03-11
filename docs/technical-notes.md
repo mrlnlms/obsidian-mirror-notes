@@ -2,9 +2,26 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v26 — Code Block Processor (Era 5)
+## Versao Atual: v27 — Performance + Timing (Era 5)
 
-**Adiciona `registerMarkdownCodeBlockProcessor("mirror")`. Templates inline via code blocks, funciona em Reading View e Live Preview. Rendering compartilhado entre CM6 widget e code block.**
+**Centraliza timing, ativa configCache, usa cachedRead para templates, unifica startup.**
+
+### O que mudou na v27
+
+- Novo `src/editor/timingConfig.ts` — objeto `TIMING` com 8 constantes (`as const`)
+- 9 magic numbers substituidos em 3 arquivos: main.ts (6), mirrorState.ts (2), settings.ts (1)
+- `configCache` movido de mirrorState.ts (dead code) para mirrorConfig.ts (ativo)
+  - Cache por `file.path` + hash do frontmatter via `hashObject()`
+  - Cache hit evita iterar todos os custom mirrors + `.some()` em 3 arrays por keystroke
+  - Invalidacao: `clearConfigCache()` chamado em forced updates, settings file change, settings tab
+- `vault.read()` → `vault.cachedRead()` em templateRenderer.ts — retorna da memoria se arquivo nao mudou
+- Startup unificado: `iterateAllLeaves` duplicado no onload removido, setupEditor + rerender numa unica passada dentro do `onLayoutReady`
+- `UPDATE_DEBOUNCE` local removida de mirrorState.ts (usa `TIMING.UPDATE_DEBOUNCE`)
+- `window.mirrorUIPluginInstance` substituido por `mirrorPluginFacet` (Facet CM6) em mirrorState.ts
+  - `state.facet(mirrorPluginFacet)` no create(), `tr.state.facet(mirrorPluginFacet)` no update()
+  - Facet registrado junto com StateField via `mirrorPluginFacet.of(this)` no setupEditor()
+- `window.mirrorUICleanup` substituido por `cleanupMirrorCaches()` exportada de mirrorState.ts
+- Removido `StateEffect.reconfigure([])` do onunload — nukava TODAS as extensoes CM6 (Dataview, Meta-bind, etc)
 
 ### O que mudou na v26
 
@@ -92,7 +109,8 @@ src/rendering/codeBlockProcessor.ts  — registerMarkdownCodeBlockProcessor("mir
 src/rendering/blockParser.ts         — parseBlockContent() — parser key:value do code block
 src/editor/mirrorState.ts            — CM6 StateField + StateEffects (hub central)
 src/editor/mirrorWidget.ts           — CM6 WidgetType (delega para templateRenderer)
-src/editor/mirrorConfig.ts           — getApplicableConfig() — matching logic (file, folder, props)
+src/editor/timingConfig.ts           — TIMING object (constantes centralizadas de debounce/delay)
+src/editor/mirrorConfig.ts           — getApplicableConfig() + configCache + clearConfigCache()
 src/editor/mirrorDecorations.ts      — buildDecorations() + cleanOrphanWidgets()
 src/editor/mirrorTypes.ts            — Interfaces compartilhadas
 src/editor/mirrorUtils.ts            — parseFrontmatter, hashObject, generateWidgetId
@@ -121,10 +139,10 @@ styles.css                           — Plugin styles + hideProps + code block 
 ### Eventos registrados
 
 - `editor-change` — re-setup do editor ao editar
-- `file-open` — setup ao abrir arquivo (delay 25ms)
-- `active-leaf-change` — setup ao trocar aba (delay 25ms)
-- `metadataCache.changed` — force update se usuario inativo >1s (delay 500ms)
-- `vault.modify` em `data.json` — re-update ao mudar settings (debounce 500ms)
+- `file-open` — setup ao abrir arquivo (delay TIMING.EDITOR_SETUP_DELAY)
+- `active-leaf-change` — setup ao trocar aba (delay TIMING.EDITOR_SETUP_DELAY)
+- `metadataCache.changed` — force update se usuario inativo >TIMING.USER_INACTIVITY_THRESHOLD (delay TIMING.METADATA_CHANGE_DEBOUNCE)
+- `vault.modify` em `data.json` — re-update ao mudar settings (debounce TIMING.SETTINGS_FILE_DEBOUNCE)
 - DOM: `keydown` + `mousedown` — tracking de ultima interacao do usuario
 
 ---

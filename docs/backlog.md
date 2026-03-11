@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Features, melhorias e bugs. Atualizado na v26.
+Features, melhorias e bugs. Atualizado na v27.
 
 ## Bugs
 
@@ -31,29 +31,26 @@ Features, melhorias e bugs. Atualizado na v26.
 - [ ] Menu contextual para gestao rapida de espelhos (right-click em nota → adicionar/remover mirror)
 - [ ] Painel de status mostrando espelhos ativos na nota atual
 - [ ] Busca e filtros dentro da lista de espelhos no settings
-- [ ] Posicionamento left/right (hoje so top/bottom)
+- [ ] **Posicionamento flexivel** — left/right (hoje so top/bottom), acima das properties, acima dos backlinks. Envolve tanto CM6 (posicoes dentro do editor) quanto DOM (posicoes fora do `.cm-content`). Referencia: analise CM6 vs DOM no technical-notes.md
 - [x] **Suporte a Reading View** — implementado via code block processor (v26). Blocos ` ```mirror ``` ` funcionam em Reading View e Live Preview. Mirrors via settings (CM6) continuam apenas Live Preview.
 
 ## Features — Gestao
 
 - [ ] Sistema de templates pre-configurados (starter configs para casos comuns)
-- [ ] Exportacao/importacao de configuracoes (compartilhar setups entre vaults)
 - [ ] Dashboard de uso com estatisticas de espelhamento (quantas notas cada mirror atinge)
-- [ ] Historico de mudancas em notas espelho
 
 ## Melhorias Tecnicas
 
-- [ ] Performance para vaults grandes (cache de frontmatter, lazy matching)
+- [ ] Performance para vaults grandes (lazy matching, batch processing) — configCache e cachedRead implementados na v27
 - [ ] Validacao avancada de configuracoes (detectar templates inexistentes, filtros vazios)
 - [x] Sistema de logs para debugging (toggle no settings) — implementado na v25.2 (`src/logger.ts`, toggle `debug_logging` no settings)
-- [ ] **Remover `window.mirrorUIPluginInstance`** — hack global. Substituir por `app.plugins.plugins['mirror-notes']` ou API propria
-- [ ] **Fix `StateEffect.reconfigure([])` no onunload** — remove TODAS as extensoes CM6, nao so as do mirror
-- [ ] **Debounce/delay hardcoded** — valores fixos (25ms, 500ms, 1000ms) podem nao funcionar em vaults grandes
+- [x] **Remover `window.mirrorUIPluginInstance`** — substituido por `mirrorPluginFacet` (Facet CM6 idiomatico) na v27
+- [x] **Fix `StateEffect.reconfigure([])` no onunload** — removido na v27. Nukava todas as extensoes CM6
+- [x] **Debounce/delay hardcoded** — centralizado em `src/editor/timingConfig.ts` (v27). 8 constantes, 9 substituicoes em 3 arquivos
 - [ ] **Atualizar dependencias** — pacotes defasados desde 2022-2023:
   - Seguro (patch/minor): `@codemirror/state` 6.5.2→6.5.4, `@codemirror/view` 6.37→6.39, `obsidian` 1.8→1.12, `tslib` 2.4→2.8
   - Requer teste (major): `typescript` 4.7→5.9, `esbuild` 0.17→0.27, `@types/node` 16→25
   - Mover `@codemirror/state` e `@codemirror/view` de dependencies para devDependencies (Obsidian ja fornece em runtime)
-- [ ] **Posicoes fora do .cm-content** — acima das properties, acima dos backlinks. Requer camada DOM (ver analise no technical-notes.md)
 
 ---
 

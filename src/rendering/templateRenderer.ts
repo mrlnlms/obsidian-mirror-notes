@@ -59,7 +59,7 @@ async function doRender(ctx: RenderContext): Promise<void> {
     }
 
     Logger.log(`Template file found: ${templateFile.path}`);
-    const templateContent = await plugin.app.vault.read(templateFile);
+    const templateContent = await plugin.app.vault.cachedRead(templateFile);
     Logger.log(`Template content length: ${templateContent.length}`);
 
     let processedContent = templateContent;

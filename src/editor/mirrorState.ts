@@ -1,17 +1,23 @@
-import { StateField, StateEffect, EditorState, Transaction } from "@codemirror/state";
+import { StateField, StateEffect, EditorState, Transaction, Facet } from "@codemirror/state";
 import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
 import { ApplicableMirrorConfig, MirrorState, MirrorFieldState } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { clearRenderCache } from "../rendering/templateRenderer";
 import { buildDecorations, cleanOrphanWidgets } from "./mirrorDecorations";
-import { getApplicableConfig } from "./mirrorConfig";
+import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
+import { TIMING } from "./timingConfig";
 import { parseFrontmatter, hashObject, generateWidgetId } from "./mirrorUtils";
 import { Logger } from '../logger';
 
 // =================================================================================
 // INTERFACES E TIPOS
 // =================================================================================
+
+// Facet para injetar o plugin no StateField (substitui window.mirrorUIPluginInstance)
+export const mirrorPluginFacet = Facet.define<MirrorUIPlugin, MirrorUIPlugin | null>({
+  combine: values => values[0] ?? null
+});
 
 // Effects
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
@@ -20,21 +26,17 @@ export const forceMirrorUpdateEffect = StateEffect.define<void>();
 // widgetRecoveryEffect — desabilitado (v25.2), ver mirrorViewPlugin.ts
 // export const widgetRecoveryEffect = StateEffect.define<void>();
 
-// Cache de config por arquivo
-const configCache = new Map<string, { config: ApplicableMirrorConfig | null, frontmatterHash: string }>();
-
 // =================================================================================
 // STATE FIELD
 // =================================================================================
 let lastUpdateTime = 0;
-const UPDATE_DEBOUNCE = 500; // Aumentado para 500ms - mais conservador
 const fileDebounceMap = new Map<string, number>(); // Debounce por arquivo
 const lastForcedUpdateMap = new Map<string, number>(); // Track forced updates por arquivo
 
 // 🔥 NOVO: StateField para rastrear decorations separadamente (inspirado no CodeMarker)
 export const mirrorStateField = StateField.define<MirrorFieldState>({
   create(state: EditorState): MirrorFieldState {
-    const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
+    const plugin = state.facet(mirrorPluginFacet)!;
     const file = plugin?.app.workspace.getActiveFile();
     const frontmatter = parseFrontmatter(state.doc.toString());
     const frontmatterHash = hashObject(frontmatter);
@@ -67,7 +69,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
     // Ver mirrorViewPlugin.ts para referencia da implementacao original
 
-    const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
+    const plugin = tr.state.facet(mirrorPluginFacet)!;
 
     // 1. Verificar se foi um update forçado (só aceitar se for realmente necessário)
     let forcedUpdate = false;
@@ -91,7 +93,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // 3. Se foi um forced update, verificar se é muito frequente
     if (forcedUpdate) {
         const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
-        if (now - lastForcedUpdate < 1000) { // Não aceitar forced updates mais de 1x por segundo
+        if (now - lastForcedUpdate < TIMING.FORCED_UPDATE_THROTTLE) { // Não aceitar forced updates mais de 1x por segundo
             Logger.log(`Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
             return { mirrorState: value, decorations };
         }
@@ -100,7 +102,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
 
     // 5. Debounce específico por arquivo (mais agressivo)
     const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
-    if (!forcedUpdate && now - lastFileUpdate < UPDATE_DEBOUNCE) {
+    if (!forcedUpdate && now - lastFileUpdate < TIMING.UPDATE_DEBOUNCE) {
         return { mirrorState: value, decorations };
     }
     
@@ -144,6 +146,8 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     
     // 🔥 8. TRATAMENTO ESPECIAL PARA FORCED UPDATE
     if (forcedUpdate) {
+        // Invalidar cache de config antes de recarregar
+        clearConfigCache();
         // Recarregar configuração
         const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter);
 
@@ -262,14 +266,10 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
 // =================================================================================
 // CLEANUP
 // =================================================================================
-if ((window as any).mirrorUICleanup) {
-  (window as any).mirrorUICleanup();
-}
-
-(window as any).mirrorUICleanup = () => {
+export function cleanupMirrorCaches() {
   MirrorTemplateWidget.widgetInstanceCache.clear();
   MirrorTemplateWidget.domCache.clear();
   clearRenderCache();
   fileDebounceMap.clear();
   lastForcedUpdateMap.clear();
-};
+}

@@ -2,7 +2,7 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v26 — Code Block Processor (Era 5)
+## Versao Atual: v27 — Performance + Timing (Era 5)
 
 **Adiciona `registerMarkdownCodeBlockProcessor("mirror")` — templates inline via code blocks, funciona em Reading View e Live Preview. Rendering compartilhado entre CM6 widget e code block.**
 
@@ -75,6 +75,17 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - settings.ts chama updateHidePropsForView() apos force update
 
 #### Era 5: Code Block Processor (Mar 2026)
+- **v27: Performance, timing centralizado, cleanup de globals**
+  - Novo `src/editor/timingConfig.ts` — 8 constantes de timing centralizadas (TIMING object)
+  - Magic numbers (25, 100, 500, 1000) substituidos em main.ts (6), mirrorState.ts (2), settings.ts (1)
+  - `configCache` ativado em mirrorConfig.ts (existia em mirrorState.ts mas nunca era usado)
+  - Cache por `file.path` + `frontmatterHash` — evita recomputar config a cada keystroke
+  - `clearConfigCache()` chamado em forced updates, settings change, e settings tab
+  - `vault.read()` → `vault.cachedRead()` em templateRenderer.ts (retorna da memoria se arquivo nao mudou)
+  - Startup unificado: `iterateAllLeaves` duplicado removido, setupEditor + rerender numa unica passada no onLayoutReady
+  - `window.mirrorUIPluginInstance` substituido por `mirrorPluginFacet` (Facet CM6 idiomatico)
+  - `window.mirrorUICleanup` substituido por `cleanupMirrorCaches()` (export normal)
+  - Removido `StateEffect.reconfigure([])` do onunload (nukava todas as extensoes CM6)
 - **v26: Code block processor + shared renderer**
   - `registerMarkdownCodeBlockProcessor("mirror", ...)` — funciona em Reading View e Live Preview
   - Sintaxe: ` ```mirror\ntemplate: path\nsource: nota\nvar: valor\n``` `
