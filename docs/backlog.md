@@ -28,10 +28,14 @@ Features, melhorias e bugs. Atualizado na v28.
 
 ## Features — Interface
 
-- [ ] Menu contextual para gestao rapida de espelhos (right-click em nota → adicionar/remover mirror)
-- [ ] Painel de status mostrando espelhos ativos na nota atual
+- [ ] **Menu contextual** — right-click em nota → inserir bloco ` ```mirror ``` ` com config basica. Faz sentido agora que code blocks existem (v26). User-flow a definir
 - [ ] Busca e filtros dentro da lista de espelhos no settings
-- [ ] **Posicionamento flexivel** — left/right (hoje so top/bottom), acima das properties, acima dos backlinks. Envolve tanto CM6 (posicoes dentro do editor) quanto DOM (posicoes fora do `.cm-content`). Referencia: analise CM6 vs DOM no technical-notes.md
+- [ ] **Posicionamento flexivel** — duas engines, cada uma cobrindo seu dominio:
+  - **Engine CM6** (dentro do editor): top (acima do conteudo), bottom (abaixo), inline (sobrepondo). Todas implementadas. Quarta posicao prevista: **side-by-side** (nota ao lado, como no Qualia Coding) — roadmap futuro
+  - **Engine DOM** (fora do editor): acima do titulo, abaixo do titulo, acima das properties, abaixo das properties. Nenhuma implementada ainda. CM6 nao alcanca esses elementos
+  - Referencia: plugin VirtualNotes (ponto de partida pras implementacoes proprias)
+  - Juntas as duas engines cobrem toda a anatomia de uma nota no Obsidian
+  - **Proximo passo:** benchmark VirtualNotes vs MirrorNotes focado em settings — mapear configs do VirtualNotes, cruzar com o que ja existe, e gerar: (1) lista de funcionalidades (falta / existe / adaptar) e (2) layout do settings pra acomodar as duas engines. Nao e pra copiar, e pra definir escopo e organizar a UI antes de implementar
 - [x] **Suporte a Reading View** — implementado via code block processor (v26). Blocos ` ```mirror ``` ` funcionam em Reading View e Live Preview. Mirrors via settings (CM6) continuam apenas Live Preview.
 
 ## Features — Gestao

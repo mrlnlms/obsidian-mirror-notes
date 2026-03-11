@@ -1,5 +1,11 @@
 # Mirror Notes — Roadmap
 
+## Concluido: v28.1 — Clickable Error in Renderer
+
+- [x] Link "Open settings" no erro "Template not found" (widget + code block)
+- [x] `openSettingsToField` publico pra uso pelo renderer
+- [x] `pointer-events: auto` no errorDiv (CM6 widget bloqueia eventos por default)
+
 ## Concluido: v28 — Rename-Aware Settings + Inline Validation
 
 - [x] `vault.on('rename')` — auto-update de paths nos settings

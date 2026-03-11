@@ -2,9 +2,20 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v28 — Rename-Aware Settings (Era 5)
+## Versao Atual: v28.1 — Clickable Error in Renderer (Era 5)
 
-**Settings reagem a rename/move/delete de arquivos. Validacao inline nos campos de path.**
+**Erro "Template not found" com link clicavel para settings. Funciona em CM6 widget e code block.**
+
+### O que mudou na v28.1
+
+- `openSettingsToField` em main.ts: `private` → `public` (linha 207)
+- templateRenderer.ts: bloco de erro "Template not found" (linhas 52-66) reescrito:
+  - Antes: `container.innerHTML = '<div style="color:...">${errorMsg}</div>'` (string estatica)
+  - Depois: DOM via `container.createEl()` com link `<a>` que chama `plugin.openSettingsToField(templatePath)`
+  - `errorDiv.style.cssText` inclui `pointer-events: auto; user-select: text; -webkit-user-select: text`
+  - Necessario porque o container do CM6 widget (`mirrorWidget.ts:53`) tem `pointer-events: none` e `user-select: none`
+  - O contentDiv do render normal ja tinha `pointer-events: auto` (linha 83), mas o early-return de erro nao passava por ele
+- Cache guard `if (container.innerHTML !== ...)` removido — era redundante com o hash cache da linha 75, e incompativel com DOM elements
 
 ### O que mudou na v28
 

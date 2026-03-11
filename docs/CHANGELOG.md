@@ -2,9 +2,18 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v28 — Rename-Aware Settings (Era 5)
+## Versao Atual: v28.1 — Clickable Error in Renderer (Era 5)
 
-**Settings se auto-atualizam quando arquivos/pastas sao renomeados ou movidos. Validacao inline mostra paths quebrados em tempo real.**
+**Erro "Template not found" agora tem link clicavel "Open settings" dentro do widget/code block.**
+
+### v28.1: Clickable Error Link in Renderer
+
+- Erro "Template not found" no renderer agora exibe link "Open settings" clicavel
+- `openSettingsToField` tornado `public` em main.ts (antes `private`)
+- Erro construido via DOM (createEl) em vez de innerHTML estatico — permite event listeners
+- `pointer-events: auto` + `user-select: text` no errorDiv — necessario porque o container do CM6 widget tem `pointer-events: none`
+- Cache guard de innerHTML removido do bloco de erro (redundante com hash cache)
+- Funciona em CM6 widget (Live Preview) e code block processor (Reading View)
 
 ### v28: Rename-Aware Settings + Inline Validation
 

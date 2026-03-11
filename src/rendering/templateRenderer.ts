@@ -52,9 +52,20 @@ async function doRender(ctx: RenderContext): Promise<void> {
     if (!templateFile || !(templateFile instanceof TFile)) {
       const errorMsg = `Template not found: ${templatePath}`;
       Logger.error(errorMsg);
-      if (container.innerHTML !== `<div style="color: var(--text-error);">${errorMsg}</div>`) {
-        container.innerHTML = `<div style="color: var(--text-error);">${errorMsg}</div>`;
-      }
+
+      container.innerHTML = '';
+      const errorDiv = container.createEl('div', { cls: 'mirror-template-error' });
+      errorDiv.style.cssText = 'color: var(--text-error); pointer-events: auto; user-select: text; -webkit-user-select: text;';
+      errorDiv.createEl('span', { text: errorMsg + ' ' });
+      const link = errorDiv.createEl('a', {
+        text: 'Open settings',
+        attr: { style: 'cursor: pointer; text-decoration: underline;' }
+      });
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        plugin.openSettingsToField(templatePath);
+      });
       return;
     }
 

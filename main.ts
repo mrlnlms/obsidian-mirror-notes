@@ -204,7 +204,7 @@ export default class MirrorUIPlugin extends Plugin {
     await this.saveSettings();
   }
 
-  private openSettingsToField(targetValue: string, mirrorIndices?: number[]): void {
+  public openSettingsToField(targetValue: string, mirrorIndices?: number[]): void {
     // Expandir mirrors afetados se colapsados
     if (mirrorIndices) {
       for (const idx of mirrorIndices) {
