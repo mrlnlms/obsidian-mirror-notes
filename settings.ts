@@ -716,36 +716,44 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         const warningEl = target.createEl('div', { cls: 'mirror-path-warning' });
         warningEl.style.display = 'none';
 
-        const validate = (val: string) => {
-            if (!val) { warningEl.style.display = 'none'; return; }
-
-            let exists = false;
-            if (type === 'file') {
-                exists = !!this.app.vault.getAbstractFileByPath(val);
-            } else if (type === 'folder') {
-                const folder = this.app.vault.getAbstractFileByPath(val);
-                exists = !!folder && !(folder instanceof TFile);
-            } else if (type === 'filename') {
-                exists = this.app.vault.getFiles().some(f => f.name === val);
+        const checkExists = (val: string): boolean => {
+            if (!val) return false;
+            if (type === 'file') return !!this.app.vault.getAbstractFileByPath(val);
+            if (type === 'folder') {
+                const f = this.app.vault.getAbstractFileByPath(val);
+                return !!f && !(f instanceof TFile);
             }
-
-            if (!exists) {
-                warningEl.textContent = type === 'filename'
-                    ? `File "${val}" not found in vault`
-                    : type === 'folder'
-                    ? `Folder "${val}" not found in vault`
-                    : `Template "${val}" not found in vault`;
-                warningEl.style.display = '';
-            } else {
-                warningEl.style.display = 'none';
-            }
+            return this.app.vault.getFiles().some(f => f.name === val);
         };
 
+        const showWarning = (val: string) => {
+            warningEl.textContent = type === 'filename'
+                ? `File "${val}" not found in vault`
+                : type === 'folder'
+                ? `Folder "${val}" not found in vault`
+                : `Template "${val}" not found in vault`;
+            warningEl.style.display = '';
+        };
+
+        const validate = (val: string) => {
+            if (!val) { warningEl.style.display = 'none'; return; }
+            if (!checkExists(val)) { showWarning(val); } else { warningEl.style.display = 'none'; }
+        };
+
+        // Render: mostrar warning se valor atual e invalido
         validate(value);
 
         const inputEl = container.querySelector('input') as HTMLInputElement;
         if (inputEl) {
+            // Blur: mostra warning se invalido
             inputEl.addEventListener('blur', () => validate(inputEl.value));
+
+            // Input: so esconde warning quando valor valido (ex. clicou no suggest)
+            inputEl.addEventListener('input', () => {
+                if (inputEl.value && checkExists(inputEl.value)) {
+                    warningEl.style.display = 'none';
+                }
+            });
         }
     }
 
