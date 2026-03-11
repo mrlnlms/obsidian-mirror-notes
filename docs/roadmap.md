@@ -1,5 +1,14 @@
 # Mirror Notes — Roadmap
 
+## Concluido: v28 — Rename-Aware Settings + Inline Validation
+
+- [x] `vault.on('rename')` — auto-update de paths nos settings
+- [x] `vault.on('delete')` — Notice clicavel avisando template quebrado
+- [x] Toggle global + per-mirror pra controlar auto-update
+- [x] Notice com "Open settings" → expande mirror colapsado, scroll + focus
+- [x] Inline path validation em todos os campos de path/folder/filename
+- [x] Validacao no render + blur do input
+
 ## Concluido: v27 — Performance, Timing, Cleanup
 
 - [x] Centralizar constantes de timing em timingConfig.ts
@@ -26,7 +35,7 @@
 
 ## Prioridade 2: Qualidade de vida
 
-- [ ] Validacao de configuracoes (template inexistente, filtro vazio)
+- [x] Validacao de configuracoes (template inexistente, filtro vazio) — v28
 - [ ] Documentacao de uso do code block processor (README ou wiki)
 - [ ] Reatividade cross-note (quando `source: outra-nota.md` muda, re-renderizar)
 

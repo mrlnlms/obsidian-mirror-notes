@@ -1,5 +1,5 @@
 import MirrorUIPlugin from "./main";
-import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView } from "obsidian";
+import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView, TFile } from "obsidian";
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "./utils/file-suggest";
 import { wrapAround } from "./utils";
 import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
@@ -24,6 +24,7 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     global_settings_preview_pos: "top",
     global_settings_overide: false,
     global_settings_hide_props: false,
+    auto_update_paths: true,
     customMirrors: []
 };
 
@@ -39,6 +40,7 @@ export interface MirrorUIPluginSettings {
     global_settings_preview_pos: string;
     global_settings_overide: boolean;
     global_settings_hide_props: boolean;
+    auto_update_paths: boolean;
     customMirrors: Array<CustomMirror>;
 }
 
@@ -54,6 +56,7 @@ export interface CustomMirror {
     custom_settings_preview_pos: string;
     custom_settings_overide: boolean;
     custom_settings_hide_props: boolean;
+    custom_auto_update_paths: boolean;
     filterFiles: Array<FolderTemplate>;
     filterFolders: Array<FolderTemplate>;
     filterProps: Array<FolderTemplate>;
@@ -191,6 +194,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                     })
                     .infoEl.remove();
+                this.addPathValidation(noteSetting, this.plugin.settings.global_settings_live_preview_note, 'file');
             }
 
             new Setting(globalMirrorSettings)
@@ -236,6 +240,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                     })
                     .infoEl.remove();
+                this.addPathValidation(noteSetting, this.plugin.settings.global_settings_preview_note, 'file');
             }
             new Setting(globalMirrorSettings)
                 .setName("Hide properties")
@@ -264,6 +269,18 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     });
                 })
                 .setClass("toogle-header");
+
+            new Setting(globalMirrorSettings)
+                .setName("Auto-update paths on rename")
+                .setDesc("Automatically update template and filter paths when files or folders are renamed.")
+                .addToggle((cb) => {
+                    cb.setValue(this.plugin.settings.auto_update_paths)
+                    .onChange((value) => {
+                        this.plugin.settings.auto_update_paths = value;
+                        this.plugin.saveSettings();
+                    });
+                })
+                .setClass("toogle-header");
         };
 
         // Adiciona os cards customizados
@@ -288,6 +305,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             custom_settings_preview_pos: "top",
                             custom_settings_overide: false,
                             custom_settings_hide_props: false,
+                            custom_auto_update_paths: true,
                             filterFiles: [],
                             filterFolders: [],
                             filterProps: [],
@@ -406,6 +424,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                     })
                     .infoEl.remove();
+                this.addPathValidation(noteSetting, customMirrors[index].custom_settings_live_preview_note, 'file');
             }
             new Setting(globalMirrorSettings)
                 .setName("Preview Mode Template Mirror Note.")
@@ -448,6 +467,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                     })
                     .infoEl.remove();
+                this.addPathValidation(noteSetting, customMirrors[index].custom_settings_preview_note, 'file');
             }
             new Setting(card)
                 .setName("Filter by Filename")
@@ -510,6 +530,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             });
                     });
                     s.infoEl.remove();
+                    this.addPathValidation(folderSelection, customMirrors[index].filterFiles[index2].folder, 'filename');
             })
             new Setting(card)
                 .setName("Filter by Folder path")
@@ -570,6 +591,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             });
                     });
                     s.infoEl.remove();
+                    this.addPathValidation(folderSelection, customMirrors[index].filterFolders[index2].folder, 'folder');
             });
             new Setting(card)
                 .setName("Filter by Properties")
@@ -672,7 +694,59 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                 })
                 .setClass("toogle-header");
+            new Setting(card)
+                .setName("Auto-update paths on rename")
+                .setDesc("Override the global setting for this mirror. If OFF, paths won't be updated when files are renamed.")
+                .addToggle((cb) => {
+                    cb.setValue(customMirrors[index].custom_auto_update_paths)
+                    .onChange((value) => {
+                        customMirrors[index].custom_auto_update_paths = value;
+                        this.plugin.saveSettings();
+                    });
+                })
+                .setClass("toogle-header");
         });
+    }
+
+    private addPathValidation(container: HTMLElement, value: string, type: 'file' | 'folder' | 'filename'): void {
+        // Inserir dentro do .setting-item (o componente visual com borda)
+        const settingItem = container.querySelector('.setting-item') as HTMLElement;
+        const target = settingItem || container;
+
+        const warningEl = target.createEl('div', { cls: 'mirror-path-warning' });
+        warningEl.style.display = 'none';
+
+        const validate = (val: string) => {
+            if (!val) { warningEl.style.display = 'none'; return; }
+
+            let exists = false;
+            if (type === 'file') {
+                exists = !!this.app.vault.getAbstractFileByPath(val);
+            } else if (type === 'folder') {
+                const folder = this.app.vault.getAbstractFileByPath(val);
+                exists = !!folder && !(folder instanceof TFile);
+            } else if (type === 'filename') {
+                exists = this.app.vault.getFiles().some(f => f.name === val);
+            }
+
+            if (!exists) {
+                warningEl.textContent = type === 'filename'
+                    ? `File "${val}" not found in vault`
+                    : type === 'folder'
+                    ? `Folder "${val}" not found in vault`
+                    : `Template "${val}" not found in vault`;
+                warningEl.style.display = '';
+            } else {
+                warningEl.style.display = 'none';
+            }
+        };
+
+        validate(value);
+
+        const inputEl = container.querySelector('input') as HTMLInputElement;
+        if (inputEl) {
+            inputEl.addEventListener('blur', () => validate(inputEl.value));
+        }
     }
 
     clearAdjacentField(filterPropsValues: Array<FolderTemplate>, index: number): void {

@@ -2,9 +2,30 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v27 — Performance + Timing (Era 5)
+## Versao Atual: v28 — Rename-Aware Settings (Era 5)
 
-**Centraliza timing, ativa configCache, usa cachedRead para templates, unifica startup.**
+**Settings reagem a rename/move/delete de arquivos. Validacao inline nos campos de path.**
+
+### O que mudou na v28
+
+- Novos campos: `auto_update_paths` (global, default true), `custom_auto_update_paths` (per-mirror, default true)
+- `vault.on('rename')` em main.ts — `updateSettingsPaths(oldPath, newPath)` percorre settings e atualiza:
+  - Template paths globais e custom (match exato ou prefixo de folder)
+  - `filterFiles[].folder` — compara filename (`.split('/').pop()`), so muda se nome do arquivo mudou
+  - `filterFolders[].folder` — compara prefixo de path
+  - Respeita toggles: global OFF = nada atualiza, per-mirror OFF = pula aquele mirror
+  - Retorna `{ changed, mirrorIndices[], globalAffected }` pra feedback preciso
+- `vault.on('delete')` em main.ts — `checkDeletedTemplates(path)` emite Notice por template afetado
+- Notice usa `DocumentFragment` com link clicavel "Open settings":
+  - `openSettingsToField(targetValue, mirrorIndices)` — expande mirrors colapsados, abre settings tab, setTimeout 250ms → busca input por valor, `scrollIntoView({ behavior: 'smooth', block: 'center' })` + `focus()`
+  - `app.setting.open()` + `app.setting.openTabById(manifest.id)` (runtime APIs, @ts-ignore)
+- Inline validation: `addPathValidation(container, value, type)` em settings.ts
+  - Busca `.setting-item` dentro do container pra inserir warning no componente visual correto
+  - 3 tipos: `file` (getAbstractFileByPath), `folder` (getAbstractFileByPath + not TFile), `filename` (vault.getFiles().some)
+  - Valida no render + blur do input
+  - 6 pontos de insercao: 2 global templates, 2 custom templates, filterFiles, filterFolders
+- CSS: `.mirror-path-warning` com `var(--text-error)` e `var(--font-ui-smaller)`
+- Bug: mirrors existentes sem `custom_auto_update_paths` no JSON → `undefined` (falsy) → check `=== false` em vez de `!value`
 
 ### O que mudou na v27
 

@@ -1,4 +1,4 @@
-import { Plugin, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
+import { Plugin, MarkdownView, TFile, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
@@ -145,6 +145,32 @@ export default class MirrorUIPlugin extends Plugin {
       })
     );
 
+    // Atualizar paths nos settings quando arquivos/pastas sao renomeados
+    this.registerEvent(
+      this.app.vault.on('rename', (file, oldPath) => {
+        const result = this.updateSettingsPaths(oldPath, file.path);
+        if (result.changed) {
+          Logger.log(`Settings paths updated: ${oldPath} → ${file.path}`);
+          const frag = document.createDocumentFragment();
+          frag.createEl('span', { text: `Mirror Notes: paths updated (${oldPath.split('/').pop()} → ${file.path.split('/').pop()}). ` });
+          const link = frag.createEl('a', { text: 'Open settings', attr: { style: 'cursor: pointer; text-decoration: underline;' } });
+          link.addEventListener('click', () => {
+            this.openSettingsToField(file.path, result.mirrorIndices.length > 0 ? result.mirrorIndices : undefined);
+          });
+          new Notice(frag, 8000);
+          this.saveSettings();
+          clearConfigCache();
+        }
+      })
+    );
+
+    // Notificar quando template referenciado e deletado
+    this.registerEvent(
+      this.app.vault.on('delete', (file) => {
+        this.checkDeletedTemplates(file.path);
+      })
+    );
+
     // Registrar eventos de interação do usuário para tracking
     this.registerDomEvent(document, 'keydown', () => {
       this.updateLastUserInteraction();
@@ -176,6 +202,123 @@ export default class MirrorUIPlugin extends Plugin {
   async resetSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS);
     await this.saveSettings();
+  }
+
+  private openSettingsToField(targetValue: string, mirrorIndices?: number[]): void {
+    // Expandir mirrors afetados se colapsados
+    if (mirrorIndices) {
+      for (const idx of mirrorIndices) {
+        if (this.settings.customMirrors[idx]) {
+          this.settings.customMirrors[idx].openview = true;
+        }
+      }
+      this.saveSettings();
+    }
+
+    // @ts-ignore
+    this.app.setting.open();
+    // @ts-ignore
+    this.app.setting.openTabById(this.manifest.id);
+
+    setTimeout(() => {
+      const container = document.querySelector('.mirror-settings_main');
+      if (!container) return;
+      for (const input of Array.from(container.querySelectorAll('input'))) {
+        if ((input as HTMLInputElement).value === targetValue) {
+          input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          (input as HTMLInputElement).focus();
+          break;
+        }
+      }
+    }, 250);
+  }
+
+  private updateSettingsPaths(oldPath: string, newPath: string): { changed: boolean; mirrorIndices: number[]; globalAffected: boolean } {
+    const result = { changed: false, mirrorIndices: [] as number[], globalAffected: false };
+    if (!this.settings.auto_update_paths) return result;
+
+    const s = this.settings;
+
+    const replacePath = (current: string): string | null => {
+      if (!current) return null;
+      if (current === oldPath) return newPath;
+      if (current.startsWith(oldPath + '/')) return newPath + current.slice(oldPath.length);
+      return null;
+    };
+
+    // Global template paths
+    const g1 = replacePath(s.global_settings_live_preview_note);
+    if (g1 !== null) { s.global_settings_live_preview_note = g1; result.changed = true; result.globalAffected = true; }
+
+    const g2 = replacePath(s.global_settings_preview_note);
+    if (g2 !== null) { s.global_settings_preview_note = g2; result.changed = true; result.globalAffected = true; }
+
+    // Custom mirrors (respeita per-mirror toggle)
+    for (let i = 0; i < s.customMirrors.length; i++) {
+      const mirror = s.customMirrors[i];
+      if (mirror.custom_auto_update_paths === false) continue;
+
+      let mirrorAffected = false;
+
+      const c1 = replacePath(mirror.custom_settings_live_preview_note);
+      if (c1 !== null) { mirror.custom_settings_live_preview_note = c1; mirrorAffected = true; }
+
+      const c2 = replacePath(mirror.custom_settings_preview_note);
+      if (c2 !== null) { mirror.custom_settings_preview_note = c2; mirrorAffected = true; }
+
+      // filterFiles — compara filename, nao path completo
+      const oldName = oldPath.split('/').pop();
+      const newName = newPath.split('/').pop();
+      if (oldName && newName && oldName !== newName) {
+        for (const f of mirror.filterFiles) {
+          if (f.folder === oldName) { f.folder = newName; mirrorAffected = true; }
+        }
+      }
+
+      // filterFolders — compara prefixo de path
+      for (const f of mirror.filterFolders) {
+        const r = replacePath(f.folder);
+        if (r !== null) { f.folder = r; mirrorAffected = true; }
+      }
+
+      if (mirrorAffected) {
+        result.changed = true;
+        result.mirrorIndices.push(i);
+      }
+    }
+
+    return result;
+  }
+
+  private checkDeletedTemplates(deletedPath: string): void {
+    const s = this.settings;
+
+    const notify = (msg: string, mirrorIndex?: number) => {
+      const frag = document.createDocumentFragment();
+      frag.createEl('span', { text: msg + ' ' });
+      const link = frag.createEl('a', { text: 'Open settings', attr: { style: 'cursor: pointer; text-decoration: underline;' } });
+      link.addEventListener('click', () => {
+        this.openSettingsToField(deletedPath, mirrorIndex !== undefined ? [mirrorIndex] : undefined);
+      });
+      new Notice(frag, 10000);
+    };
+
+    if (s.global_settings_live_preview_note === deletedPath) {
+      notify(`Mirror Notes: global template "${deletedPath}" was deleted.`);
+    }
+    if (s.global_settings_preview_note === deletedPath) {
+      notify(`Mirror Notes: global preview template "${deletedPath}" was deleted.`);
+    }
+
+    for (let i = 0; i < s.customMirrors.length; i++) {
+      const mirror = s.customMirrors[i];
+      if (mirror.custom_settings_live_preview_note === deletedPath) {
+        notify(`Mirror Notes: template "${deletedPath}" used by "${mirror.name}" was deleted.`, i);
+      }
+      if (mirror.custom_settings_preview_note === deletedPath) {
+        notify(`Mirror Notes: preview template "${deletedPath}" used by "${mirror.name}" was deleted.`, i);
+      }
+    }
   }
 
   // Método para atualizar o estado do hideProps

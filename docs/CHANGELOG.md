@@ -2,9 +2,20 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v27 — Performance + Timing (Era 5)
+## Versao Atual: v28 — Rename-Aware Settings (Era 5)
 
-**Adiciona `registerMarkdownCodeBlockProcessor("mirror")` — templates inline via code blocks, funciona em Reading View e Live Preview. Rendering compartilhado entre CM6 widget e code block.**
+**Settings se auto-atualizam quando arquivos/pastas sao renomeados ou movidos. Validacao inline mostra paths quebrados em tempo real.**
+
+### v28: Rename-Aware Settings + Inline Validation
+
+- `vault.on('rename')` — detecta rename/move, atualiza paths nos settings automaticamente
+- `vault.on('delete')` — Notice clicavel avisando qual mirror ficou com template quebrado
+- Toggle global `auto_update_paths` (ON default) + toggle per-mirror `custom_auto_update_paths`
+- Notice clicavel "Open settings" — expande mirror colapsado, scroll + focus no campo afetado
+- Inline path validation: warning vermelho dentro do `.setting-item` quando path nao existe
+  - Valida no render e no blur do input
+  - Cobre template paths, filterFiles (filename) e filterFolders (folder path)
+- Bug fix: `custom_auto_update_paths` undefined em mirrors existentes → check `=== false`
 
 ### Historico de Eras
 
