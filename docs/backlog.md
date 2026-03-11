@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Features, melhorias e bugs. Atualizado na v25.3.
+Features, melhorias e bugs. Atualizado na v26.
 
 ## Bugs
 
@@ -32,7 +32,7 @@ Features, melhorias e bugs. Atualizado na v25.3.
 - [ ] Painel de status mostrando espelhos ativos na nota atual
 - [ ] Busca e filtros dentro da lista de espelhos no settings
 - [ ] Posicionamento left/right (hoje so top/bottom)
-- [ ] **Suporte a Reading View** — mirrors so funcionam em Live Preview (CM6). Limitacao arquitetural. Pra Reading View seria necessario camada DOM separada (ver analise CM6 vs DOM no technical-notes.md)
+- [x] **Suporte a Reading View** — implementado via code block processor (v26). Blocos ` ```mirror ``` ` funcionam em Reading View e Live Preview. Mirrors via settings (CM6) continuam apenas Live Preview.
 
 ## Features — Gestao
 
@@ -45,7 +45,7 @@ Features, melhorias e bugs. Atualizado na v25.3.
 
 - [ ] Performance para vaults grandes (cache de frontmatter, lazy matching)
 - [ ] Validacao avancada de configuracoes (detectar templates inexistentes, filtros vazios)
-- [ ] Sistema de logs para debugging (toggle no settings)
+- [x] Sistema de logs para debugging (toggle no settings) — implementado na v25.2 (`src/logger.ts`, toggle `debug_logging` no settings)
 - [ ] **Remover `window.mirrorUIPluginInstance`** — hack global. Substituir por `app.plugins.plugins['mirror-notes']` ou API propria
 - [ ] **Fix `StateEffect.reconfigure([])` no onunload** — remove TODAS as extensoes CM6, nao so as do mirror
 - [ ] **Debounce/delay hardcoded** — valores fixos (25ms, 500ms, 1000ms) podem nao funcionar em vaults grandes
@@ -54,10 +54,6 @@ Features, melhorias e bugs. Atualizado na v25.3.
   - Requer teste (major): `typescript` 4.7→5.9, `esbuild` 0.17→0.27, `@types/node` 16→25
   - Mover `@codemirror/state` e `@codemirror/view` de dependencies para devDependencies (Obsidian ja fornece em runtime)
 - [ ] **Posicoes fora do .cm-content** — acima das properties, acima dos backlinks. Requer camada DOM (ver analise no technical-notes.md)
-
-## Integracao — Futuro
-
-- [ ] API para outros plugins interagirem com mirrors
 
 ---
 

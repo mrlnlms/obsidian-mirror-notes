@@ -1,4 +1,4 @@
-import { TFile, MarkdownRenderer } from "obsidian";
+import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../logger';
 
@@ -9,6 +9,7 @@ export interface RenderContext {
   sourcePath: string;
   container: HTMLElement;
   cacheKey: string;
+  component?: Component;
 }
 
 // Caches compartilhados entre CM6 widget e code block processor
@@ -70,8 +71,9 @@ async function doRender(ctx: RenderContext): Promise<void> {
 
     const contentHash = simpleHash(processedContent);
     const lastContent = lastRenderedContent.get(cacheKey);
-    if (lastContent === contentHash) {
-      Logger.log('Content unchanged, skipping render');
+    // Cache de hash so para CM6 widgets (container reusado). Code blocks (com component) sempre renderizam.
+    if (!ctx.component && lastContent === contentHash && container.children.length > 0) {
+      Logger.log('Content unchanged and container has content, skipping render');
       return;
     }
 
@@ -81,13 +83,22 @@ async function doRender(ctx: RenderContext): Promise<void> {
     contentDiv.style.cssText = "pointer-events: auto;";
     container.appendChild(contentDiv);
 
+    const component = ctx.component ?? plugin;
+
     Logger.log(`Rendering markdown for: ${sourcePath}`);
     await MarkdownRenderer.renderMarkdown(
       processedContent,
       contentDiv,
       sourcePath,
-      plugin
+      component
     );
+
+    // Registrar no lifecycle do Obsidian (necessario pro Reading View)
+    if (ctx.component) {
+      const renderChild = new MarkdownRenderChild(contentDiv);
+      ctx.component.addChild(renderChild);
+    }
+
     Logger.log('Markdown rendered successfully');
   } catch (error) {
     Logger.error('Error rendering template:', error);

@@ -1,8 +1,14 @@
 # Mirror Notes — Roadmap
 
-## Prioridade 1: Estabilizar v25
+## Concluido: v26 — Code Block Processor
 
-Corrigir os bugs que impedem features existentes de funcionar:
+- [x] `registerMarkdownCodeBlockProcessor("mirror")` — Reading View + Live Preview
+- [x] Rendering compartilhado (templateRenderer.ts)
+- [x] Sintaxe: template, source, variaveis inline
+- [x] MarkdownRenderChild para lifecycle correto
+- [x] onLayoutReady para notas ja abertas
+
+## Prioridade 1: Estabilizar bugs existentes
 
 - [ ] Fix Hide Properties (CSS selector vs DOM do Obsidian)
 - [ ] Fix filterProps com listas YAML (tags, aliases)
@@ -11,7 +17,8 @@ Corrigir os bugs que impedem features existentes de funcionar:
 ## Prioridade 2: Qualidade de vida
 
 - [ ] Validacao de configuracoes (template inexistente, filtro vazio)
-- [ ] Logs toggle no settings para debugging
+- [ ] Documentacao de uso do code block processor (README ou wiki)
+- [ ] Reatividade cross-note (quando `source: outra-nota.md` muda, re-renderizar)
 
 ## Futuro
 

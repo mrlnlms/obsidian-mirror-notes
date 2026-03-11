@@ -2,9 +2,37 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v25.3 — Cleanup modularizacao (Era 4)
+## Versao Atual: v26 — Code Block Processor (Era 5)
 
-**Completa a modularizacao da v23: remove dead code, corrige widgetInstanceCache, desabilita recovery.**
+**Adiciona `registerMarkdownCodeBlockProcessor("mirror")`. Templates inline via code blocks, funciona em Reading View e Live Preview. Rendering compartilhado entre CM6 widget e code block.**
+
+### O que mudou na v26
+
+- Novo `registerMarkdownCodeBlockProcessor("mirror", ...)` — processa blocos ` ```mirror ``` ` em ambas as views
+- Logica de rendering extraida de `mirrorWidget.ts` para `src/rendering/templateRenderer.ts` (modulo compartilhado)
+- `mirrorWidget.ts` refatorado: `doUpdateContent()` + `simpleHash()` substituidos por `renderMirrorTemplate()`
+- Novo `src/rendering/blockParser.ts` — parser key:value para conteudo do code block
+- Novo `src/rendering/codeBlockProcessor.ts` — processor + resolucao de variaveis via `metadataCache`
+- `MarkdownRenderChild` registrado via `ctx.addChild()` — necessario para lifecycle correto no Reading View
+- `onLayoutReady()` em `main.ts` — forca `previewMode.rerender(true)` nas notas ja abertas quando o plugin carrega
+- Cache de hash desabilitado para code blocks (`!ctx.component`) — Obsidian recria o container a cada render
+- Caches `lastRenderedContent` e `renderingPromises` movidos de `MirrorTemplateWidget` para `templateRenderer.ts`
+- `mirrorState.ts` usa `clearRenderCache()` em vez de acessar cache estatico do widget
+
+### Sintaxe do code block
+
+````
+```mirror
+template: templates/meu-template.md
+source: notas/outra-nota.md
+titulo: Override Custom
+```
+````
+
+- `template` — obrigatorio, caminho do template no vault
+- `source` — opcional, nota de onde puxar frontmatter (default: nota atual)
+- Demais chaves = variaveis inline (override sobre frontmatter)
+- Resolucao: `{ ...frontmatterAtual, ...frontmatterSource, ...inlineVars }`
 
 ### O que mudou na v25.3
 
@@ -50,33 +78,45 @@ Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura,
 
 ---
 
-## Arquitetura (v25.3)
+## Arquitetura (v26)
 
 ```
-main.ts                          — MirrorUIPlugin (lifecycle, CM6 setup, hideProps)
-settings.ts                      — MirrorUISettingsTab (global/custom mirrors, filters)
-YAMLSuggest.ts                   — YAML property suggestions
-utils.ts                         — Utility functions
-utils/file-suggest.ts            — FileSuggest, FolderSuggest, YamlPropertySuggest
-utils/suggest.ts                 — Abstract suggest base class
-src/editor/mirrorState.ts        — CM6 StateField + StateEffects (273 linhas, hub central)
-src/editor/mirrorWidget.ts       — CM6 WidgetType (template rendering + {{var}} + caches)
-src/editor/mirrorConfig.ts       — getApplicableConfig() — matching logic (file, folder, props)
-src/editor/mirrorDecorations.ts  — buildDecorations() + cleanOrphanWidgets()
-src/editor/mirrorTypes.ts        — Interfaces compartilhadas
-src/editor/mirrorUtils.ts        — parseFrontmatter, hashObject, generateWidgetId
-src/editor/mirrorViewPlugin.ts   — Recovery ViewPlugin (comentado, v25.3)
-src/logger.ts                    — Logger com toggle via settings
-styles.css                       — Plugin styles + hideProps CSS
+main.ts                              — MirrorUIPlugin (lifecycle, CM6 setup, code block, hideProps)
+settings.ts                          — MirrorUISettingsTab (global/custom mirrors, filters)
+YAMLSuggest.ts                       — YAML property suggestions
+utils.ts                             — Utility functions
+utils/file-suggest.ts                — FileSuggest, FolderSuggest, YamlPropertySuggest
+utils/suggest.ts                     — Abstract suggest base class
+src/rendering/templateRenderer.ts    — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
+src/rendering/codeBlockProcessor.ts  — registerMarkdownCodeBlockProcessor("mirror")
+src/rendering/blockParser.ts         — parseBlockContent() — parser key:value do code block
+src/editor/mirrorState.ts            — CM6 StateField + StateEffects (hub central)
+src/editor/mirrorWidget.ts           — CM6 WidgetType (delega para templateRenderer)
+src/editor/mirrorConfig.ts           — getApplicableConfig() — matching logic (file, folder, props)
+src/editor/mirrorDecorations.ts      — buildDecorations() + cleanOrphanWidgets()
+src/editor/mirrorTypes.ts            — Interfaces compartilhadas
+src/editor/mirrorUtils.ts            — parseFrontmatter, hashObject, generateWidgetId
+src/editor/mirrorViewPlugin.ts       — Recovery ViewPlugin (comentado, v25.3)
+src/logger.ts                        — Logger com toggle via settings
+styles.css                           — Plugin styles + hideProps + code block CSS
 ```
 
-### Fluxo principal
+### Fluxo principal — CM6 widget (Live Preview, via settings)
 
 1. `MirrorUIPlugin.setupEditor()` registra `mirrorStateField` como extensao CM6
 2. `mirrorState.ts` — StateField usa `parseFrontmatter` (mirrorUtils) e `getApplicableConfig` (mirrorConfig)
 3. `mirrorDecorations.ts` — `buildDecorations()` cria `MirrorTemplateWidget` (mirrorWidget) com `Decoration.widget`
-4. `mirrorWidget.ts` — WidgetType renderiza o template markdown com substituicao `{{var}}`
+4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
 5. `main.ts` — `updateHidePropsForView()` adiciona/remove classe CSS pra esconder frontmatter
+
+### Fluxo principal — Code block (Reading View + Live Preview, inline)
+
+1. `main.ts` — `registerMirrorCodeBlock(this)` registra o processor no `onload()`
+2. Obsidian detecta bloco ` ```mirror ``` ` e chama o processor
+3. `blockParser.ts` — `parseBlockContent()` extrai template, source, variaveis inline
+4. `codeBlockProcessor.ts` — resolve variaveis (inline > source > frontmatter atual via metadataCache)
+5. `templateRenderer.ts` — `renderMirrorTemplate()` le template, substitui `{{var}}`, `MarkdownRenderer.renderMarkdown()`
+6. `MarkdownRenderChild` registrado via `ctx.addChild()` para lifecycle do Obsidian
 
 ### Eventos registrados
 

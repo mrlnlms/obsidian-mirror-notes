@@ -2,9 +2,9 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v25 — Fix hideProps (Era 4) — FINAL
+## Versao Atual: v26 — Code Block Processor (Era 5)
 
-**Substitui Decoration.replace por CSS-based property hiding. HideFrontmatterWidget removido, decorations simplificadas.**
+**Adiciona `registerMarkdownCodeBlockProcessor("mirror")` — templates inline via code blocks, funciona em Reading View e Live Preview. Rendering compartilhado entre CM6 widget e code block.**
 
 ### Historico de Eras
 
@@ -73,6 +73,18 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
   - Decorations simplificadas de ~120 pra ~35 linhas
   - styles.css: `.mirror-hide-properties .metadata-container { display: none }`, seletores com `:has()`
   - settings.ts chama updateHidePropsForView() apos force update
+
+#### Era 5: Code Block Processor (Mar 2026)
+- **v26: Code block processor + shared renderer**
+  - `registerMarkdownCodeBlockProcessor("mirror", ...)` — funciona em Reading View e Live Preview
+  - Sintaxe: ` ```mirror\ntemplate: path\nsource: nota\nvar: valor\n``` `
+  - Logica de rendering extraida para `src/rendering/templateRenderer.ts` (modulo compartilhado)
+  - CM6 widget (`mirrorWidget.ts`) refatorado para usar `renderMirrorTemplate()`
+  - Parser de code blocks em `src/rendering/blockParser.ts`
+  - Resolucao de variaveis: inline > source > frontmatter da nota atual (via `metadataCache`)
+  - `MarkdownRenderChild` para lifecycle correto no Reading View
+  - `onLayoutReady()` forca re-render de notas ja abertas ao iniciar
+  - Cache de hash desabilitado para code blocks (container recreado pelo Obsidian a cada render)
 
 ### Bugs conhecidos (v25)
 

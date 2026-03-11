@@ -67,6 +67,16 @@ export default class MirrorUIPlugin extends Plugin {
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
 
+    // Re-renderizar notas abertas apos layout pronto (code blocks ja renderizados antes do plugin)
+    this.app.workspace.onLayoutReady(() => {
+      this.app.workspace.iterateAllLeaves(leaf => {
+        if (leaf.view instanceof MarkdownView && leaf.view.file) {
+          // @ts-ignore — previewMode existe em runtime
+          leaf.view.previewMode?.rerender(true);
+        }
+      });
+    });
+
     // Registrar a aba de configurações
     this.addSettingTab(new MirrorUISettingsTab(this.app, this));
 

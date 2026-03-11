@@ -1,4 +1,4 @@
-import { TFile } from "obsidian";
+import { TFile, MarkdownRenderChild } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { parseBlockContent } from './blockParser';
 import { renderMirrorTemplate } from './templateRenderer';
@@ -23,6 +23,10 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     // Container estilizado (sem .mirror-ui-widget pra nao herdar regras CM6)
     const container = el.createEl('div', { cls: 'mirror-code-block' });
 
+    // Registrar no lifecycle do Obsidian (necessario pro Reading View)
+    const child = new MarkdownRenderChild(container);
+    ctx.addChild(child);
+
     // Cache key unico por bloco (path da nota + posicao no documento)
     const sectionInfo = ctx.getSectionInfo(el);
     const lineStart = sectionInfo?.lineStart ?? 0;
@@ -34,7 +38,8 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       variables,
       sourcePath: ctx.sourcePath,
       container,
-      cacheKey
+      cacheKey,
+      component: child
     });
   });
 }
