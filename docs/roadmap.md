@@ -1,5 +1,27 @@
 # Mirror Notes — Roadmap
 
+Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
+
+## Pre-lancamento (must-have)
+
+- [ ] **Sistema de templates pre-configurados (starter configs)** — usuario instala e ja tem exemplos funcionando. So faz sentido quando o plugin estiver pronto pra lancar
+- [x] **README: documentar code blocks** (v29) — secao com sintaxe ` ```mirror ``` `, exemplos e uso
+
+## Should-have
+
+- [ ] **Import/Export de configuracoes** — precisa de user-flow bem pensado. Validacao de schema no import, tratamento de paths quebrados, conflitos com mirrors existentes. Depende do redesign de settings (backlog) pra validacao mais forte
+
+## Nice-to-have
+
+- [ ] **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc.
+
+## Concluido: v30 — Cross-Note Reactivity
+
+- [x] `SourceDependencyRegistry` — registry centralizado com callbacks de re-render
+- [x] Code block processor registra dependencias + callback `doRender()` com cleanup automatico
+- [x] Branch cross-note no `metadataCache.on('changed')` com debounce 500ms
+- [x] Funciona em Live Preview e Reading View (callbacks diretos, sem depender de `previewMode.rerender`)
+
 ## Concluido: v29 — Dependency Update + Insert Mirror Block + Cleanup
 
 - [x] Deps atualizadas: TS 4.7→5.9, esbuild 0.17→0.25, ESLint 9 flat config, obsidian pinado
@@ -42,19 +64,3 @@
 - [x] Sintaxe: template, source, variaveis inline
 - [x] MarkdownRenderChild para lifecycle correto
 - [x] onLayoutReady para notas ja abertas
-
-## Proximo: Benchmark VirtualNotes + Redesign Settings
-
-Bloco unico que resolve bugs, adiciona posicoes DOM, e redesenha settings. Ver [backlog.md](backlog.md) para detalhes completos.
-
-1. Benchmark VirtualNotes vs MirrorNotes (settings, posicoes, condicionais)
-2. Redesign settings (bugs Hide Properties/filterProps/parseFrontmatter entram aqui)
-3. Implementar posicoes DOM (acima/abaixo titulo, acima/abaixo properties)
-
-## Independentes (qualquer momento)
-
-- [ ] Import/Export de configuracoes (precisa user-flow)
-- [ ] Sistema de templates pre-configurados (starter configs)
-- [ ] Dashboard de uso
-- [ ] Documentacao de uso do code block processor
-- [ ] Reatividade cross-note (quando `source: outra-nota.md` muda, re-renderizar)

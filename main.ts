@@ -7,13 +7,16 @@ import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from '.
 import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
+import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache } from './src/editor/mirrorConfig';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
+  sourceDeps = new SourceDependencyRegistry();
   private activeEditors: Map<string, boolean> = new Map();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
+  private crossNoteTimeout: NodeJS.Timeout | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -83,37 +86,48 @@ export default class MirrorUIPlugin extends Plugin {
     let metadataUpdateTimeout: NodeJS.Timeout | null = null;
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
+        // Branch 1: arquivo ativo (CM6 widgets)
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file && file.path === activeView.file.path) {
           // @ts-ignore
           const cm = activeView.editor.cm;
           if (cm) {
-            // Cancelar timeout anterior se existir
             if (metadataUpdateTimeout) {
               clearTimeout(metadataUpdateTimeout);
             }
-            
-            // Aguardar muito mais tempo para estabilizar
+
             metadataUpdateTimeout = setTimeout(() => {
-              // Só forçar update se realmente necessário e não estiver digitando
               const now = Date.now();
               const lastInteraction = this.getLastUserInteraction();
-              
-              // Muito mais conservador: 1 segundo desde última interação
+
               if (now - lastInteraction > TIMING.USER_INACTIVITY_THRESHOLD) {
                 Logger.log('Metadata changed, updating mirror');
                 cm.dispatch({
                   effects: forceMirrorUpdateEffect.of()
                 });
-                // Atualizar hideProps também
                 this.updateHidePropsForView(activeView);
               } else {
                 Logger.log('Metadata changed but user is active, skipping update');
               }
-              
+
               metadataUpdateTimeout = null;
             }, TIMING.METADATA_CHANGE_DEBOUNCE);
           }
+        }
+
+        // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
+        const callbacks = this.sourceDeps.getDependentCallbacks(file.path);
+        if (callbacks.length > 0) {
+          if (this.crossNoteTimeout) {
+            clearTimeout(this.crossNoteTimeout);
+          }
+          this.crossNoteTimeout = setTimeout(() => {
+            Logger.log(`Cross-note refresh: ${callbacks.length} block(s) depend on ${file.path}`);
+            for (const cb of callbacks) {
+              cb();
+            }
+            this.crossNoteTimeout = null;
+          }, TIMING.METADATA_CHANGE_DEBOUNCE);
         }
       })
     );
@@ -409,9 +423,15 @@ export default class MirrorUIPlugin extends Plugin {
     // 4. Limpar referências
     this.activeEditors.clear();
 
-    // 5. Limpar timeouts
+    // 5. Limpar registry de dependencias cross-note
+    this.sourceDeps.clear();
+
+    // 6. Limpar timeouts
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
+    }
+    if (this.crossNoteTimeout) {
+      clearTimeout(this.crossNoteTimeout);
     }
     
     Logger.log('Plugin unloaded successfully');

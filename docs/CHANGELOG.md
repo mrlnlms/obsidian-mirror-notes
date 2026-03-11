@@ -2,9 +2,24 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v29 — Dependency Update + Insert Mirror Block + Cleanup (Era 5)
+## Versao Atual: v30 — Cross-Note Reactivity (Era 5)
 
-**Atualizacao completa de dependencias, menu contextual para inserir blocos mirror, e limpeza de codigo.**
+**Mirror blocks com `source:` agora atualizam automaticamente quando o frontmatter da nota source muda em outra aba.**
+
+### v30: Cross-Note Reactivity
+
+- Novo `src/rendering/sourceDependencyRegistry.ts` — registry centralizado de dependencias cross-note
+  - Map `sourcePath → Set<blockKey>` com callbacks de re-render
+  - Lookup O(1) no `metadataCache.on('changed')`
+- `codeBlockProcessor.ts` — registra dependencia + callback `doRender()` quando bloco tem `source:`
+  - Callback re-resolve variaveis (frontmatter fresco) e re-renderiza no mesmo container
+  - Cleanup automatico via `MarkdownRenderChild.register()` quando bloco e destruido
+- `main.ts` — branch cross-note no listener de `metadataCache.on('changed')`
+  - `sourceDeps` como propriedade publica do plugin
+  - Debounce via `crossNoteTimeout` (500ms, reusa `TIMING.METADATA_CHANGE_DEBOUNCE`)
+  - Callbacks invocados diretamente (funciona em Live Preview e Reading View)
+  - Cleanup do registry e timeout no `onunload()`
+- Abordagem inicial com `previewMode.rerender(true)` descartada — so funciona em Reading View
 
 ### v29: Dependency Update + Insert Mirror Block + Cleanup
 

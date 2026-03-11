@@ -2,9 +2,45 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v29 — Dependency Update + Insert Mirror Block + Cleanup (Era 5)
+## Versao Atual: v30 — Cross-Note Reactivity (Era 5)
 
-**Deps atualizadas (TS5, esbuild 0.25, ESLint 9 flat config). Facet CM6 substitui window global. Menu contextual pra inserir blocos mirror.**
+**Mirror blocks com `source:` atualizam automaticamente quando o frontmatter da source muda.**
+
+### O que mudou na v30
+
+**Problema**: Quando um mirror block usa `source: outra-nota.md`, o frontmatter era lido uma unica vez no render inicial. Editar a source em outra aba nao atualizava o mirror block. O listener existente em `metadataCache.on('changed')` so escutava mudancas no arquivo ativo.
+
+**Solucao**: `SourceDependencyRegistry` — registry centralizado com callbacks de re-render direto.
+
+**Arquivos:**
+- Novo `src/rendering/sourceDependencyRegistry.ts`:
+  - `deps: Map<sourcePath, Set<blockKey>>` — quem depende de quem
+  - `callbacks: Map<blockKey, () => Promise<void>>` — re-render direto no container
+  - `register()`, `unregisterBlock()`, `getDependentCallbacks()`, `clear()`
+- Modificado `src/rendering/codeBlockProcessor.ts`:
+  - Extrai `doRender()` como funcao reusavel (resolve variaveis + renderiza)
+  - Registra `doRender` como callback no registry quando bloco tem `source:`
+  - Cleanup via `MarkdownRenderChild.register()` — chama `unregisterBlock()` no unload
+- Modificado `main.ts`:
+  - `sourceDeps: SourceDependencyRegistry` (propriedade publica)
+  - `crossNoteTimeout` — debounce do branch cross-note
+  - Branch 2 no `metadataCache.on('changed')`: consulta registry, invoca callbacks apos debounce
+  - Cleanup no `onunload()`: `sourceDeps.clear()` + `clearTimeout(crossNoteTimeout)`
+
+**Aprendizado importante — `previewMode.rerender(true)` so funciona em Reading View:**
+- A abordagem inicial usava `previewMode.rerender(true)` + `forceMirrorUpdateEffect` pra re-render
+- Em Reading View funcionava (preview e o modo ativo)
+- Em Live Preview nao funcionava — code blocks sao renderizados pelo CM6 e `previewMode` e o modo "escondido"
+- Fix: guardar callbacks diretos (funcoes que re-resolve variaveis e re-renderiza no mesmo container DOM)
+- Callbacks funcionam em ambos os modos porque operam diretamente no container, sem depender do modo de view
+
+**Fluxo end-to-end:**
+1. `dashboard.md` tem `source: projects/alpha.md` → processor registra dependencia + callback
+2. Usuario edita frontmatter de `alpha.md` em outra aba
+3. `metadataCache.on('changed')` dispara com `file.path = "projects/alpha.md"`
+4. Registry retorna callbacks dos blocos dependentes
+5. Apos debounce 500ms, callbacks sao invocados
+6. Cada callback re-resolve variaveis (le frontmatter fresco do `metadataCache`) e re-renderiza
 
 ### O que mudou na v29
 
@@ -164,19 +200,20 @@ titulo: Override Custom
 
 ---
 
-## Arquitetura (v26)
+## Arquitetura (v30)
 
 ```
-main.ts                              — MirrorUIPlugin (lifecycle, CM6 setup, code block, hideProps)
-settings.ts                          — MirrorUISettingsTab (global/custom mirrors, filters)
-YAMLSuggest.ts                       — YAML property suggestions
-utils.ts                             — Utility functions
-utils/file-suggest.ts                — FileSuggest, FolderSuggest, YamlPropertySuggest
-utils/suggest.ts                     — Abstract suggest base class
-src/rendering/templateRenderer.ts    — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
-src/rendering/codeBlockProcessor.ts  — registerMarkdownCodeBlockProcessor("mirror")
-src/rendering/blockParser.ts         — parseBlockContent() — parser key:value do code block
-src/editor/mirrorState.ts            — CM6 StateField + StateEffects (hub central)
+main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, hideProps)
+settings.ts                                — MirrorUISettingsTab (global/custom mirrors, filters)
+YAMLSuggest.ts                             — YAML property suggestions
+utils.ts                                   — Utility functions
+utils/file-suggest.ts                      — FileSuggest, FolderSuggest, YamlPropertySuggest
+utils/suggest.ts                           — Abstract suggest base class
+src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
+src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
+src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
+src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
+src/editor/mirrorState.ts                  — CM6 StateField + StateEffects (hub central)
 src/editor/mirrorWidget.ts           — CM6 WidgetType (delega para templateRenderer)
 src/editor/timingConfig.ts           — TIMING object (constantes centralizadas de debounce/delay)
 src/editor/mirrorConfig.ts           — getApplicableConfig() + configCache + clearConfigCache()
@@ -210,7 +247,7 @@ styles.css                           — Plugin styles + hideProps + code block 
 - `editor-change` — re-setup do editor ao editar
 - `file-open` — setup ao abrir arquivo (delay TIMING.EDITOR_SETUP_DELAY)
 - `active-leaf-change` — setup ao trocar aba (delay TIMING.EDITOR_SETUP_DELAY)
-- `metadataCache.changed` — force update se usuario inativo >TIMING.USER_INACTIVITY_THRESHOLD (delay TIMING.METADATA_CHANGE_DEBOUNCE)
+- `metadataCache.changed` — branch 1: force update se usuario inativo (delay TIMING.METADATA_CHANGE_DEBOUNCE). Branch 2: cross-note — invoca callbacks de re-render para blocos dependentes (debounce TIMING.METADATA_CHANGE_DEBOUNCE)
 - `vault.modify` em `data.json` — re-update ao mudar settings (debounce TIMING.SETTINGS_FILE_DEBOUNCE)
 - DOM: `keydown` + `mousedown` — tracking de ultima interacao do usuario
 

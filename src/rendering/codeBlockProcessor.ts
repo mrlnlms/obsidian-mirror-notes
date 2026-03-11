@@ -17,9 +17,6 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       return;
     }
 
-    // Resolver variaveis: inline > source > nota atual
-    const variables = await resolveVariables(plugin, config.inlineVars, config.sourcePath, ctx.sourcePath);
-
     // Container estilizado (sem .mirror-ui-widget pra nao herdar regras CM6)
     const container = el.createEl('div', { cls: 'mirror-code-block' });
 
@@ -32,15 +29,30 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     const lineStart = sectionInfo?.lineStart ?? 0;
     const cacheKey = `block-${ctx.sourcePath}-${lineStart}`;
 
-    await renderMirrorTemplate({
-      plugin,
-      templatePath: config.templatePath,
-      variables,
-      sourcePath: ctx.sourcePath,
-      container,
-      cacheKey,
-      component: child
-    });
+    // Funcao de render (reusada no re-render cross-note)
+    const doRender = async () => {
+      const variables = await resolveVariables(plugin, config.inlineVars, config.sourcePath, ctx.sourcePath);
+      await renderMirrorTemplate({
+        plugin,
+        templatePath: config.templatePath,
+        variables,
+        sourcePath: ctx.sourcePath,
+        container,
+        cacheKey,
+        component: child
+      });
+    };
+
+    // Registrar dependencia cross-note se tem source externo
+    if (config.sourcePath) {
+      const blockKey = `${ctx.sourcePath}::${lineStart}`;
+      plugin.sourceDeps.register(config.sourcePath, ctx.sourcePath, blockKey, doRender);
+      child.register(() => {
+        plugin.sourceDeps.unregisterBlock(blockKey);
+      });
+    }
+
+    await doRender();
   });
 }
 

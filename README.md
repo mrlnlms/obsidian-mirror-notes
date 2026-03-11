@@ -10,6 +10,9 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Template Variables**: Use `{{variable}}` syntax to inject frontmatter values into templates
 - **Position Control**: Place templates at the top or bottom of your notes
 - **Hide Properties Option**: Optionally hide the frontmatter section in notes with mirrors
+- **Inline Mirror Blocks**: Embed templates anywhere with ` ```mirror``` ` code blocks — works in Live Preview and Reading View
+- **Cross-Note Reactivity**: Mirror blocks with `source:` update automatically when the source note's frontmatter changes — even across split views
+- **Insert Command**: Right-click menu and command palette entry with file autocomplete
 - **Live Preview Support**: Works seamlessly in Obsidian's Live Preview mode
 - **Performance Optimized**: Intelligent caching and debouncing for smooth editing
 
@@ -64,6 +67,53 @@ priority: high
 Your regular note content here...
 ```
 
+### Inline Mirror Blocks
+
+You can also embed mirrors directly in any note using code blocks — no settings required:
+
+````markdown
+```mirror
+template: templates/project-dashboard.md
+```
+````
+
+The block renders the template using the current note's frontmatter for `{{variable}}` substitution.
+
+#### Syntax
+
+| Key | Required | Description |
+|-----|----------|-------------|
+| `template` | Yes | Path to the template file in your vault |
+| `source` | No | Path to another note to pull frontmatter from (defaults to current note) |
+| Any other key | No | Inline variable overrides |
+
+#### Full example
+
+````markdown
+```mirror
+template: templates/project-card.md
+source: projects/website-redesign.md
+status: completed
+```
+````
+
+Variable resolution order: `inline overrides > source frontmatter > current note frontmatter`.
+
+#### Inserting via menu
+
+Right-click in the editor or use the command palette (`Cmd/Ctrl+P` → **Insert mirror block**) to open a dialog with file autocomplete for template and source paths.
+
+#### Settings mirrors vs inline blocks
+
+| | Settings mirrors | Inline blocks |
+|---|---|---|
+| **Scope** | Applied automatically to matching notes | Only where you place the block |
+| **Configuration** | Plugin settings UI | Written directly in the note |
+| **Works in** | Live Preview (CM6 widget) | Live Preview + Reading View |
+| **Best for** | Consistent templates across many notes | One-off embeds, mixed layouts |
+
+Both use the same rendering engine and `{{variable}}` syntax.
+
 ## Use Cases
 
 ### Reusable Content Blocks
@@ -112,21 +162,33 @@ Create multiple mirrors with different configurations:
 
 ### How It Works
 
-Mirror Notes uses CodeMirror 6 extensions to inject content directly into the editor. A **StateField** parses the document's frontmatter and matches it against configured filters. When a match is found, a **ViewPlugin** creates decorations, and a **WidgetType** renders the template markdown with `{{variable}}` substitution from the note's frontmatter values. The plugin never modifies the note's content — it only adds visual elements to the editor DOM.
+Mirror Notes operates in two modes with a shared rendering engine:
+
+1. **Settings mirrors** (Live Preview): CodeMirror 6 extensions inject content into the editor. A StateField parses frontmatter and matches it against configured filters. When matched, a WidgetType renders the template with `{{variable}}` substitution.
+
+2. **Inline code blocks** (Live Preview + Reading View): A `registerMarkdownCodeBlockProcessor` handles ` ```mirror``` ` blocks, parsing `template:`, `source:`, and inline variables, then rendering through the same template engine.
+
+The plugin never modifies the note's content — it only adds visual elements to the editor DOM.
 
 ### Architecture
 
 ```
-main.ts                          — Plugin lifecycle, CM6 setup, hideProps
-settings.ts                      — Settings tab (global/custom mirrors, filters)
-src/editor/mirrorState.ts        — CM6 StateField + StateEffects + parseFrontmatter
-src/editor/mirrorViewPlugin.ts   — CM6 ViewPlugin (widget rendering)
-src/editor/mirrorWidget.ts       — CM6 WidgetType (template + {{var}} substitution)
-src/editor/mirrorConfig.ts       — Configuration + filter matching logic
-src/editor/mirrorDecorations.ts  — Decoration builder
-src/editor/mirrorTypes.ts        — Shared type definitions
-src/editor/mirrorUtils.ts        — Editor utility functions
-styles.css                       — Plugin styles + hideProps CSS
+main.ts                              — Plugin lifecycle, CM6 setup, code block, hideProps
+settings.ts                          — Settings tab (global/custom mirrors, filters)
+src/commands/insertMirrorBlock.ts    — Insert mirror block command + modal
+src/rendering/templateRenderer.ts    — Shared rendering engine (CM6 + code block)
+src/rendering/codeBlockProcessor.ts        — Code block processor (```mirror```) + cross-note deps
+src/rendering/blockParser.ts               — Key:value parser for code blocks
+src/rendering/sourceDependencyRegistry.ts  — Cross-note dependency tracking
+src/editor/mirrorState.ts            — CM6 StateField + StateEffects
+src/editor/mirrorWidget.ts           — CM6 WidgetType (delegates to templateRenderer)
+src/editor/mirrorConfig.ts           — Configuration + filter matching logic
+src/editor/mirrorDecorations.ts      — Decoration builder
+src/editor/mirrorTypes.ts            — Shared type definitions
+src/editor/mirrorUtils.ts            — parseFrontmatter, hashObject, generateWidgetId
+src/editor/timingConfig.ts           — Centralized timing constants
+src/logger.ts                        — Logger with toggle via settings
+styles.css                           — Plugin styles + hideProps + code block CSS
 ```
 
 ### Building from Source
@@ -139,14 +201,15 @@ npm run dev      # watch mode
 
 ## Version History
 
-25 versions across 4 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+28 versions across 5 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
 | Era 1: Prototype Sprint | Jun 2024 | v1-v10 — First working prototype |
 | Era 2: Settings Evolution | Jul-Aug 2024 | v11-v18 — Settings UI, autocomplete, build system |
 | Era 3: CSS | Nov 2024 | v19 — Styles rewrite |
-| Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite (current) |
+| Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
+| Era 5: Code Blocks + Polish | Mar 2026 | v26-v30 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity |
 
 ## Support
 
