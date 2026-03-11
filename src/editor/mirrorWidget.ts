@@ -10,6 +10,7 @@ export class MirrorTemplateWidget extends WidgetType {
   public static domCache = new Map<string, HTMLElement>();
   public static lastRenderedContent = new Map<string, string>();
   public static renderingPromises = new Map<string, Promise<void>>();
+  public static widgetInstanceCache = new Map<string, MirrorTemplateWidget>();
 
   constructor(
     private plugin: MirrorUIPlugin,

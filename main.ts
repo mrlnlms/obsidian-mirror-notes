@@ -1,7 +1,8 @@
 import { Plugin, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from './src/editor/mirrorState';
-import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
+// Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
+// import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 
@@ -217,8 +218,8 @@ export default class MirrorUIPlugin extends Plugin {
 
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
-          mirrorStateField,
-          mirrorRecoveryPlugin
+          mirrorStateField
+          // mirrorRecoveryPlugin — desabilitado (v25.2)
         ])
       });
     } else {

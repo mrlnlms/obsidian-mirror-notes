@@ -3,7 +3,6 @@ import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/v
 import { MirrorState } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
 import { MirrorTemplateWidget } from "./mirrorWidget";
-import { getApplicableConfig } from "./mirrorConfig";
 import { mirrorStateField } from "./mirrorState";
 import { Logger } from '../logger';
 
@@ -52,13 +51,11 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
   }
 
   try {
-    let widget = (MirrorTemplateWidget as any).widgetInstanceCache?.get?.(widgetId);
+    let widget = MirrorTemplateWidget.widgetInstanceCache.get(widgetId);
     if (!widget) {
       Logger.log(`Creating new widget instance for: ${widgetId}`);
       widget = new MirrorTemplateWidget(plugin, mirrorState, config, widgetId);
-      if ((MirrorTemplateWidget as any).widgetInstanceCache) {
-        (MirrorTemplateWidget as any).widgetInstanceCache.set(widgetId, widget);
-      }
+      MirrorTemplateWidget.widgetInstanceCache.set(widgetId, widget);
     } else {
       Logger.log(`Using cached widget instance for: ${widgetId}`);
     }
