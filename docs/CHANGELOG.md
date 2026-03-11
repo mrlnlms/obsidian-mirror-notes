@@ -2,7 +2,23 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v30 — Cross-Note Reactivity (Era 5)
+## Versao Atual: v31 — Refatorar Suggester + Busca de Mirrors
+
+### v31: Refatorar Suggester + Busca de Mirrors
+
+**Refatoracao:**
+- `utils.ts` eliminado — `wrapAround` movido inline pra `utils/suggest.ts`
+- `suggest.ts` limpo: `(<any>this.app).dom.appContainerEl` → `document.body`, `(<any>this.app).keymap` → `// @ts-ignore` explicito, whitespace removido
+- `templater_search` → `mirror-search-input` em 4 ocorrencias no `settings.ts`
+- `utils/file-suggest.ts` sem mudanca (codigo limpo)
+
+**Busca de mirrors no settings:**
+- Novo campo de busca inline acima da lista de custom mirrors
+- Filtro por nome em tempo real (hide/show de cards via `display: none`)
+- Mensagem "No mirrors matching" aparece dentro do `mirror-plugin-cards` com visual de card (background, border-radius)
+- CSS: `.mirror-search-container` com `margin-bottom` e `border-top: none`, `.mirror-search-empty` com visual de card
+
+## v30 — Cross-Note Reactivity (Era 5)
 
 **Mirror blocks com `source:` agora atualizam automaticamente quando o frontmatter da nota source muda em outra aba.**
 

@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v30.
+Trabalho tecnico a ser feito. Atualizado na v31.
 
 ## Benchmark + Redesign Settings
 
@@ -17,9 +17,6 @@ Tudo abaixo converge num unico bloco de trabalho. O benchmark VirtualNotes vs Mi
 - **filterProps falha com listas YAML** — matching usa `===` (string vs array = sempre false). Tratamento YAML inteiro pode mudar
 - **parseFrontmatter hardcoda listas em tags** — linhas com `-` sao jogadas em `result.tags` ignorando a key real. Mesmo caso
 
-**Features que entram nesse redesign:**
-- Busca e filtros dentro da lista de espelhos no settings
-
 **Blocker resolvido (v29):** dependencias atualizadas.
 
 ## Posicionamento — Duas Engines
@@ -31,9 +28,14 @@ Implementacao apos o redesign de settings.
 - Referencia: plugin VirtualNotes
 - Juntas as duas engines cobrem toda a anatomia de uma nota no Obsidian
 
-## Melhorias Tecnicas
+**Experimentos DOM da Era 1 (referencia para implementacao):**
 
-- [ ] **Refatorar suggester** — `utils/suggest.ts` (TextInputSuggest) e `utils/file-suggest.ts` (FileSuggest, FolderSuggest, YamlPropertySuggest) sao codigo copiado do Templater com restos. Revisar, limpar, e avaliar se da pra simplificar
+| Commit | Versao | Tecnica | O que testou |
+|--------|--------|---------|--------------|
+| `1ceb033` | v2 | `insertBefore(block, header.nextSibling)` | Div depois do h1 — posicao "abaixo do titulo" |
+| `610bd36` | v4 | `containerEl.prepend(toolbar)` + `MarkdownRenderer.render()` | Toolbar acima de tudo com render de markdown |
+| `a0a9dfc` | v5 | `querySelector(".cm-scroller").append()` | Targeting do cm-scroller diretamente |
+| `96974bd` | v6 | `ItemView` (MirrorUIView) | Painel lateral independente — pattern de sidebar |
 
 ## Integracao com outros plugins
 
@@ -64,3 +66,5 @@ Implementacao apos o redesign de settings.
 - [x] Limpeza de codigo — 22 unused imports/vars (v29)
 - [x] Reatividade cross-note — SourceDependencyRegistry + callbacks diretos (v30)
 - [x] README: documentar code blocks (v29)
+- [x] Refatorar suggester — wrapAround inline, limpar casts, CSS class renomeada (v31)
+- [x] Busca e filtros dentro da lista de espelhos no settings (v31)

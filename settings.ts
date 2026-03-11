@@ -315,6 +315,17 @@ export class MirrorUISettingsTab extends PluginSettingTab {
             });
         globalSettings.createEl("hr",{cls: "mirror-separator"});
 
+        // Search field para filtrar mirrors
+        const searchContainer = customSettings.createEl("div", { cls: "mirror-search-container" });
+        new Setting(searchContainer)
+            .setName("Search mirrors")
+            .addSearch((cb) => {
+                cb.setPlaceholder("Filter by name...")
+                    .onChange((value) => {
+                        this.filterMirrorCards(cards, value);
+                    });
+            });
+
         const cards = customSettings.createEl("div", { cls: "mirror-plugin-cards" });
         this.addCustomSettingCards(cards, 'customMirrors');
 
@@ -497,7 +508,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         //@ts-ignore
                         cb.inputEl.id = `input-${settingKey}-${index}`;
                         //@ts-ignore
-                        cb.containerEl.addClass("templater_search");
+                        cb.containerEl.addClass("mirror-search-input");
                     });
                     s.addExtraButton((cb) => {
                         cb.setIcon("up-chevron-glyph")
@@ -558,7 +569,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                                 this.plugin.saveSettings();
                             });
                         //@ts-ignore
-                        cb.containerEl.addClass("templater_search");
+                        cb.containerEl.addClass("mirror-search-input");
                     });
                     s.addExtraButton((cb) => {
                         cb.setIcon("up-chevron-glyph")
@@ -621,7 +632,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         //@ts-ignore
                         cb.inputEl.id = `input-filter_props_values-${index2}`;
                         //@ts-ignore
-                        cb.containerEl.addClass("templater_search");
+                        cb.containerEl.addClass("mirror-search-input");
                     });
                     s.addSearch((cb) => {
                         new YamlPropertySuggest(this.app, cb.inputEl);
@@ -632,7 +643,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                                 this.plugin.saveSettings();
                             });
                         //@ts-ignore
-                        cb.containerEl.addClass("templater_search");
+                        cb.containerEl.addClass("mirror-search-input");
                         cb.inputEl.id = `input-filter_props_values-${index2}`;
                     })
                     .addExtraButton((cb) => {
@@ -705,6 +716,29 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 })
                 .setClass("toogle-header");
         });
+    }
+
+    private filterMirrorCards(container: HTMLElement, query: string): void {
+        const cards = container.querySelectorAll('.mirror-card');
+        const lowerQuery = query.toLowerCase();
+        let visibleCount = 0;
+        cards.forEach((card, index) => {
+            const mirror = this.plugin.settings.customMirrors[index];
+            const matches = !query || mirror.name.toLowerCase().contains(lowerQuery);
+            (card as HTMLElement).style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        let emptyMsg = container.querySelector('.mirror-search-empty') as HTMLElement;
+        if (visibleCount === 0 && query) {
+            if (!emptyMsg) {
+                emptyMsg = container.createEl('div', { cls: 'mirror-search-empty' });
+            }
+            emptyMsg.textContent = `No mirrors matching "${query}"`;
+            emptyMsg.style.display = '';
+        } else if (emptyMsg) {
+            emptyMsg.style.display = 'none';
+        }
     }
 
     private addPathValidation(container: HTMLElement, value: string, type: 'file' | 'folder' | 'filename'): void {

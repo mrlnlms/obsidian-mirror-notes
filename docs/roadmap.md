@@ -15,6 +15,15 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 
 - [ ] **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc.
 
+## Concluido: v31 — Refatorar Suggester + Busca de Mirrors
+
+- [x] `utils.ts` eliminado — `wrapAround` inline em `suggest.ts`
+- [x] `suggest.ts` limpo: `document.body`, `@ts-ignore` explicito, whitespace
+- [x] `templater_search` → `mirror-search-input` (4 ocorrencias)
+- [x] Campo de busca inline pra filtrar mirrors por nome no settings
+- [x] `filterMirrorCards()` — hide/show de cards em tempo real
+- [x] Mensagem "No mirrors matching" dentro do container de cards com visual coerente
+
 ## Concluido: v30 — Cross-Note Reactivity
 
 - [x] `SourceDependencyRegistry` — registry centralizado com callbacks de re-render

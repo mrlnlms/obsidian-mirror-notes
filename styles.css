@@ -481,6 +481,23 @@
   outline: 1px dotted magenta !important;
 }
 
+/* ========== MIRROR SEARCH ========== */
+.mirror-search-container {
+  margin-bottom: 8px;
+}
+.mirror-search-container .setting-item {
+  border-top: none;
+}
+.mirror-search-empty {
+  color: var(--text-muted);
+  font-size: var(--font-ui-small);
+  text-align: center;
+  padding: 24px 20px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background-color: var(--color-base-20);
+}
+
 /* ========== PATH VALIDATION WARNING ========== */
 .mirror-path-warning {
   color: var(--text-error);

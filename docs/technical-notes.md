@@ -2,7 +2,30 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v30 — Cross-Note Reactivity (Era 5)
+## Versao Atual: v31 — Refatorar Suggester + Busca de Mirrors
+
+### O que mudou na v31
+
+**Refatoracao do suggester (codigo herdado do Templater):**
+
+- `utils.ts` (3 linhas, so `wrapAround`) eliminado. Funcao movida inline pra `utils/suggest.ts`
+- `suggest.ts`: `(<any>this.app).dom.appContainerEl` trocado por `document.body` (equivalente, sem cast)
+- `suggest.ts`: `(<any>this.app).keymap.pushScope/popScope` trocado por `this.app.keymap.pushScope/popScope` com `// @ts-ignore` explicito (API interna inevitavel)
+- `suggest.ts`: linhas em branco extras removidas (130, 136, 166)
+- `settings.ts`: classe CSS `templater_search` → `mirror-search-input` (4 ocorrencias). Classe original do Templater, sem CSS correspondente
+
+**Busca de mirrors no settings:**
+
+- Campo de busca inline (`Setting.addSearch`) acima da lista de cards
+- Metodo `filterMirrorCards(container, query)`: filtra por nome com `String.contains()`, show/hide via `display: none`
+- Mensagem "No mirrors matching" criada dentro do `cardsContainer` (`mirror-plugin-cards`) — mesmo contexto visual dos cards
+- CSS: `.mirror-search-container` com margin e sem borda superior, `.mirror-search-empty` com `background-color: var(--color-base-20)`, `border-radius: 8px`, `margin-top: 10px` — visual identico aos `.mirror-card`
+
+**Arquivos modificados:** `utils/suggest.ts`, `settings.ts`, `styles.css`
+**Arquivos deletados:** `utils.ts`
+**Sem mudanca:** `utils/file-suggest.ts`
+
+## v30 — Cross-Note Reactivity (Era 5)
 
 **Mirror blocks com `source:` atualizam automaticamente quando o frontmatter da source muda.**
 
