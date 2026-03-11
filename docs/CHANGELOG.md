@@ -2,7 +2,41 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v28.1 — Clickable Error in Renderer (Era 5)
+## Versao Atual: v29 — Dependency Update + Insert Mirror Block + Cleanup (Era 5)
+
+**Atualizacao completa de dependencias, menu contextual para inserir blocos mirror, e limpeza de codigo.**
+
+### v29: Dependency Update + Insert Mirror Block + Cleanup
+
+**Dependencias atualizadas (blocker pro benchmark):**
+- TypeScript 4.7.4 → 5.9.3 (major)
+- esbuild 0.17.3 → 0.25.12 (major)
+- @types/node 16 → 22 (major)
+- @codemirror/state 6.5.2 → 6.5.4, @codemirror/view 6.37.2 → 6.39.17 (movidos pra devDeps)
+- obsidian: latest → ^1.12.3 (pinado)
+- tslib 2.4.0 → 2.8.1
+- builtin-modules 3.3.0 → 4.0.0
+- ESLint migrado: .eslintrc → eslint.config.mjs (flat config v9 + @typescript-eslint v8)
+- Script `npm run lint` adicionado
+- tsconfig modernizado: target ES6 → ES2018, lib DOM+ES2018
+
+**Facet CM6 + Fix onunload:**
+- `window.mirrorUIPluginInstance` substituido por `mirrorPluginFacet` (Facet CM6 idiomatico)
+- `StateEffect.reconfigure([])` removido do onunload — nukava todas as extensoes CM6 de todos os editores
+- `window.mirrorUICleanup` substituido por `cleanupMirrorCaches()` (funcao exportada)
+
+**Insert Mirror Block (menu contextual):**
+- Novo arquivo: `src/commands/insertMirrorBlock.ts`
+- Modal com campos Template e Source (FileSuggest para autocomplete)
+- Insere bloco ` ```mirror ``` ` no editor
+- Acessivel via right-click (editor-menu) e Command Palette (Cmd+P)
+
+**Limpeza de codigo (detectada pelo linter novo):**
+- 22 unused imports/vars removidos em 11 arquivos
+- Dead code: `lastUpdateTime`, `RESERVED_KEYS`, `hasFrontmatter`, `frontmatterEndLine`
+- prefer-const aplicado onde apropriado
+
+### v28.1: Clickable Error in Renderer (Era 5)
 
 **Erro "Template not found" agora tem link clicavel "Open settings" dentro do widget/code block.**
 

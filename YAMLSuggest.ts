@@ -1,4 +1,4 @@
-import { TextComponent, App } from 'obsidian';
+import { App } from 'obsidian';
 
 export class YAMLSuggester {
     constructor(public inputEl: HTMLInputElement, private app: App, private getProperties: () => string[]) {

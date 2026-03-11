@@ -7,7 +7,7 @@
 // =================================================================================
 
 import { ViewPlugin, ViewUpdate } from "@codemirror/view";
-import { mirrorStateField } from "./mirrorState";
+// mirrorStateField — import removido (v25.2), mantido como referencia
 // import { widgetRecoveryEffect } from "./mirrorState";
 // import { Logger } from "../logger";
 

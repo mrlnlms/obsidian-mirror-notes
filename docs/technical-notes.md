@@ -2,9 +2,43 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v28.1 — Clickable Error in Renderer (Era 5)
+## Versao Atual: v29 — Dependency Update + Insert Mirror Block + Cleanup (Era 5)
 
-**Erro "Template not found" com link clicavel para settings. Funciona em CM6 widget e code block.**
+**Deps atualizadas (TS5, esbuild 0.25, ESLint 9 flat config). Facet CM6 substitui window global. Menu contextual pra inserir blocos mirror.**
+
+### O que mudou na v29
+
+**Dependencias — salto de 2022 pra 2025:**
+- TypeScript 4.7 → 5.9: backward-compat, zero erros de tipo. `strict: true` NAO habilitado (tarefa futura)
+- esbuild 0.17 → 0.25: config `.mjs` compativel, `context()` API ja existia
+- ESLint: `.eslintrc` (v5) → `eslint.config.mjs` (v9 flat config + @typescript-eslint v8)
+- tsconfig: target ES6 → ES2018, lib DOM+ES2018 (alinhado com esbuild target)
+- @codemirror/state e @codemirror/view movidos pra devDependencies (sao external no esbuild, Obsidian fornece em runtime)
+- obsidian pinado em ^1.12.3 (era `latest`)
+- Peer dep conflict: obsidian 1.12.3 pede @codemirror/state@6.5.0 exato, resolvido com --legacy-peer-deps (types-only, nao afeta runtime)
+
+**Facet CM6 (`mirrorPluginFacet`):**
+- Substitui `window.mirrorUIPluginInstance` — Facet e o padrao idiomatico do CM6 pra injetar dependencias no StateField
+- `mirrorPluginFacet.of(this)` registrado junto com `mirrorStateField` no `setupEditor()`
+- `state.facet(mirrorPluginFacet)!` no create, `tr.state.facet(mirrorPluginFacet)!` no update
+- Non-null assertion (`!`) seguro porque facet e StateField sao registrados juntos
+
+**Fix onunload:**
+- `StateEffect.reconfigure([])` removido — nukava TODAS as extensoes CM6 de todos os editores (Dataview, Meta-bind, etc)
+- `window.mirrorUICleanup` → `cleanupMirrorCaches()` (funcao exportada de mirrorState.ts)
+
+**Insert Mirror Block:**
+- `src/commands/insertMirrorBlock.ts`: `InsertMirrorBlockModal` + `insertMirrorBlock()` + `registerInsertMirrorBlock()`
+- Modal com FileSuggest pra template e source
+- Registra command palette (editorCallback) + editor-menu (right-click)
+- Chamado no onload logo apos registerMirrorCodeBlock
+
+**Limpeza (22 items):**
+- Unused imports removidos: TextComponent, TFile, toggleWidgetEffect, wrapAround, mirrorStateField (2x), WidgetType, Decoration, DecorationSet, ApplicableMirrorConfig, MirrorState, cleanOrphanWidgets
+- Dead vars removidas: lastUpdateTime, RESERVED_KEYS, hasFrontmatter, frontmatterEndLine
+- Destructuring simplificado em renderMirrorTemplate (so extrai cacheKey)
+- `catch (e)` → `catch` (mirrorUtils.ts)
+- `let` → `const` onde aplicavel (auto-fix)
 
 ### O que mudou na v28.1
 

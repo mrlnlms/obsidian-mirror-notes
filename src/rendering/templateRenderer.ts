@@ -27,7 +27,7 @@ function simpleHash(str: string): string {
 }
 
 export async function renderMirrorTemplate(ctx: RenderContext): Promise<void> {
-  const { plugin, templatePath, variables, sourcePath, container, cacheKey } = ctx;
+  const { cacheKey } = ctx;
 
   // Guard: ja renderizando este cache key?
   if (renderingPromises.has(cacheKey)) {

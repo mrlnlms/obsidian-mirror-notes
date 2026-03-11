@@ -4,7 +4,6 @@ export interface MirrorBlockConfig {
   inlineVars: Record<string, string>;
 }
 
-const RESERVED_KEYS = new Set(['template', 'source']);
 
 export function parseBlockContent(content: string): MirrorBlockConfig | { error: string } {
   const lines = content.trim().split('\n').filter(l => l.trim().length > 0);

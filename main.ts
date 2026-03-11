@@ -1,11 +1,12 @@
-import { Plugin, MarkdownView, TFile, WorkspaceLeaf, Notice } from 'obsidian';
+import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
-import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
+import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
 // import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
+import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache } from './src/editor/mirrorConfig';
 
@@ -60,6 +61,9 @@ export default class MirrorUIPlugin extends Plugin {
 
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
+
+    // Registrar comando + menu contextual para inserir blocos mirror
+    registerInsertMirrorBlock(this);
 
     // Configurar editores ja abertos e re-renderizar code blocks apos layout pronto
     this.app.workspace.onLayoutReady(() => {

@@ -1,5 +1,5 @@
 import { EditorState, RangeSetBuilder } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView, WidgetType } from "@codemirror/view";
+import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
 import { MirrorState } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
 import { MirrorTemplateWidget } from "./mirrorWidget";
@@ -35,15 +35,11 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
 
   // Encontrar posição do frontmatter
   let frontmatterEndPos = 0;
-  let frontmatterEndLine = 0;
-  let hasFrontmatter = false;
   const firstLine = doc.line(1);
   if (firstLine.text === '---') {
-    hasFrontmatter = true;
     for (let i = 2; i <= doc.lines; i++) {
       const line = doc.line(i);
       if (line.text === '---') {
-        frontmatterEndLine = i;
         frontmatterEndPos = line.to + 1;
         break;
       }

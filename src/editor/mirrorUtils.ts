@@ -35,7 +35,7 @@ export function parseFrontmatter(content: string): any {
     });
 
     return result;
-  } catch (e) {
+  } catch {
     return {};
   }
 }

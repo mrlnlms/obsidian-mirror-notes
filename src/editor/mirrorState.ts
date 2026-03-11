@@ -1,10 +1,10 @@
 import { StateField, StateEffect, EditorState, Transaction, Facet } from "@codemirror/state";
-import { Decoration, DecorationSet, EditorView } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
-import { ApplicableMirrorConfig, MirrorState, MirrorFieldState } from "./mirrorTypes";
+import { MirrorFieldState } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { clearRenderCache } from "../rendering/templateRenderer";
-import { buildDecorations, cleanOrphanWidgets } from "./mirrorDecorations";
+import { buildDecorations } from "./mirrorDecorations";
 import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
 import { parseFrontmatter, hashObject, generateWidgetId } from "./mirrorUtils";
@@ -29,7 +29,6 @@ export const forceMirrorUpdateEffect = StateEffect.define<void>();
 // =================================================================================
 // STATE FIELD
 // =================================================================================
-let lastUpdateTime = 0;
 const fileDebounceMap = new Map<string, number>(); // Debounce por arquivo
 const lastForcedUpdateMap = new Map<string, number>(); // Track forced updates por arquivo
 
@@ -64,7 +63,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const { mirrorState: value } = fieldState;
     
     // 🔥 IMPORTANTE: Mapear decorations através das mudanças (como o CodeMarker faz!)
-    let decorations = fieldState.decorations.map(tr.changes);
+    const decorations = fieldState.decorations.map(tr.changes);
 
     // Recovery desabilitado (v25.2) — fix de decoration mapping resolve o problema
     // Ver mirrorViewPlugin.ts para referencia da implementacao original

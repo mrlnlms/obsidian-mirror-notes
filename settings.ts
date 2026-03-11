@@ -1,7 +1,6 @@
 import MirrorUIPlugin from "./main";
 import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView, TFile } from "obsidian";
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "./utils/file-suggest";
-import { wrapAround } from "./utils";
 import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
 import { clearConfigCache } from './src/editor/mirrorConfig';
 import { TIMING } from './src/editor/timingConfig';
