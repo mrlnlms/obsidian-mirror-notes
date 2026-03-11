@@ -25,7 +25,7 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 
 ## Bugs (v25.1 — investigando)
 
-- [ ] **Widget some ao digitar rapido no meta-bind** — CM6 remove o widget DOM do `.cm-content` durante DOM sync quando meta-bind edita YAML rapidamente. Confirmado via MutationObserver: parent é `cm-content cm-lineWrapping`. StateField mantem decorations, mas CM6 nao chama `toDOM()` novamente. Causa raiz: CM6 re-renderiza regiao do frontmatter e descarta block widget adjacente sem re-inserir.
+- [x] **Widget sumia ao digitar rapido no meta-bind** — RESOLVIDO. Causa real: bug de decoration mapping nos early-returns do StateField.update(). Debounce retornava `fieldState` (posicoes antigas) em vez de decorations mapeadas. Fix: 2 linhas trocando early-returns. ViewPlugin recovery mantido como safety net.
 
 ## Melhorias Tecnicas
 
@@ -43,7 +43,7 @@ Features, melhorias e bugs extraidos da visao original do produto e do estado at
 ## Integracao
 
 - [x] Suporte a Dataview queries dentro de templates — funciona via MarkdownRenderer (testado v25.1)
-- [ ] Suporte a Meta Bind inputs dentro de templates — em teste (v25.1)
+- [x] Suporte a Meta Bind inputs dentro de templates — funciona (v25.2, widget sobrevive digitacao rapida)
 - [ ] Compatibilidade com Templater syntax
 - [ ] API para outros plugins interagirem com mirrors
 

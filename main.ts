@@ -1,6 +1,7 @@
 import { Plugin, MarkdownView, TFile, WorkspaceLeaf } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, toggleWidgetEffect, forceMirrorUpdateEffect } from './src/editor/mirrorState';
+import { mirrorRecoveryPlugin } from './src/editor/mirrorViewPlugin';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 
@@ -216,7 +217,8 @@ export default class MirrorUIPlugin extends Plugin {
 
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
-          mirrorStateField
+          mirrorStateField,
+          mirrorRecoveryPlugin
         ])
       });
     } else {

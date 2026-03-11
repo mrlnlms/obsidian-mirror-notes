@@ -97,24 +97,21 @@ Widgets CM6 (`Decoration.widget` com `block: true`) que renderizam conteudo dina
 
 **Testado**: Dataview TABLE renderizado via MarkdownRenderer dentro de widget block, com sidebar aberta/fechada. Fix confirmado.
 
-## Bug aberto: CM6 DOM sync remove widget (v25.1)
+## Bug resolvido: Widget sumia ao digitar rapido no meta-bind (v25.1)
 
-**Sintoma**: Widget do Mirror Notes desaparece ao digitar rapido em campos meta-bind que editam YAML. Nenhum log do plugin e emitido no momento do desaparecimento.
+**Sintoma**: Widget desaparecia ao digitar rapido em campos meta-bind que editam YAML. Nenhum log do plugin era emitido no momento do desaparecimento.
 
-**Investigacao**:
-1. Logs do StateField mostram que nenhum rebuild/recreate e disparado
-2. `forceMirrorUpdateEffect` corretamente detecta "config unchanged, keeping widget alive"
-3. Debounce e checks de frontmatter funcionam — o StateField nao destroi o widget
-4. MutationObserver no DOM capturou o momento exato: o widget e removido do `.cm-content.cm-lineWrapping` pelo proprio CM6
+**Diagnostico inicial (errado)**: MutationObserver mostrou CM6 removendo o widget de `.cm-content.cm-lineWrapping`. Achavamos que era o CM6 descartando o widget arbitrariamente durante DOM sync. Isso levou a implementar um ViewPlugin recovery que detectava widget ausente e recriava — mas recriava o DOM inteiro, causando perda de foco nos inputs.
 
-**Causa raiz**: Quando meta-bind edita o YAML (document change), o CM6 re-renderiza a regiao do `.cm-content` como parte do DOM sync. O block widget (`Decoration.widget({ block: true })`) posicionado logo apos o frontmatter e removido do DOM durante esse sync. O CM6 mantem a decoration no state, mas nao chama `toDOM()` novamente para re-inserir o elemento.
+**Causa raiz REAL**: Bug de decoration mapping nos early-returns do `StateField.update()`. O codigo fazia `let decorations = fieldState.decorations.map(tr.changes)` no inicio (mapeando posicoes pro novo documento), mas os early-returns de debounce retornavam `fieldState` (posicoes antigas) em vez de `{ mirrorState: value, decorations }` (posicoes mapeadas). Durante digitacao rapida, o debounce descartava o mapeamento → widget ficava na posicao errada → CM6 removia porque a posicao nao batia com o DOM.
 
-**Hipoteses para fix** (nao testadas):
-- ViewPlugin com `update()` que detecta widget ausente no DOM e re-insere
-- MutationObserver no main.ts que re-dispara `setupEditor()` quando widget e removido
-- Trocar `Decoration.widget` por abordagem DOM pura (como Virtual Content faz) — eliminaria o problema mas perderia vantagens do CM6
+**Fix**: 2 linhas — trocar `return fieldState` por `return { mirrorState: value, decorations }` nos 2 caminhos de early-return (debounce por arquivo e throttle de forced update) em `mirrorState.ts`.
 
-**Contexto**: Esse e o trade-off central da arquitetura CM6 vs DOM. O Virtual Content (referencia) nao tem esse problema porque injeta diretamente no DOM fora do CM6.
+**Resultado**: Zero desaparecimentos em 12+ segundos de digitacao rapida continua. Widget permanece firme, foco preservado.
+
+**Regra**: Em `StateField.update()`, se voce faz `decorations.map(tr.changes)` no inicio, NUNCA retorne o `fieldState` original quando `tr.docChanged` — sempre retorne com as decorations mapeadas. O mapeamento de posicoes nao pode ser debounced.
+
+**Estado**: ViewPlugin recovery mantido como safety net (nao dispara mais com o fix, mas existe como fallback).
 
 ---
 
@@ -140,6 +137,61 @@ Abrir o vault `demo/` no Obsidian para testar.
 
 ---
 
+## Analise comparativa: CM6 (Mirror Notes) vs DOM puro (Virtual Content)
+
+### Numeros
+
+| | Mirror Notes (CM6) | Virtual Content (DOM) |
+|---|---|---|
+| Total | 2,547 linhas (10 arquivos) | 2,927 linhas (2 arquivos) |
+| Core engine | ~1,004 (src/editor/) | ~2,865 (main.ts monolito) |
+| Settings UI | 688 (separada) | dentro do main.ts |
+
+### Posicionamento: o que cada abordagem consegue
+
+O CM6 so opera dentro de `.cm-content` (area editavel). O DOM pode injetar em qualquer ponto da hierarquia do Obsidian.
+
+**Pontos de injecao do Virtual Content:**
+- `.cm-sizer` antes de `.cm-contentContainer` → header no topo do editor
+- `.metadata-container.parentElement` via `insertBefore` → acima das properties
+- `.embedded-backlinks.parentElement` via `insertBefore` → acima dos backlinks
+- `.cm-sizer` via `appendChild` → footer no fim do editor
+- Targets diferentes pra Reading Mode (`.mod-header`, `.mod-footer`, `.markdown-preview-section`)
+
+**Pontos de injecao do Mirror Notes (CM6):**
+- `Decoration.widget({ block: true, side: 0 })` em `frontmatterEndPos` → top (depois do frontmatter)
+- `Decoration.widget({ block: true, side: 1 })` em `docLength` → bottom (fim do documento)
+- Nao consegue: acima das properties, acima dos backlinks, Reading Mode
+
+### O que o CM6 entrega que o DOM nao entrega
+
+| Capacidade | CM6 | DOM |
+|---|---|---|
+| `decorations.map(tr.changes)` — posicoes ajustam automaticamente | Sim | N/A (re-injection manual) |
+| Widget sobrevive a edição rapida (validado) | Sim | Precisa de idempotency strategy |
+| Dataview/meta-bind/callouts dentro do widget | Nativo | Nativo |
+| Lifecycle gerenciado pelo editor | Sim (create/update/destroy) | Manual (observer + cleanup) |
+| Integração com transacoes do editor | Sim (StateField reage a effects) | Nenhuma |
+| Risco de quebra entre versoes do Obsidian | Baixo (API CM6 estavel) | Alto (depende de classes internas) |
+
+### O que o DOM entrega que o CM6 nao entrega
+
+| Capacidade | DOM | CM6 |
+|---|---|---|
+| Posicionar acima de `.metadata-container` | `insertBefore()` | Impossivel |
+| Posicionar acima de `.embedded-backlinks` | `insertBefore()` | Impossivel |
+| Reading Mode | Targets separados (`.mod-header`, `.mod-footer`) | Nao funciona |
+| Sidebar tab | `ItemView` separada | N/A |
+| Popovers / hover previews | Targets dentro de `.markdown-embed` | N/A |
+
+### Conclusao
+
+O CM6 e a escolha certa quando o widget vive **dentro do conteudo do editor** (top/bottom). Menos codigo, posicionamento declarativo, lifecycle automatico.
+
+Se precisarmos de posicoes **fora do `.cm-content`** (acima das props, acima dos backlinks, Reading Mode), a unica opcao e DOM puro — uma camada separada do CM6, como o Virtual Content faz. Essas duas abordagens nao sao mutuamente exclusivas: e possivel usar CM6 pro widget principal e DOM pra posicoes extras.
+
+---
+
 ## Referencias
 
-- **[Virtual Content](https://github.com/Signynt/virtual-content)** — Plugin Obsidian que renderiza conteudo markdown virtual (header, footer, sidebar) sem modificar os arquivos. Regras baseadas em pastas, tags, properties e queries Dataview. Logica AND/OR, matching recursivo, toggle por regra. Referencia direta pro Mirror Notes — resolve o mesmo problema (injecao visual de conteudo) com abordagem diferente (regras configuradas no settings vs templates no frontmatter).
+- **[Virtual Content](https://github.com/Signynt/virtual-content)** — Plugin Obsidian que renderiza conteudo markdown virtual (header, footer, sidebar) sem modificar os arquivos. Regras baseadas em pastas, tags, properties e queries Dataview. Logica AND/OR, matching recursivo, toggle por regra. 2,927 linhas (main.ts monolito + styles.css). Abordagem 100% DOM: injeta em `.cm-sizer`, `.metadata-container`, `.embedded-backlinks` via `insertBefore`/`appendChild`. Nenhum uso de CM6 APIs.

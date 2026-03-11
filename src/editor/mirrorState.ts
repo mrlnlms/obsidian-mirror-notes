@@ -16,6 +16,7 @@ import { Logger } from '../logger';
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
 export const toggleWidgetEffect = StateEffect.define<boolean>();
 export const forceMirrorUpdateEffect = StateEffect.define<void>();
+export const widgetRecoveryEffect = StateEffect.define<void>();
 
 // Cache global mais persistente
 const widgetInstanceCache = new Map<string, MirrorTemplateWidget>();
@@ -303,6 +304,23 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // 🔥 IMPORTANTE: Mapear decorations através das mudanças (como o CodeMarker faz!)
     let decorations = fieldState.decorations.map(tr.changes);
 
+    // 0. Recovery: widget DOM foi removido pelo CM6, forcar recriacao
+    const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
+    for (const effect of tr.effects) {
+        if (effect.is(widgetRecoveryEffect)) {
+            Logger.log('Widget recovery — generating new widgetId');
+            const newMirrorState = {
+                ...value,
+                widgetId: generateWidgetId(),
+                lastDocText: tr.state.doc.toString()
+            };
+            MirrorTemplateWidget.domCache.clear();
+            MirrorTemplateWidget.lastRenderedContent.clear();
+            const newDecorations = buildDecorations(tr.state, newMirrorState, plugin);
+            return { mirrorState: newMirrorState, decorations: newDecorations };
+        }
+    }
+
     // 1. Verificar se foi um update forçado (só aceitar se for realmente necessário)
     let forcedUpdate = false;
     for (const effect of tr.effects) {
@@ -317,18 +335,17 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
         return fieldState; // Retornar fieldState completo
     }
 
-    const plugin = (window as any).mirrorUIPluginInstance as MirrorUIPlugin;
     const file = plugin?.app.workspace.getActiveFile();
     const filePath = file?.path || 'unknown';
     const docText = tr.state.doc.toString();
-    const now = Date.now(); // Declarar aqui no início
+    const now = Date.now();
 
     // 3. Se foi um forced update, verificar se é muito frequente
     if (forcedUpdate) {
         const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
         if (now - lastForcedUpdate < 1000) { // Não aceitar forced updates mais de 1x por segundo
             Logger.log(`Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
-            return fieldState;
+            return { mirrorState: value, decorations };
         }
         lastForcedUpdateMap.set(filePath, now);
     }
@@ -336,7 +353,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // 5. Debounce específico por arquivo (mais agressivo)
     const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
     if (!forcedUpdate && now - lastFileUpdate < UPDATE_DEBOUNCE) {
-        return fieldState;
+        return { mirrorState: value, decorations };
     }
     
     // 6. Verificar se realmente precisamos processar esta mudança
