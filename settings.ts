@@ -61,6 +61,20 @@ export interface CustomMirror {
     filterProps: Array<FolderTemplate>;
 }
 
+/** Position dropdown options with visual labels */
+function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
+    dropdown.addOption("above-title", "Above title");
+    dropdown.addOption("top", "Top of note");
+    dropdown.addOption("above-properties", "Above properties");
+    dropdown.addOption("below-properties", "Below properties");
+    dropdown.addOption("bottom", "Bottom of note");
+    dropdown.addOption("above-backlinks", "Above backlinks");
+    dropdown.addOption("below-backlinks", "Below backlinks");
+    dropdown.addOption("left", "Left margin");
+    dropdown.addOption("right", "Right margin");
+    return dropdown;
+}
+
 export class MirrorUISettingsTab extends PluginSettingTab {
     plugin: MirrorUIPlugin;
     constructor(app: App, plugin: MirrorUIPlugin) {
@@ -74,6 +88,8 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         Logger.log('Current settings:', this.plugin.settings);
 
         clearConfigCache();
+        // Clear position overrides so DOM injection re-evaluates fresh
+        this.plugin.positionOverrides.clear();
         setTimeout(() => {
             this.plugin.app.workspace.iterateAllLeaves(leaf => {
                 if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -85,6 +101,8 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         });
                         // IMPORTANTE: Esta linha faz o hideProps funcionar
                         this.plugin.updateHidePropsForView(leaf.view);
+                        // Atualizar DOM positions
+                        this.plugin.setupDomPosition(leaf.view);
                         Logger.log(`Updated editor for: ${leaf.view.file.path}`);
                     }
                 }
@@ -181,10 +199,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.containerEl.addClass("full-width-input");
                     })
                     .addDropdown((cb: DropdownComponent) => {
-                        cb.addOption("top", "Top of note")
-                        cb.addOption("bottom", "Bottom of note")
-                        cb.addOption("left", "Left of note")
-                        cb.addOption("right", "Right of note")
+                        addPositionOptions(cb);
                         cb.setValue(this.plugin.settings.global_settings_live_preview_pos);
                         cb.onChange(async (value) => {
                             this.plugin.settings.global_settings_live_preview_pos = value;
@@ -215,7 +230,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 new Setting(noteSetting)
                     .addSearch((cb) => {
                         new FileSuggest(this.app, cb.inputEl);
-                        
+
                         cb.setPlaceholder("ex. folder/note-mirror.md")
                             .setValue(this.plugin.settings.global_settings_preview_note)
                             .onChange((value) => {
@@ -227,13 +242,10 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.containerEl.addClass("full-width-input");
                     })
                     .addDropdown((cb: DropdownComponent) => {
-                        cb.addOption("top", "Top of note")
-                        cb.addOption("bottom", "Bottom of note")
-                        cb.addOption("left", "Left of note")
-                        cb.addOption("right", "Right of note")
-                        cb.setValue(this.plugin.settings.global_settings_live_preview_pos);
+                        addPositionOptions(cb);
+                        cb.setValue(this.plugin.settings.global_settings_preview_pos);
                         cb.onChange(async (value) => {
-                            this.plugin.settings.global_settings_live_preview_pos = value;
+                            this.plugin.settings.global_settings_preview_pos = value;
                             await this.plugin.saveSettings();
                             this.updateAllEditors();
                         });
@@ -422,10 +434,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.containerEl.addClass("full-width-input");
                     })
                     .addDropdown((cb: DropdownComponent) => {
-                        cb.addOption("top", "Top of note")
-                        cb.addOption("bottom", "Bottom of note")
-                        cb.addOption("left", "Left of note")
-                        cb.addOption("right", "Right of note")
+                        addPositionOptions(cb);
                         cb.setValue(customMirrors[index].custom_settings_live_preview_pos);
                         cb.onChange(async (value) => {
                             customMirrors[index].custom_settings_live_preview_pos = value;
@@ -465,10 +474,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cb.containerEl.addClass("full-width-input");
                     })
                     .addDropdown((cb: DropdownComponent) => {
-                        cb.addOption("top", "Top of note")
-                        cb.addOption("bottom", "Bottom of note")
-                        cb.addOption("left", "Left of note")
-                        cb.addOption("right", "Right of note")
+                        addPositionOptions(cb);
                         cb.setValue(customMirrors[index].custom_settings_preview_pos);
                         cb.onChange(async (value) => {
                             customMirrors[index].custom_settings_preview_pos = value;

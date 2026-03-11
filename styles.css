@@ -498,6 +498,64 @@
   background-color: var(--color-base-20);
 }
 
+/* ========== DOM-INJECTED POSITIONS ========== */
+.mirror-dom-injection {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 15px;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+  position: relative;
+  width: 100%;
+}
+
+.mirror-dom-injection > * {
+  pointer-events: auto;
+}
+
+.mirror-position-above-title {
+  margin-bottom: 10px;
+}
+
+.mirror-position-above-properties {
+  margin-bottom: 10px;
+}
+
+.mirror-position-below-properties {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.mirror-position-above-backlinks {
+  margin-top: 15px;
+  margin-bottom: 10px;
+}
+
+.mirror-position-below-backlinks {
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+
+/* ========== MARGIN PANELS ========== */
+.mirror-margin-panel {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.mirror-margin-panel > * {
+  pointer-events: auto;
+}
+
 /* ========== PATH VALIDATION WARNING ========== */
 .mirror-path-warning {
   color: var(--text-error);

@@ -2,7 +2,51 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v31 — Refatorar Suggester + Busca de Mirrors
+## Versao Atual: v32 — Position Engine + filterProps Fix
+
+### v32: Position Engine (DOM + Margin) + filterProps Fix
+
+**Novas posicoes (9 no total, de 3 implementadas pra 9):**
+- `above-title` — DOM: `insertBefore(.inline-title)` com fallback → top CM6
+- `above-properties` — DOM: `insertBefore(.metadata-container)` com fallback → top CM6
+- `below-properties` — DOM: `insertAfter(.metadata-container)` com fallback → top CM6
+- `above-backlinks` — DOM: `insertBefore(.embedded-backlinks)` com fallback → bottom CM6
+- `below-backlinks` — DOM: `insertAfter(.embedded-backlinks)` com fallback → bottom CM6
+- `left` — CM6 ViewPlugin: panel absoluto no `scrollDOM`, posicionado via `contentDOM.offsetLeft`
+- `right` — CM6 ViewPlugin: mesmo pattern, lado oposto
+
+**Arquitetura de posicoes:**
+- `MirrorPosition` type union com 9 valores (era 4 strings)
+- `DOM_POSITIONS`, `CM6_POSITIONS`, `MARGIN_POSITIONS` — categorias exportadas
+- Novo: `src/rendering/domInjector.ts` — engine DOM com resolucao de target, fallback, e cleanup
+- Novo: `src/editor/marginPanelExtension.ts` — ViewPlugin basico pro left/right
+- `positionOverrides` no plugin — quando DOM fallback acontece, overrides forcam CM6 position
+
+**Fix: filterProps com arrays e booleans:**
+- `mirrorConfig.ts`: matching de properties agora trata `boolean`, `Array`, e coercao `String()`
+- Antes: `frontmatter[key] === template` (strict equality, falhava pra tags e booleans)
+- Agora: array → `val.some(item => String(item) === template)`, boolean → `String(val) === template`
+
+**Fix: bug no dropdown do global preview mode:**
+- `settings.ts`: preview mode dropdown salva/le em `global_settings_preview_pos` (antes usava `global_settings_live_preview_pos` por engano)
+
+**Dropdown de posicoes atualizado:**
+- Labels visuais: "Above title", "Top of note", "Above properties", "Below properties", "Bottom of note", "Above backlinks", "Below backlinks", "Left margin", "Right margin"
+- Helper `addPositionOptions()` — DRY pra 4 dropdowns
+
+**Arquivos novos:**
+- `src/rendering/domInjector.ts`
+- `src/editor/marginPanelExtension.ts`
+
+**Arquivos modificados:**
+- `src/editor/mirrorTypes.ts` — MirrorPosition type + constantes
+- `src/editor/mirrorConfig.ts` — filterProps fix + positionOverrides + import MirrorPosition
+- `src/editor/mirrorDecorations.ts` — sem mudanca (DOM positions retornam Decoration.none)
+- `settings.ts` — dropdown helper + positionOverrides clear no updateAllEditors
+- `main.ts` — setupDomPosition, import domInjector/marginPanel, cleanup no onunload
+- `styles.css` — CSS pra DOM positions e margin panels
+
+## v31 — Refatorar Suggester + Busca de Mirrors
 
 ### v31: Refatorar Suggester + Busca de Mirrors
 

@@ -9,11 +9,18 @@ import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
-import { clearConfigCache } from './src/editor/mirrorConfig';
+import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
+import { MirrorPosition, MARGIN_POSITIONS } from './src/editor/mirrorTypes';
+import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
+import { parseFrontmatter } from './src/editor/mirrorUtils';
+import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
   sourceDeps = new SourceDependencyRegistry();
+  /** Position overrides when DOM injection falls back to CM6 */
+  positionOverrides = new Map<string, MirrorPosition>();
   private activeEditors: Map<string, boolean> = new Map();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
   private crossNoteTimeout: NodeJS.Timeout | null = null;
@@ -106,6 +113,7 @@ export default class MirrorUIPlugin extends Plugin {
                   effects: forceMirrorUpdateEffect.of()
                 });
                 this.updateHidePropsForView(activeView);
+                this.setupDomPosition(activeView);
               } else {
                 Logger.log('Metadata changed but user is active, skipping update');
               }
@@ -251,61 +259,8 @@ export default class MirrorUIPlugin extends Plugin {
     }, 250);
   }
 
-  private updateSettingsPaths(oldPath: string, newPath: string): { changed: boolean; mirrorIndices: number[]; globalAffected: boolean } {
-    const result = { changed: false, mirrorIndices: [] as number[], globalAffected: false };
-    if (!this.settings.auto_update_paths) return result;
-
-    const s = this.settings;
-
-    const replacePath = (current: string): string | null => {
-      if (!current) return null;
-      if (current === oldPath) return newPath;
-      if (current.startsWith(oldPath + '/')) return newPath + current.slice(oldPath.length);
-      return null;
-    };
-
-    // Global template paths
-    const g1 = replacePath(s.global_settings_live_preview_note);
-    if (g1 !== null) { s.global_settings_live_preview_note = g1; result.changed = true; result.globalAffected = true; }
-
-    const g2 = replacePath(s.global_settings_preview_note);
-    if (g2 !== null) { s.global_settings_preview_note = g2; result.changed = true; result.globalAffected = true; }
-
-    // Custom mirrors (respeita per-mirror toggle)
-    for (let i = 0; i < s.customMirrors.length; i++) {
-      const mirror = s.customMirrors[i];
-      if (mirror.custom_auto_update_paths === false) continue;
-
-      let mirrorAffected = false;
-
-      const c1 = replacePath(mirror.custom_settings_live_preview_note);
-      if (c1 !== null) { mirror.custom_settings_live_preview_note = c1; mirrorAffected = true; }
-
-      const c2 = replacePath(mirror.custom_settings_preview_note);
-      if (c2 !== null) { mirror.custom_settings_preview_note = c2; mirrorAffected = true; }
-
-      // filterFiles — compara filename, nao path completo
-      const oldName = oldPath.split('/').pop();
-      const newName = newPath.split('/').pop();
-      if (oldName && newName && oldName !== newName) {
-        for (const f of mirror.filterFiles) {
-          if (f.folder === oldName) { f.folder = newName; mirrorAffected = true; }
-        }
-      }
-
-      // filterFolders — compara prefixo de path
-      for (const f of mirror.filterFolders) {
-        const r = replacePath(f.folder);
-        if (r !== null) { f.folder = r; mirrorAffected = true; }
-      }
-
-      if (mirrorAffected) {
-        result.changed = true;
-        result.mirrorIndices.push(i);
-      }
-    }
-
-    return result;
+  private updateSettingsPaths(oldPath: string, newPath: string) {
+    return updatePaths(this.settings, oldPath, newPath);
   }
 
   private checkDeletedTemplates(deletedPath: string): void {
@@ -365,6 +320,36 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
+  /** Handle DOM-based positions (above-title, above/below-properties, above/below-backlinks) */
+  async setupDomPosition(view: MarkdownView) {
+    const file = view.file;
+    if (!file) return;
+
+    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
+    const config = getApplicableConfig(this, file, frontmatter);
+    if (!config || !isDomPosition(config.position)) {
+      // Not a DOM position — clean up any existing DOM injection for this file
+      removeAllDomMirrors(file.path);
+      return;
+    }
+
+    // Clear any previous position override (fresh attempt)
+    this.positionOverrides.delete(file.path);
+
+    const actualPos = await injectDomMirror(this, view, config, frontmatter);
+
+    // If DOM injection fell back to a CM6 position, set override and force StateField rebuild
+    if (actualPos !== config.position) {
+      Logger.log(`DOM fallback: ${config.position} → ${actualPos} for ${file.path}`);
+      this.positionOverrides.set(file.path, actualPos);
+      // @ts-ignore
+      const cm = view.editor?.cm;
+      if (cm) {
+        cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
+      }
+    }
+  }
+
   setupEditor(view: MarkdownView) {
     const file = view.file;
     if (!file) return;
@@ -390,17 +375,18 @@ export default class MirrorUIPlugin extends Plugin {
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
           mirrorPluginFacet.of(this),
-          mirrorStateField
-          // mirrorRecoveryPlugin — desabilitado (v25.2)
+          mirrorStateField,
+          mirrorMarginPanelPlugin
         ])
       });
     } else {
       Logger.log(`setupEditor: StateField already present for ${file.path}, skipping`);
     }
     
-    // Atualizar estado do hideProps
+    // Atualizar estado do hideProps e DOM positions
     setTimeout(() => {
       this.updateHidePropsForView(view);
+      this.setupDomPosition(view);
     }, TIMING.HIDE_PROPS_DELAY);
   }
 
@@ -417,16 +403,20 @@ export default class MirrorUIPlugin extends Plugin {
       el.classList.remove('mirror-hide-properties');
     });
     
-    // 3. Limpar caches globais
+    // 3. Limpar DOM-injected mirrors
+    cleanupAllDomMirrors();
+
+    // 4. Limpar caches globais
     cleanupMirrorCaches();
 
-    // 4. Limpar referências
+    // 5. Limpar referências
     this.activeEditors.clear();
+    this.positionOverrides.clear();
 
-    // 5. Limpar registry de dependencias cross-note
+    // 6. Limpar registry de dependencias cross-note
     this.sourceDeps.clear();
 
-    // 6. Limpar timeouts
+    // 7. Limpar timeouts
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }

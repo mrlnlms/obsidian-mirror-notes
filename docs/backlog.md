@@ -1,41 +1,16 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v31.
+Trabalho tecnico a ser feito. Atualizado na v32.
 
-## Benchmark + Redesign Settings
+## Pendente
 
-Tudo abaixo converge num unico bloco de trabalho. O benchmark VirtualNotes vs MirrorNotes e o ponto de partida — nao pra copiar, mas pra definir escopo e fechar as lacunas antes de implementar posicoes DOM.
-
-**O que o benchmark vai cobrir:**
-- Mapear configs do VirtualNotes, cruzar com o que ja existe no MirrorNotes
-- Gerar: (1) lista de funcionalidades (falta / existe / adaptar) e (2) layout do settings pra duas engines
-- Avaliar melhor implementacao de DOM (posicoes fora do editor)
-- Condicionais (vai surgir do benchmark)
-
-**Bugs que entram nesse redesign** (nao sao itens isolados — sao sintomas do settings/config atual):
-- **Hide Properties** — hack CSS atual (`.mirror-hide-properties .metadata-container`) nao funciona. Pode ter solucao melhor via API do Obsidian
-- **filterProps falha com listas YAML** — matching usa `===` (string vs array = sempre false). Tratamento YAML inteiro pode mudar
-- **parseFrontmatter hardcoda listas em tags** — linhas com `-` sao jogadas em `result.tags` ignorando a key real. Mesmo caso
-
-**Blocker resolvido (v29):** dependencias atualizadas.
-
-## Posicionamento — Duas Engines
-
-Implementacao apos o redesign de settings.
-
-- **Engine CM6** (dentro do editor): top, bottom, inline (implementadas). **Side-by-side** (nota ao lado, como no Qualia Coding) — roadmap futuro
-- **Engine DOM** (fora do editor): acima/abaixo do titulo, acima/abaixo das properties. Nenhuma implementada. CM6 nao alcanca esses elementos
-- Referencia: plugin VirtualNotes
-- Juntas as duas engines cobrem toda a anatomia de uma nota no Obsidian
-
-**Experimentos DOM da Era 1 (referencia para implementacao):**
-
-| Commit | Versao | Tecnica | O que testou |
-|--------|--------|---------|--------------|
-| `1ceb033` | v2 | `insertBefore(block, header.nextSibling)` | Div depois do h1 — posicao "abaixo do titulo" |
-| `610bd36` | v4 | `containerEl.prepend(toolbar)` + `MarkdownRenderer.render()` | Toolbar acima de tudo com render de markdown |
-| `a0a9dfc` | v5 | `querySelector(".cm-scroller").append()` | Targeting do cm-scroller diretamente |
-| `96974bd` | v6 | `ItemView` (MirrorUIView) | Painel lateral independente — pattern de sidebar |
+- **Logica AND/OR nas condicionais** — hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje. Afeta `mirrorConfig.ts` (matching) e `settings.ts` (UI pra combinar condicoes)
+- **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Prioridade baixa — fallbacks de posicao funcionam independentemente
+- **parseFrontmatter hardcoda listas em tags** — linhas com `-` sao jogadas em `result.tags` ignorando a key real
+- **Tag matching (condicional nova)** — filtrar mirrors por tag da nota (feature do VirtualNotes, nao existe no MN). Tipo: "aplicar mirror X se a nota tiver tag #project"
+- **Margin panel avancado** — tratamento de line numbers (`cm-gutters.offsetWidth`), readable-line-width (`contentDOM.offsetLeft`), resize observer
+- **Reading View DOM injection pra top/bottom** — CM6 widgets so existem em Live Preview. Pra top/bottom em Reading View: DOM injection em `.mod-header.mod-ui` / `.mod-footer`
+- **VN min-height** — avaliar se margin panels precisam de `min-height` como VN faz (528px footer, 100px above-backlinks)
 
 ## Integracao com outros plugins
 
@@ -68,3 +43,8 @@ Implementacao apos o redesign de settings.
 - [x] README: documentar code blocks (v29)
 - [x] Refatorar suggester — wrapAround inline, limpar casts, CSS class renomeada (v31)
 - [x] Busca e filtros dentro da lista de espelhos no settings (v31)
+- [x] Benchmark VN+QDA completo — posicoes, condicoes, engines mapeadas (v32, docs/benchmark-vn-vs-mn.md)
+- [x] Position engine — 6 novas posicoes DOM + 2 margin panels (v32)
+- [x] filterProps fix — arrays e booleans (v32)
+- [x] Bug dropdown preview mode — salvar em campo correto (v32)
+- [x] Dropdown de posicoes com labels visuais + helper DRY (v32)

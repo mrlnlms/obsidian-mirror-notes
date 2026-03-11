@@ -1,6 +1,6 @@
 import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
-import { ApplicableMirrorConfig } from "./mirrorTypes";
+import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
 import { hashObject } from "./mirrorUtils";
 import { CustomMirror, MirrorUIPluginSettings } from "../../settings";
 import { Logger } from '../logger';
@@ -58,7 +58,7 @@ export function clearConfigCache(): void {
 function configFromMirror(mirror: CustomMirror): ApplicableMirrorConfig {
   return {
     templatePath: mirror.custom_settings_live_preview_note,
-    position: mirror.custom_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
+    position: mirror.custom_settings_live_preview_pos as MirrorPosition,
     hideProps: mirror.custom_settings_hide_props
   };
 }
@@ -108,7 +108,19 @@ export function getApplicableConfig(
   if (!matchedMirror) {
     for (const mirror of settings.customMirrors) {
       if (!mirror.enable_custom_live_preview_mode || !mirror.custom_settings_live_preview_note) continue;
-      const hasPropMatch = mirror.filterProps.some(p => p.folder && frontmatter[p.folder] === p.template);
+      const hasPropMatch = mirror.filterProps.some(p => {
+        if (!p.folder) return false;
+        const val = frontmatter[p.folder];
+        if (val === undefined) return false;
+        // Exact match (string, number)
+        if (val === p.template) return true;
+        // Boolean: frontmatter `true`/`false` vs settings string "true"/"false"
+        if (typeof val === 'boolean') return String(val) === p.template;
+        // Array: check if any element matches (e.g. tags: [a, b] matches "a")
+        if (Array.isArray(val)) return val.some(item => String(item) === p.template);
+        // Coerce to string for other types
+        return String(val) === p.template;
+      });
       if (hasPropMatch) {
         matchedMirror = mirror;
         break;
@@ -140,13 +152,20 @@ export function getApplicableConfig(
     Logger.log(`Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
     result = {
       templatePath: settings.global_settings_live_preview_note,
-      position: settings.global_settings_live_preview_pos as 'top' | 'bottom' | 'left' | 'right',
+      position: settings.global_settings_live_preview_pos as MirrorPosition,
       hideProps: settings.global_settings_hide_props
     };
   }
 
   if (!result) {
     Logger.log(`No mirror applied to: ${file.path}, globalActive: ${globalMirrorActive}`);
+  }
+
+  // Apply position override (DOM fallback → CM6)
+  if (result && plugin.positionOverrides.has(file.path)) {
+    const override = plugin.positionOverrides.get(file.path)!;
+    Logger.log(`Applying position override for ${file.path}: ${result.position} → ${override}`);
+    result = { ...result, position: override };
   }
 
   // Cachear resultado

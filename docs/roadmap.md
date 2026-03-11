@@ -6,6 +6,8 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 
 - [ ] **Sistema de templates pre-configurados (starter configs)** — usuario instala e ja tem exemplos funcionando. So faz sentido quando o plugin estiver pronto pra lancar
 - [x] **README: documentar code blocks** (v29) — secao com sintaxe ` ```mirror ``` `, exemplos e uso
+- [ ] **Margin panel avancado** — line numbers, readable-line-width, resize observer (base existe em marginPanelExtension.ts)
+- [ ] **Reading View DOM injection** — top/bottom via `.mod-header.mod-ui` / `.mod-footer` (CM6 so funciona em Live Preview)
 
 ## Should-have
 
@@ -14,6 +16,18 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 ## Nice-to-have
 
 - [ ] **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc.
+
+## Concluido: v32 — Position Engine + filterProps Fix
+
+- [x] 6 novas posicoes DOM: above-title, above/below-properties, above/below-backlinks
+- [x] 2 margin panels basicos: left, right (ViewPlugin no scrollDOM)
+- [x] `MirrorPosition` type union + constantes `DOM_POSITIONS`, `CM6_POSITIONS`, `MARGIN_POSITIONS`
+- [x] `src/rendering/domInjector.ts` — engine DOM com fallback chain
+- [x] `src/editor/marginPanelExtension.ts` — ViewPlugin basico
+- [x] Fallback automatico: DOM target ausente → CM6 position via `positionOverrides`
+- [x] filterProps fix: arrays, booleans, coercao string
+- [x] Bug fix: dropdown preview mode salvava no campo errado
+- [x] Dropdown com 9 posicoes visuais + helper DRY
 
 ## Concluido: v31 — Refatorar Suggester + Busca de Mirrors
 

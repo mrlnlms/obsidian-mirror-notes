@@ -2,7 +2,49 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v31 — Refatorar Suggester + Busca de Mirrors
+## Versao Atual: v32 — Position Engine + filterProps Fix
+
+### O que mudou na v32
+
+**Arquitetura de posicoes — 3 engines:**
+
+O MN agora tem 3 engines de renderizacao, cada uma cobrindo uma parte da anatomia da nota:
+
+| Engine | Posicoes | Tecnica | Onde opera |
+|--------|----------|---------|------------|
+| CM6 StateField | top, bottom | `Decoration.widget({ side: 0/1 })` | Dentro do `.cm-content` |
+| DOM Injector | above-title, above/below-properties, above/below-backlinks | `insertBefore`/`insertAfter` no DOM | Fora do `.cm-editor` |
+| Margin ViewPlugin | left, right | ViewPlugin no `scrollDOM`, position absolute | Lateral do editor |
+
+**Flow de posicoes:**
+1. `getApplicableConfig()` retorna config com position original do settings
+2. Se position e CM6 (top/bottom): StateField → buildDecorations (existente)
+3. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
+4. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
+5. Se position e margin: `mirrorMarginPanelPlugin` (ViewPlugin) detecta no `update()` e injeta
+
+**Fallback chain:**
+- above-title → top (se `.inline-title` nao existe)
+- above-properties, below-properties → top (se `.metadata-container` nao existe)
+- above-backlinks, below-backlinks → bottom (se `.embedded-backlinks` nao existe)
+- left, right → sempre funciona (scrollDOM sempre existe)
+
+**positionOverrides (Map no plugin):**
+- Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
+- `getApplicableConfig()` checa este map antes de retornar — aplica override se existir
+- Override e limpo em `updateAllEditors()` e `setupDomPosition()` (fresh attempt)
+
+**filterProps fix:**
+- `mirrorConfig.ts` linhas 111-121: matching de YAML properties agora trata:
+  - `boolean`: `String(val) === template` (antes: `true === "true"` → false)
+  - `Array`: `val.some(item => String(item) === template)` (antes: `["a","b"] === "a"` → false)
+  - Fallback: `String(val) === template` pra outros tipos
+
+**marginPanelExtension.ts (basico):**
+- ViewPlugin que cria div absoluto no `scrollDOM`
+- Usa `contentDOM.offsetLeft` pra posicionar (esquerda: espaco antes do conteudo, direita: apos)
+- Largura fixa 250px, sem tratamento de line numbers/readable-line-width (v33)
+- Renderiza via `renderMirrorTemplate()` (compartilhado)
 
 ### O que mudou na v31
 

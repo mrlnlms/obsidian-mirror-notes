@@ -1,0 +1,166 @@
+import { MarkdownView, Component, MarkdownRenderChild } from "obsidian";
+import MirrorUIPlugin from "../../main";
+import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
+import { renderMirrorTemplate } from "./templateRenderer";
+import { Logger } from "../logger";
+
+// Selectors for native Obsidian DOM elements
+const SELECTOR_INLINE_TITLE = '.inline-title';
+const SELECTOR_METADATA_CONTAINER = '.metadata-container';
+const SELECTOR_EMBEDDED_BACKLINKS = '.embedded-backlinks';
+const SELECTOR_CM_SIZER = '.cm-sizer';
+
+// Track injected containers per view for cleanup
+const injectedContainers = new Map<string, HTMLElement>();
+
+/** Unique key for a DOM injection (per file + position) */
+function injectionKey(filePath: string, position: MirrorPosition): string {
+  return `dom-${filePath}-${position}`;
+}
+
+/** Resolve the target element and insertion method for a DOM position */
+export function resolveTarget(
+  viewContent: HTMLElement,
+  position: MirrorPosition
+): { target: HTMLElement; method: 'before' | 'after' | 'appendChild' } | null {
+  switch (position) {
+    case 'above-title': {
+      const title = viewContent.querySelector(SELECTOR_INLINE_TITLE) as HTMLElement;
+      if (title) return { target: title, method: 'before' };
+      return null; // fallback
+    }
+    case 'above-properties': {
+      const meta = viewContent.querySelector(SELECTOR_METADATA_CONTAINER) as HTMLElement;
+      if (meta) return { target: meta, method: 'before' };
+      return null;
+    }
+    case 'below-properties': {
+      const meta = viewContent.querySelector(SELECTOR_METADATA_CONTAINER) as HTMLElement;
+      if (meta) return { target: meta, method: 'after' };
+      return null;
+    }
+    case 'above-backlinks': {
+      const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
+      if (backlinks) return { target: backlinks, method: 'before' };
+      return null;
+    }
+    case 'below-backlinks': {
+      const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
+      if (backlinks) return { target: backlinks, method: 'after' };
+      // Try .cm-sizer as last resort for appending at the very bottom
+      const sizer = viewContent.querySelector(SELECTOR_CM_SIZER) as HTMLElement;
+      if (sizer) return { target: sizer, method: 'appendChild' };
+      return null;
+    }
+    default:
+      return null;
+  }
+}
+
+/** Get the fallback position when the target element doesn't exist */
+export function getFallbackPosition(position: MirrorPosition): 'top' | 'bottom' {
+  switch (position) {
+    case 'above-title':
+    case 'above-properties':
+    case 'below-properties':
+      return 'top';
+    case 'above-backlinks':
+    case 'below-backlinks':
+      return 'bottom';
+    default:
+      return 'top';
+  }
+}
+
+/** Check if a position is a DOM position */
+export function isDomPosition(position: MirrorPosition): boolean {
+  return DOM_POSITIONS.includes(position);
+}
+
+/** Inject or update a mirror widget at a DOM position */
+export async function injectDomMirror(
+  plugin: MirrorUIPlugin,
+  view: MarkdownView,
+  config: ApplicableMirrorConfig,
+  frontmatter: Record<string, string>
+): Promise<MirrorPosition> {
+  const file = view.file;
+  if (!file) return config.position;
+
+  const viewContent = view.containerEl.querySelector('.view-content') as HTMLElement;
+  if (!viewContent) return config.position;
+
+  const key = injectionKey(file.path, config.position);
+  const resolved = resolveTarget(viewContent, config.position);
+
+  // If target element not found, return fallback position for CM6 to handle
+  if (!resolved) {
+    const fallback = getFallbackPosition(config.position);
+    Logger.log(`DOM position "${config.position}" target not found, falling back to "${fallback}"`);
+    // Clean up any existing container for this position
+    removeDomMirror(file.path, config.position);
+    return fallback;
+  }
+
+  // Reuse or create container
+  let container = injectedContainers.get(key);
+  if (!container || !container.isConnected) {
+    container = document.createElement('div');
+    container.className = `mirror-ui-widget mirror-dom-injection mirror-position-${config.position}`;
+    container.setAttribute('data-mirror-key', key);
+    container.setAttribute('data-position', config.position);
+    container.setAttribute('contenteditable', 'false');
+    injectedContainers.set(key, container);
+  }
+
+  // Insert at the right position
+  const { target, method } = resolved;
+  if (method === 'before') {
+    target.parentElement?.insertBefore(container, target);
+  } else if (method === 'after') {
+    target.parentElement?.insertBefore(container, target.nextSibling);
+  } else if (method === 'appendChild') {
+    target.appendChild(container);
+  }
+
+  // Render template content
+  await renderMirrorTemplate({
+    plugin,
+    templatePath: config.templatePath,
+    variables: frontmatter,
+    sourcePath: file.path,
+    container,
+    cacheKey: key
+  });
+
+  Logger.log(`DOM mirror injected at "${config.position}" for ${file.path}`);
+  return config.position; // successful injection, no fallback needed
+}
+
+/** Remove a DOM-injected mirror container */
+export function removeDomMirror(filePath: string, position: MirrorPosition): void {
+  const key = injectionKey(filePath, position);
+  const container = injectedContainers.get(key);
+  if (container) {
+    container.remove();
+    injectedContainers.delete(key);
+  }
+}
+
+/** Remove all DOM-injected mirrors for a file */
+export function removeAllDomMirrors(filePath: string): void {
+  for (const [key, container] of injectedContainers) {
+    if (key.startsWith(`dom-${filePath}-`)) {
+      container.remove();
+      injectedContainers.delete(key);
+    }
+  }
+}
+
+/** Clean up all DOM-injected mirrors (for plugin unload) */
+export function cleanupAllDomMirrors(): void {
+  for (const container of injectedContainers.values()) {
+    container.remove();
+  }
+  injectedContainers.clear();
+}
