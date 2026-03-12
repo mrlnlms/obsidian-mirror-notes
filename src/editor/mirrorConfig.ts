@@ -31,11 +31,15 @@ function buildMirrorIndex(settings: MirrorUIPluginSettings): MirrorIndex {
     for (const f of mirror.filterFiles) {
       if (f.folder && !byFile.has(f.folder)) {
         byFile.set(f.folder, mirror);
+      } else if (f.folder && byFile.has(f.folder)) {
+        Logger.warn(`Mirror conflict: "${mirror.name}" discarded for file "${f.folder}" (already claimed by "${byFile.get(f.folder)!.name}")`);
       }
     }
     for (const f of mirror.filterFolders) {
       if (f.folder && !folderToMirror.has(f.folder)) {
         folderToMirror.set(f.folder, mirror);
+      } else if (f.folder && folderToMirror.has(f.folder)) {
+        Logger.warn(`Mirror conflict: "${mirror.name}" discarded for folder "${f.folder}" (already claimed by "${folderToMirror.get(f.folder)!.name}")`);
       }
     }
   }

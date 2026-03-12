@@ -24,6 +24,10 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 - [x] `.github/workflows/ci.yml` — build + lint + test em push/PR
 - [x] Skill `obsidian-plugin-scaffold` atualizada com secao CI/CD
 
+## Proximo: v37 — Position engine refinement
+
+- [ ] **below-properties → CM6 top** — preferir CM6 sobre DOM (resultado visual identico, melhor reatividade). ~5 linhas em `main.ts` + label em `settings.ts`. Plano: [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
+
 ## Pre-lancamento (must-have)
 
 - [ ] **Sistema de templates pre-configurados (starter configs)** — usuario instala e ja tem exemplos funcionando. So faz sentido quando o plugin estiver pronto pra lancar

@@ -153,9 +153,31 @@ O MN agora tem 3 engines de renderizacao, cada uma cobrindo uma parte da anatomi
 
 **Fallback chain:**
 - above-title → top (se `.inline-title` nao existe)
-- above-properties, below-properties → top (se `.metadata-container` nao existe)
+- above-properties → DOM obrigatorio (unico caso que precisa de DOM — CM6 nao alcanca acima do frontmatter)
+- below-properties → CM6 top (resultado visual identico, melhor performance e reatividade)
+- sem properties → CM6 top (mesmo caso)
 - above-backlinks, below-backlinks → bottom (se `.embedded-backlinks` nao existe)
 - left, right → sempre funciona (scrollDOM sempre existe)
+
+**Descoberta: `.metadata-container` sempre existe no DOM (v36, mar/2026)**
+
+Diagnostico via Logger em `setupDomPosition` confirmou que o Obsidian **sempre** cria `.metadata-container` em Live Preview, independente de:
+- nota ter YAML frontmatter ou nao (mesmo nota vazia recem-criada)
+- setting "Properties in document" estar "visible" ou "hidden"
+
+O container sempre tem 3 filhos (metadata-error-container, metadata-properties-heading, collapse icon). Visualmente, sem YAML nao aparece botao de "add property", mas o elemento DOM existe. Isso significa que o fallback `above/below-properties → top` e codigo morto na pratica.
+
+**Decisao arquitetural: preferir CM6 sobre DOM**
+
+Preferencia: usar CM6 sempre que possivel (menos intrusivo, reatividade nativa via StateField).
+
+| Posicao | Implementacao | Motivo |
+|---------|---------------|--------|
+| above-properties | DOM (obrigatorio) | CM6 nao consegue inserir antes do `.metadata-container` |
+| below-properties | CM6 top (preferencial) | Resultado visual identico, melhor performance |
+| sem properties | CM6 top | Mesmo caso |
+
+A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`.
 
 **positionOverrides (Map no plugin):**
 - Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
