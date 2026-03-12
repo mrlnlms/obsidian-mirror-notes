@@ -27,6 +27,8 @@ export default class MirrorUIPlugin extends Plugin {
   private templateUpdateTimeout: NodeJS.Timeout | null = null;
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   private knownTemplatePaths = new Set<string>();
+  /** Cached Obsidian config values — only refresh editors when these actually change */
+  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible' };
 
   async onload() {
     await this.loadSettings();
@@ -73,13 +75,24 @@ export default class MirrorUIPlugin extends Plugin {
 
     // Re-processar mirrors quando settings visuais do Obsidian mudam (inline title, properties)
     // css-change nao cobre config changes; monitorar app.json via vault raw event
+    // @ts-ignore — getConfig not in official typings
+    this.lastObsidianConfig.showInlineTitle = !!this.app.vault.getConfig("showInlineTitle");
+    // @ts-ignore
+    this.lastObsidianConfig.propertiesInDocument = this.app.vault.getConfig("propertiesInDocument") || 'visible';
     this.registerEvent(
       // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
       this.app.vault.on('raw', (path: string) => {
-        if (path === '.obsidian/app.json') {
-          Logger.log('[config-change] app.json changed, refreshing editors');
-          this.refreshAllEditors();
-        }
+        if (path !== '.obsidian/app.json') return;
+        // @ts-ignore
+        const showTitle = !!this.app.vault.getConfig("showInlineTitle");
+        // @ts-ignore
+        const propsMode = this.app.vault.getConfig("propertiesInDocument") || 'visible';
+        if (showTitle === this.lastObsidianConfig.showInlineTitle &&
+            propsMode === this.lastObsidianConfig.propertiesInDocument) return;
+        this.lastObsidianConfig.showInlineTitle = showTitle;
+        this.lastObsidianConfig.propertiesInDocument = propsMode;
+        Logger.log(`[config-change] showInlineTitle=${showTitle}, propertiesInDocument=${propsMode}`);
+        this.refreshAllEditors();
       })
     );
 
