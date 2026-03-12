@@ -211,6 +211,22 @@ export default class MirrorUIPlugin extends Plugin {
   async saveSettings() {
     await this.saveData(this.settings);
     this.rebuildKnownTemplatePaths();
+    this.refreshAllEditors();
+  }
+
+  /** Atualiza todos os editores abertos com config fresca (chamado apos saveSettings) */
+  private refreshAllEditors() {
+    clearConfigCache();
+    this.app.workspace.iterateAllLeaves(leaf => {
+      if (leaf.view instanceof MarkdownView && leaf.view.file) {
+        const cm = getEditorView(leaf.view as MarkdownView);
+        if (cm) {
+          cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
+          this.updateHidePropsForView(leaf.view as MarkdownView);
+          this.setupDomPosition(leaf.view as MarkdownView);
+        }
+      }
+    });
   }
 
   private rebuildKnownTemplatePaths() {
