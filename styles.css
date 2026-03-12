@@ -397,8 +397,7 @@
 }
 
 /* Callouts/hr: o Obsidian scopa margins sob .markdown-preview-view,
-   que nao e ancestral dos nossos containers. Reproduzir aqui.
-   Especificidade alta (.mirror-container-styled) pra vencer theme resets. */
+   que nao e ancestral dos nossos containers. Reproduzir aqui. */
 .mirror-container-styled .markdown-rendered .callout,
 .mirror-ui-widget .markdown-rendered .callout,
 .mirror-dom-injection .markdown-rendered .callout,
@@ -506,32 +505,39 @@
 /* Ativar: adicionar classe .mirror-debug no body via DevTools */
 /* document.body.classList.toggle('mirror-debug') */
 
-.mirror-debug .mirror-ui-widget {
+/* --- Mirror containers por tipo --- */
+/* CM6 widget (position: top/bottom) — vermelho */
+.mirror-debug .mirror-ui-widget:not(.mirror-dom-injection) {
   outline: 3px solid red !important;
 }
+/* DOM injection (below-properties, above-title, etc) — verde */
+.mirror-debug .mirror-dom-injection {
+  outline: 3px solid lime !important;
+}
+/* Code block processor — laranja */
+.mirror-debug .mirror-code-block {
+  outline: 3px solid orange !important;
+}
 
-.mirror-debug .mirror-ui-widget > * {
+/* --- Conteúdo interno --- */
+.mirror-debug .mirror-ui-widget .markdown-rendered {
   outline: 2px dashed blue !important;
 }
 
-.mirror-debug .mirror-ui-widget table {
-  outline: 2px solid lime !important;
-}
-
-.mirror-debug .mirror-ui-widget .dataview {
-  outline: 2px solid orange !important;
-}
-
+/* --- Contexto do editor --- */
 .mirror-debug .cm-content {
   outline: 1px dotted yellow !important;
 }
-
 .mirror-debug .cm-sizer {
   outline: 1px dotted cyan !important;
 }
-
 .mirror-debug .cm-editor {
   outline: 1px dotted magenta !important;
+}
+
+/* --- Metadata container (referência de posição) --- */
+.mirror-debug .metadata-container {
+  outline: 2px dashed grey !important;
 }
 
 /* ========== MIRROR SEARCH ========== */
@@ -574,7 +580,7 @@
 }
 
 .mirror-position-below-properties {
-  margin-top: 10px;
+  margin-top: 0;
   margin-bottom: 10px;
 }
 
