@@ -2,7 +2,31 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v35 — Performance fix + Template reactivity
+## Versao Atual: v36 — Reactivity fix (cross-pane + template editing)
+
+### v36: Reactivity fix — filePathFacet + handleTemplateChange + inactivity guard removal
+
+**Bug fix — `getActiveFile()` em cenario cross-pane:**
+- CM6 StateField `create()` e `update()` usavam `getActiveFile()` pra obter o arquivo do editor
+- Com 2+ paineis, `getActiveFile()` retorna o painel com foco, nao necessariamente o painel daquele editor
+- Cenario: template no painel A, nota com mirror no painel B. Forced update no B → `getActiveFile()` retorna A (template) → `getApplicableConfig(template)` → null → widget sumia
+- Fix: `filePathFacet` (Facet CM6) injetado em `setupEditor()` com `file.path`. Cada editor recebe seu path via `state.facet(filePathFacet)`, independente do painel ativo
+- `mirrorWidget.ts`: `updateContentIfNeeded` usa `state.filePath` em vez de `getActiveFile()`
+- `mirrorTypes.ts`: campo `filePath: string` adicionado ao `MirrorState`
+
+**Fix — Cenario C-settings (editar template → CM6 mirror nao atualiza):**
+- `handleTemplateChange()` fazia early return quando `templateCbs.length === 0` (CM6 widgets nao se registram no `templateDeps`)
+- Fix: `knownTemplatePaths` (Set precomputado dos template paths nos settings) como fast-path O(1)
+- `iterateAllLeaves` movido pra dentro do debounce (nao roda sincronamente a cada `vault.on('modify')`)
+- Sem `clearRenderCache()` global (desnecessario — `handleForcedUpdate` no StateField ja faz + hash invalida naturalmente)
+
+**Fix — Cenario A (editar frontmatter via Properties UI):**
+- Guard de inatividade (`USER_INACTIVITY_THRESHOLD`) removia o `forceMirrorUpdateEffect` durante digitacao
+- Properties UI edita YAML sem gerar CM6 transactions → StateField nao auto-detecta → guard bloqueava unico caminho
+- Fix: remover guard. Debounce 500ms + throttle 1/sec no StateField ja protegem contra spam
+
+**Dead code removido:**
+- `getLastUserInteraction()`, `lastUserInteraction`, `USER_INACTIVITY_THRESHOLD` — nao mais necessarios
 
 ### v35: Performance fix (DOM injector, Logger, Margin panel) + Template reactivity
 

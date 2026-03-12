@@ -18,6 +18,11 @@ export const mirrorPluginFacet = Facet.define<MirrorUIPlugin, MirrorUIPlugin | n
   combine: values => values[0] ?? null
 });
 
+/** Facet que armazena o filePath do arquivo deste editor (setado por setupEditor) */
+export const filePathFacet = Facet.define<string, string>({
+  combine: values => values[0] ?? ''
+});
+
 // Effects
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
 export const toggleWidgetEffect = StateEffect.define<boolean>();
@@ -109,6 +114,7 @@ function handleForcedUpdate(
     frontmatter: newFrontmatter || value.frontmatter,
     frontmatterHash: newFrontmatterHash || value.frontmatterHash,
     widgetId: generateWidgetId(),
+    filePath: value.filePath,
     lastDocText: docText
   };
 
@@ -155,6 +161,7 @@ function handleConfigChange(
     frontmatter: newFrontmatter,
     frontmatterHash: newFrontmatterHash,
     widgetId: positionChanged ? generateWidgetId() : value.widgetId,
+    filePath: value.filePath,
     lastDocText: docText
   };
 
@@ -180,7 +187,8 @@ function clearWidgetCaches(widgetId: string): void {
 export const mirrorStateField = StateField.define<MirrorFieldState>({
   create(state: EditorState): MirrorFieldState {
     const plugin = state.facet(mirrorPluginFacet)!;
-    const file = plugin?.app.workspace.getActiveFile();
+    const filePath = state.facet(filePathFacet);
+    const file = filePath ? plugin?.app.vault.getAbstractFileByPath(filePath) as any : null;
     const frontmatter = parseFrontmatter(state.doc.toString());
     const frontmatterHash = hashObject(frontmatter);
     const config = getApplicableConfig(plugin, file, frontmatter);
@@ -191,6 +199,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
       frontmatter: frontmatter,
       frontmatterHash: frontmatterHash,
       widgetId: generateWidgetId(),
+      filePath: filePath,
       lastDocText: state.doc.toString()
     };
 
@@ -212,8 +221,10 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
       return fieldState;
     }
 
-    const file = plugin?.app.workspace.getActiveFile();
-    const filePath = file?.path || 'unknown';
+    // Usar filePath armazenado no state — getActiveFile() retorna o painel ativo,
+    // que pode ser outro arquivo (ex: template sendo editado em outro painel)
+    const file = plugin?.app.vault.getAbstractFileByPath(value.filePath) as any;
+    const filePath = value.filePath || 'unknown';
     const docText = tr.state.doc.toString();
     const now = Date.now();
 

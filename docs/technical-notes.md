@@ -2,7 +2,39 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v35 — Performance fix + Template reactivity
+## Versao Atual: v36 — Reactivity fix (cross-pane + template editing)
+
+### O que mudou na v36
+
+**Bug cross-pane — `getActiveFile()` retornava arquivo errado:**
+
+`getActiveFile()` retorna o arquivo do painel com foco, nao do painel onde o editor CM6 vive. Com 2+ paineis abertos (template no painel A, nota com mirror no painel B), um forced update no B chamava `getActiveFile()` → retornava A (template) → `getApplicableConfig(templateFile, ...)` → null → widget sumia.
+
+Fix: `filePathFacet` — Facet CM6 injetado por `setupEditor()` via `StateEffect.appendConfig.of([..., filePathFacet.of(file.path)])`. Cada instancia de editor recebe seu proprio path.
+
+Mudancas:
+- `mirrorState.ts`: novo `filePathFacet` (linhas 22-24). `create()` usa `state.facet(filePathFacet)`. `update()` usa `vault.getAbstractFileByPath(value.filePath)` em vez de `getActiveFile()`. `handleForcedUpdate` e `handleConfigChange` propagam `filePath`
+- `mirrorWidget.ts`: `updateContentIfNeeded` usa `this.state.filePath` em vez de `getActiveFile()`
+- `mirrorTypes.ts`: `filePath: string` adicionado ao `MirrorState`
+- `main.ts` (setupEditor): `filePathFacet.of(file.path)` no appendConfig
+
+**Fix Cenario C-settings — template editado nao atualizava CM6 mirrors:**
+
+`handleTemplateChange()` fazia `if (templateCbs.length === 0) return` — CM6 widgets nao se registram no `templateDeps` (so code blocks e DOM mirrors). O `iterateAllLeaves` que despacharia `forceMirrorUpdateEffect` nunca era alcancado.
+
+Fix: `knownTemplatePaths` (Set<string>) precomputado em `loadSettings()` e `saveSettings()`. Fast-path O(1): se o arquivo modificado nao e template conhecido E nao tem callbacks → return. Senao, debounce 500ms → `iterateAllLeaves` (dentro do debounce, nao sincronamente).
+
+Sem `clearRenderCache()` global no `handleTemplateChange` — redundante porque `handleForcedUpdate` no StateField ja limpa caches, e o hash cache invalida naturalmente (conteudo diferente → hash diferente → cache miss).
+
+**Fix Cenario A — Properties UI nao trigava update:**
+
+Guard de inatividade (`now - lastUserInteraction > 1s`) bloqueava `forceMirrorUpdateEffect` durante digitacao. Properties UI edita YAML sem gerar CM6 transactions → StateField nao auto-detecta → guard bloqueava o unico caminho.
+
+Fix: removido guard. Protecoes existentes sao suficientes: debounce 500ms (`METADATA_CHANGE_DEBOUNCE`) + throttle 1/sec (`FORCED_UPDATE_THROTTLE` no StateField).
+
+Dead code removido: `getLastUserInteraction()`, `lastUserInteraction`, `USER_INACTIVITY_THRESHOLD` do timingConfig.
+
+---
 
 ### O que mudou na v35
 
@@ -82,7 +114,7 @@ src/suggesters/
   suggest.ts         — TextInputSuggest base (Popper-based, ex-utils/suggest.ts)
   file-suggest.ts    — FileSuggest, FolderSuggest, YamlPropertySuggest
 src/editor/
-  mirrorState.ts     — StateField + helpers extraidos (hasForcedUpdate, detectFrontmatterChange, etc)
+  mirrorState.ts     — StateField + filePathFacet + helpers (hasForcedUpdate, detectFrontmatterChange, etc)
   decorationBuilder.ts — buildDecorations() (ex-mirrorDecorations.ts, sem dep circular)
 src/utils/
   obsidianInternals.ts — wrappers tipados pra APIs @ts-ignore

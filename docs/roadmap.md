@@ -2,6 +2,13 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v36 — Reactivity fix (cross-pane + template editing)
+
+- [x] `filePathFacet` — cada editor CM6 recebe seu file.path via Facet (fix `getActiveFile()` cross-pane)
+- [x] `handleTemplateChange` — fast-path `knownTemplatePaths` O(1) + iterateAllLeaves dentro do debounce
+- [x] Guard de inatividade removido — Properties UI agora triga update corretamente
+- [x] Dead code removido (lastUserInteraction, USER_INACTIVITY_THRESHOLD)
+
 ## Concluido: v35 — Performance fix + Template reactivity
 
 - [x] Fix re-render excessivo DOM injector (setupDomPosition fora do hot path)

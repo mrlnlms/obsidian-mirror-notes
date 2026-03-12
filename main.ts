@@ -1,6 +1,6 @@
 import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
-import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
+import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, filePathFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
@@ -25,6 +25,8 @@ export default class MirrorUIPlugin extends Plugin {
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
   private crossNoteTimeout: NodeJS.Timeout | null = null;
   private templateUpdateTimeout: NodeJS.Timeout | null = null;
+  /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
+  private knownTemplatePaths = new Set<string>();
 
   async onload() {
     await this.loadSettings();
@@ -105,16 +107,15 @@ export default class MirrorUIPlugin extends Plugin {
             this.setupDomPosition(activeView);
             this.updateHidePropsForView(activeView);
 
-            // CM6 forced update: so quando inativo (safety net — StateField ja auto-detecta)
-            const now = Date.now();
-            if (now - this.getLastUserInteraction() > TIMING.USER_INACTIVITY_THRESHOLD) {
-              Logger.log('Metadata changed, forcing CM6 update');
-              const cm = getEditorView(activeView);
-              if (cm) {
-                cm.dispatch({
-                  effects: forceMirrorUpdateEffect.of()
-                });
-              }
+            // CM6 forced update: sempre dispatchar (Properties UI edita YAML sem gerar
+            // CM6 transactions, entao o StateField nao auto-detecta. O proprio StateField
+            // ja tem throttle 1/sec e debounce 500ms internos)
+            Logger.log('Metadata changed, forcing CM6 update');
+            const cm = getEditorView(activeView);
+            if (cm) {
+              cm.dispatch({
+                effects: forceMirrorUpdateEffect.of()
+              });
             }
 
             metadataUpdateTimeout = null;
@@ -200,32 +201,27 @@ export default class MirrorUIPlugin extends Plugin {
       })
     );
 
-    // Registrar eventos de interacao do usuario para tracking
-    this.registerDomEvent(document, 'keydown', () => {
-      this.updateLastUserInteraction();
-    });
-
-    this.registerDomEvent(document, 'mousedown', () => {
-      this.updateLastUserInteraction();
-    });
-  }
-
-  private lastUserInteraction = Date.now();
-
-  private updateLastUserInteraction() {
-    this.lastUserInteraction = Date.now();
-  }
-
-  private getLastUserInteraction(): number {
-    return this.lastUserInteraction;
   }
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.rebuildKnownTemplatePaths();
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
+    this.rebuildKnownTemplatePaths();
+  }
+
+  private rebuildKnownTemplatePaths() {
+    this.knownTemplatePaths.clear();
+    const s = this.settings;
+    if (s.global_settings_live_preview_note) this.knownTemplatePaths.add(s.global_settings_live_preview_note);
+    if (s.global_settings_preview_note) this.knownTemplatePaths.add(s.global_settings_preview_note);
+    for (const m of s.customMirrors) {
+      if (m.custom_settings_live_preview_note) this.knownTemplatePaths.add(m.custom_settings_live_preview_note);
+      if (m.custom_settings_preview_note) this.knownTemplatePaths.add(m.custom_settings_preview_note);
+    }
   }
 
   async resetSettings() {
@@ -352,18 +348,22 @@ export default class MirrorUIPlugin extends Plugin {
   /** Dispara re-render de todos mirrors que dependem de um template path */
   private handleTemplateChange(filePath: string) {
     const templateCbs = this.templateDeps.getDependentCallbacks(filePath);
-    if (templateCbs.length === 0) return;
+    // Fast path: se nenhum callback E nao e template dos settings → skip
+    if (templateCbs.length === 0 && !this.knownTemplatePaths.has(filePath)) return;
 
     if (this.templateUpdateTimeout) {
       clearTimeout(this.templateUpdateTimeout);
     }
 
     this.templateUpdateTimeout = setTimeout(() => {
-      Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
-      for (const cb of templateCbs) {
-        cb();
+      // Callbacks registrados (code blocks + DOM mirrors)
+      if (templateCbs.length > 0) {
+        Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
+        for (const cb of templateCbs) {
+          cb();
+        }
       }
-      // Forcar update em CM6 widgets que usam esse template
+      // CM6 widgets (settings-based) — iterateAllLeaves DENTRO do debounce
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
           const cm = getEditorView(leaf.view as MarkdownView);
@@ -400,6 +400,7 @@ export default class MirrorUIPlugin extends Plugin {
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
           mirrorPluginFacet.of(this),
+          filePathFacet.of(file.path),
           mirrorStateField,
           mirrorMarginPanelPlugin
         ])

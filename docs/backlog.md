@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v35.
+Trabalho tecnico a ser feito. Atualizado na v36.
 
 ## Pendente
 
@@ -58,3 +58,7 @@ Trabalho tecnico a ser feito. Atualizado na v35.
 - [x] Logger otimizado — early return com debug off, elimina console.log desnecessario (v35)
 - [x] Margin panel — docChanged → geometryChanged, elimina forced layout reflow por keystroke (v35)
 - [x] Template reactivity — TemplateDependencyRegistry + handleTemplateChange (v35)
+- [x] Bug cross-pane — getActiveFile() retornava arquivo errado em cenario multi-painel → filePathFacet (v36)
+- [x] Cenario C-settings — editar template nao atualizava CM6 mirrors → knownTemplatePaths + handleTemplateChange fix (v36)
+- [x] Cenario A — Properties UI nao trigava update → guard de inatividade removido (v36)
+- [x] Dead code — lastUserInteraction, USER_INACTIVITY_THRESHOLD removidos (v36)

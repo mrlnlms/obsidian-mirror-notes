@@ -34,6 +34,7 @@ export interface MirrorState {
   config: ApplicableMirrorConfig | null;
   frontmatter: any;
   widgetId: string;
+  filePath: string; // Path do arquivo que contém este editor (não depende de getActiveFile)
   lastDocText?: string;
   frontmatterHash?: string; // Hash do frontmatter para detectar mudanças reais
   lastContentHash?: string; // Hash do conteúdo do template para evitar re-renderização

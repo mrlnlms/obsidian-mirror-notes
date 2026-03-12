@@ -76,14 +76,16 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   async updateContentIfNeeded(container: HTMLElement, view: EditorView) {
-    const activeFile = this.plugin.app.workspace.getActiveFile();
-    if (!activeFile) return;
+    // Usar filePath armazenado no state — getActiveFile() retorna o painel ativo,
+    // que pode ser outro arquivo (ex: template sendo editado em outro painel)
+    const sourcePath = this.state.filePath;
+    if (!sourcePath) return;
 
     await renderMirrorTemplate({
       plugin: this.plugin,
       templatePath: this.config.templatePath,
       variables: this.state.frontmatter || {},
-      sourcePath: activeFile.path,
+      sourcePath,
       container,
       cacheKey: this.getCacheKey()
     });
