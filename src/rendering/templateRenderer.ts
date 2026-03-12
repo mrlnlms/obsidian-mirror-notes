@@ -1,6 +1,7 @@
-import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
+import { TFile, MarkdownRenderer, MarkdownRenderChild, Component, MarkdownView } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../logger';
+import { getEditorView } from '../utils/obsidianInternals';
 
 export interface RenderContext {
   plugin: MirrorUIPlugin;
@@ -114,21 +115,24 @@ async function doRender(ctx: RenderContext): Promise<void> {
     Logger.log('Markdown rendered successfully');
 
     // DEBUG: Capturar computed styles para comparar com rendering nativo
-    debugComputedStyles(contentDiv, cacheKey);
+    debugComputedStyles(contentDiv, cacheKey, plugin, templatePath);
   } catch (error) {
     Logger.error('Error rendering template:', error);
     container.innerHTML = `<div style="color: var(--text-error);">Error: ${error}</div>`;
   }
 }
 
-/** DEBUG temporário — captura computed styles de mirror + nativo + ancestors + diff */
-function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string): void {
-  // Delay pra garantir layout completo (nativo pode demorar um pouco mais)
+/** DEBUG temporário — captura computed styles de mirror + Reading View + Live Preview + diff triplo */
+function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string, plugin: MirrorUIPlugin, templatePath: string): void {
+  // Delay pra garantir layout completo
   setTimeout(() => {
     const focusProps = ['margin-top', 'margin-bottom', 'padding-top', 'padding-bottom'];
-    const selectors: Record<string, string> = {
+
+    // Seletores para .markdown-rendered (mirror e Reading View)
+    const htmlSelectors: Record<string, string> = {
       'h1': 'h1',
       'h2': 'h2',
+      'h3': 'h3',
       'p': 'p',
       '.callout': '.callout',
       '.callout-content': '.callout-content',
@@ -136,14 +140,31 @@ function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string): void {
       'ul': 'ul',
       'li': 'li',
       'blockquote': 'blockquote',
-      'pre': 'pre',
+      'pre': 'pre:not(.frontmatter)',
       '.markdown-rendered': '',
     };
 
-    // --- Helper: extrair styles compactos de um root ---
-    function getStyles(root: HTMLElement): Record<string, Record<string, string>> {
-      const result: Record<string, Record<string, string>> = {};
-      for (const [label, selector] of Object.entries(selectors)) {
+    // Mapeamento CM6 Live Preview: classes CM6 → label equivalente
+    const cm6Selectors: Record<string, string> = {
+      'h1': '.HyperMD-header.HyperMD-header-1',
+      'h2': '.HyperMD-header.HyperMD-header-2',
+      'h3': '.HyperMD-header.HyperMD-header-3',
+      'p': '.cm-line:not(.HyperMD-header):not(.HyperMD-list-line):not(.HyperMD-quote):not(.HyperMD-codeblock):not(.HyperMD-hr):not(.cm-active)',
+      '.callout': '.cm-callout .callout',
+      '.callout-content': '.cm-callout .callout-content',
+      'hr': '.HyperMD-hr hr',
+      'ul': '.HyperMD-list-line',
+      'li': '.HyperMD-list-line',
+      'blockquote': '.HyperMD-quote',
+      'pre': '.HyperMD-codeblock',
+    };
+
+    type StyleMap = Record<string, Record<string, string>>;
+
+    // --- Helper: extrair styles de um root com seletores customizaveis ---
+    function getStyles(root: HTMLElement, sels: Record<string, string>): StyleMap {
+      const result: StyleMap = {};
+      for (const [label, selector] of Object.entries(sels)) {
         const el = selector ? root.querySelector(selector) as HTMLElement : root;
         if (!el) continue;
         const cs = window.getComputedStyle(el);
@@ -154,7 +175,7 @@ function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string): void {
       return result;
     }
 
-    // --- Helper: cadeia de ancestrais (até 5 níveis) ---
+    // --- Helper: cadeia de ancestrais ---
     function getAncestorChain(el: HTMLElement, levels = 5): string {
       const chain: string[] = [];
       let current: HTMLElement | null = el;
@@ -168,7 +189,7 @@ function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string): void {
     }
 
     // --- Helper: formatar styles compactos ---
-    function formatStyles(label: string, styles: Record<string, Record<string, string>>): string {
+    function formatStyles(label: string, styles: StyleMap): string {
       const parts: string[] = [];
       for (const [sel, vals] of Object.entries(styles)) {
         const mt = vals['margin-top'] || '?';
@@ -180,97 +201,123 @@ function debugComputedStyles(contentDiv: HTMLElement, cacheKey: string): void {
       return `[${label}] ${parts.join(' | ')}`;
     }
 
-    // === A) Mirror container ===
-    const mirrorStyles = getStyles(contentDiv);
-
-    // === B) Nativo: buscar rendering nativo em qualquer view (Reading/Live Preview) ===
-    let nativeRoot: HTMLElement | null = null;
-    // Tentar múltiplos seletores: Reading View e Live Preview
-    const nativeCandidates = [
-      ...Array.from(document.querySelectorAll('.markdown-preview-view .markdown-preview-sizer')),
-      ...Array.from(document.querySelectorAll('.markdown-preview-view .markdown-rendered')),
-      ...Array.from(document.querySelectorAll('.markdown-reading-view .markdown-rendered')),
-    ];
-    for (const view of nativeCandidates) {
-      // Ignorar nossos próprios containers mirror
-      if (view.closest('.mirror-ui-widget') || view.closest('.mirror-codeblock-container') || view.closest('.mirror-dom-injection')) continue;
-      // Pegar o primeiro que tenha conteúdo real (h1 ou p)
-      if (view.querySelector('h1') || view.querySelector('p')) {
-        nativeRoot = view as HTMLElement;
-        break;
-      }
-    }
-    const nativeStyles = nativeRoot ? getStyles(nativeRoot) : null;
-
-    // === Log compacto ===
-    Logger.log(`\n========== CSS DIAGNOSTIC: ${cacheKey} ==========`);
-    Logger.log(formatStyles('MIRROR', mirrorStyles));
-    if (nativeStyles) {
-      Logger.log(formatStyles('NATIVE', nativeStyles));
-    } else {
-      Logger.log('[NATIVE] not found — abra o template em outra aba (Reading View)');
-    }
-
-    // === C) Filhos diretos do .markdown-rendered (pra entender :first-child) ===
-    const children = Array.from(contentDiv.children).slice(0, 5);
-    const childInfo = children.map((c, i) => {
-      const el = c as HTMLElement;
-      const tag = el.tagName.toLowerCase();
-      const cls = el.className ? `.${el.className.split(/\s+/).join('.')}` : '';
-      const display = window.getComputedStyle(el).display;
-      const mt = window.getComputedStyle(el).marginTop;
-      return `[${i}] ${tag}${cls} (display:${display}, mt:${mt})`;
-    });
-    Logger.log(`[CHILDREN: mirror] ${childInfo.join(' | ')}`);
-    if (nativeRoot) {
-      const nativeChildren = Array.from(nativeRoot.children).slice(0, 5);
-      const nChildInfo = nativeChildren.map((c, i) => {
-        const el = c as HTMLElement;
-        const tag = el.tagName.toLowerCase();
-        const cls = el.className ? `.${el.className.split(/\s+/).join('.')}` : '';
-        const display = window.getComputedStyle(el).display;
-        const mt = window.getComputedStyle(el).marginTop;
-        return `[${i}] ${tag}${cls} (display:${display}, mt:${mt})`;
-      });
-      Logger.log(`[CHILDREN: native] ${nChildInfo.join(' | ')}`);
-    }
-
-    // === D) Ancestor chains ===
-    Logger.log(`[ANCESTORS: mirror] ${getAncestorChain(contentDiv)}`);
-    if (nativeRoot) {
-      Logger.log(`[ANCESTORS: native] ${getAncestorChain(nativeRoot)}`);
-    }
-
-    // === D) Diff automático ===
-    if (nativeStyles) {
-      Logger.log('[DIFF] --- comparing mirror vs native ---');
+    // --- Helper: diff entre dois StyleMaps ---
+    function logDiff(labelA: string, stylesA: StyleMap, labelB: string, stylesB: StyleMap): void {
+      Logger.log(`[DIFF: ${labelA} vs ${labelB}] ---`);
       let hasMismatch = false;
-      for (const [sel, mirrorVals] of Object.entries(mirrorStyles)) {
-        const nativeVals = nativeStyles[sel];
-        if (!nativeVals) {
-          Logger.log(`[DIFF] ${sel}: present in mirror, missing in native`);
+      for (const [sel, valsA] of Object.entries(stylesA)) {
+        const valsB = stylesB[sel];
+        if (!valsB) {
+          Logger.log(`  ${sel}: present in ${labelA}, missing in ${labelB}`);
           hasMismatch = true;
           continue;
         }
         for (const prop of focusProps) {
-          const mv = mirrorVals[prop] || '?';
-          const nv = nativeVals[prop] || '?';
-          if (mv !== nv) {
-            Logger.log(`[DIFF] ${sel} ${prop}: mirror=${mv} native=${nv} (MISMATCH)`);
+          const a = valsA[prop] || '?';
+          const b = valsB[prop] || '?';
+          if (a !== b) {
+            Logger.log(`  ${sel} ${prop}: ${labelA}=${a} ${labelB}=${b} ← MISMATCH`);
             hasMismatch = true;
           }
         }
       }
-      // Check selectors in native but not in mirror
-      for (const sel of Object.keys(nativeStyles)) {
-        if (!mirrorStyles[sel]) {
-          Logger.log(`[DIFF] ${sel}: present in native, missing in mirror`);
+      for (const sel of Object.keys(stylesB)) {
+        if (!stylesA[sel]) {
+          Logger.log(`  ${sel}: present in ${labelB}, missing in ${labelA}`);
           hasMismatch = true;
         }
       }
-      if (!hasMismatch) {
-        Logger.log('[DIFF] all compared properties match!');
+      if (!hasMismatch) Logger.log(`  all compared properties match!`);
+    }
+
+    // --- Helper: children info ---
+    function logChildren(label: string, root: HTMLElement): void {
+      const children = Array.from(root.children).slice(0, 8);
+      const info = children.map((c, i) => {
+        const el = c as HTMLElement;
+        const tag = el.tagName.toLowerCase();
+        const cls = el.className ? `.${Array.from(el.classList).slice(0, 3).join('.')}` : '';
+        const display = window.getComputedStyle(el).display;
+        const mt = window.getComputedStyle(el).marginTop;
+        return `[${i}] ${tag}${cls} (d:${display}, mt:${mt})`;
+      });
+      Logger.log(`[CHILDREN: ${label}] ${info.join(' | ')}`);
+    }
+
+    // =============================================
+    // Encontrar leaves do template via workspace
+    // =============================================
+    let rvRoot: HTMLElement | null = null;  // Reading View
+    let lpRoot: HTMLElement | null = null;  // Live Preview (.cm-content)
+
+    plugin.app.workspace.iterateAllLeaves((leaf) => {
+      if (rvRoot && lpRoot) return; // ja encontrou ambos
+      const view = leaf.view;
+      if (!(view instanceof MarkdownView)) return;
+      if (view.file?.path !== templatePath) return;
+
+      const state = leaf.getViewState();
+      const mode = state?.state?.mode;
+      const source = state?.state?.source;
+
+      if (mode === 'preview' && !rvRoot) {
+        // Reading View — buscar .markdown-preview-sizer
+        const container = view.containerEl;
+        const sizer = container.querySelector('.markdown-preview-view .markdown-preview-sizer') as HTMLElement
+          ?? container.querySelector('.markdown-preview-view') as HTMLElement;
+        if (sizer && (sizer.querySelector('h1') || sizer.querySelector('p'))) {
+          rvRoot = sizer;
+        }
+      } else if (mode === 'source' && source === false && !lpRoot) {
+        // Live Preview — buscar .cm-content
+        const editorView = getEditorView(view);
+        if (editorView) {
+          lpRoot = editorView.contentDOM as HTMLElement;
+        }
       }
+    });
+
+    // === Capturar styles ===
+    const mirrorStyles = getStyles(contentDiv, htmlSelectors);
+    const rvStyles = rvRoot ? getStyles(rvRoot, htmlSelectors) : null;
+    const lpStyles = lpRoot ? getStyles(lpRoot, cm6Selectors) : null;
+
+    // === LOG ===
+    Logger.log(`\n========== CSS DIAGNOSTIC: ${cacheKey} ==========`);
+    Logger.log(`[template] ${templatePath}`);
+
+    // Mirror
+    Logger.log(formatStyles('MIRROR', mirrorStyles));
+    logChildren('mirror', contentDiv);
+    Logger.log(`[ANCESTORS: mirror] ${getAncestorChain(contentDiv)}`);
+
+    // Reading View
+    if (rvStyles && rvRoot) {
+      Logger.log(formatStyles('NATIVE-RV', rvStyles));
+      logChildren('native-rv', rvRoot);
+      Logger.log(`[ANCESTORS: native-rv] ${getAncestorChain(rvRoot)}`);
+    } else {
+      Logger.log('[NATIVE-RV] not found — abra o template em Reading View');
+    }
+
+    // Live Preview
+    if (lpStyles && lpRoot) {
+      Logger.log(formatStyles('NATIVE-LP', lpStyles));
+      logChildren('native-lp', lpRoot);
+      Logger.log(`[ANCESTORS: native-lp] ${getAncestorChain(lpRoot)}`);
+    } else {
+      Logger.log('[NATIVE-LP] not found — abra o template em Live Preview');
+    }
+
+    // === Diff triplo ===
+    if (rvStyles) {
+      logDiff('mirror', mirrorStyles, 'native-rv', rvStyles);
+    }
+    if (lpStyles) {
+      logDiff('mirror', mirrorStyles, 'native-lp', lpStyles);
+    }
+    if (rvStyles && lpStyles) {
+      logDiff('native-rv', rvStyles, 'native-lp', lpStyles);
     }
 
     Logger.log(`========== END CSS DIAGNOSTIC ==========\n`);

@@ -409,30 +409,35 @@
 .mirror-ui-widget .markdown-rendered hr,
 .mirror-dom-injection .markdown-rendered hr,
 .mirror-code-block .markdown-rendered hr {
-  margin-top: 1em !important;
-  margin-bottom: 1em !important;
+  margin-top: 2em !important;
+  margin-bottom: 2em !important;
 }
 /* Primeiro filho no mirror: colapsar margin-top como o nativo faz.
-   MarkdownRenderer pode injetar elementos antes do h1 (e.g. frontmatter div),
-   por isso usamos :first-child E :first-of-type pra h1-h6. */
+   MarkdownRenderer injeta <pre class="frontmatter"> como primeiro filho real,
+   por isso :first-child zera esse pre. Para h1, usamos :first-of-type porque
+   o h1 e o primeiro heading visivel (pre esta display:none).
+   NAO incluir h2/h3 — :first-of-type pega o primeiro h2 do container,
+   mesmo quando h2 segue h1 (e nesse caso mt deve ser 16px, como nativo-rv). */
 .mirror-ui-widget .markdown-rendered > :first-child,
 .mirror-dom-injection .markdown-rendered > :first-child,
 .mirror-code-block .markdown-rendered > :first-child {
   margin-top: 0 !important;
 }
 .mirror-container-styled .markdown-rendered > h1:first-of-type,
-.mirror-container-styled .markdown-rendered > h2:first-of-type,
-.mirror-container-styled .markdown-rendered > h3:first-of-type,
 .mirror-ui-widget .markdown-rendered > h1:first-of-type,
-.mirror-ui-widget .markdown-rendered > h2:first-of-type,
 .mirror-dom-injection .markdown-rendered > h1:first-of-type,
-.mirror-dom-injection .markdown-rendered > h2:first-of-type,
-.mirror-code-block .markdown-rendered > h1:first-of-type,
-.mirror-code-block .markdown-rendered > h2:first-of-type {
+.mirror-code-block .markdown-rendered > h1:first-of-type {
   margin-top: 0 !important;
 }
 
-/* Adicione estas linhas ao final do arquivo styles.css */
+/* pre (code blocks): nativo-rv tem mt:16px mb:16px, nosso MarkdownRenderer gera
+   mt:0 mb:16px por default. Corrigir margin-top pra match. */
+.mirror-container-styled .markdown-rendered pre,
+.mirror-ui-widget .markdown-rendered pre,
+.mirror-dom-injection .markdown-rendered pre,
+.mirror-code-block .markdown-rendered pre {
+  margin-top: 1em !important;
+}
 
 /* Forçar decorações de replace a serem invisíveis */
 .cm-content .cm-widget.cm-replace {

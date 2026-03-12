@@ -2,7 +2,24 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v37 — CSS parity mirror vs native
+## Versao Atual: v38 — CSS parity com Reading View nativo
+
+### v38: CSS parity com Reading View nativo — diagnostic triplo + fixes guiados por dados
+
+**Diagnostic triplo (mirror vs Reading View vs Live Preview):**
+- `debugComputedStyles` reescrito: recebe `plugin` + `templatePath`, usa `workspace.iterateAllLeaves()` pra encontrar o template em Reading View (mode=preview) e Live Preview (mode=source, source=false)
+- Reading View: mesmos seletores HTML (h1, .callout, hr, etc.) — comparacao 1:1
+- Live Preview: seletores CM6 mapeados (`.HyperMD-header-1` → h1, `.cm-callout .callout` → .callout, etc.)
+- Diff triplo: mirror vs RV, mirror vs LP, RV vs LP — identifica o que e responsabilidade nossa vs delta do Obsidian
+- Seletor `pre` corrigido pra `pre:not(.frontmatter)` (diagnostic pegava o `<pre>` fantasma do MarkdownRenderer)
+
+**CSS fixes guiados pelo diagnostic (4 mismatches corrigidos):**
+- `hr` margin: 1em → **2em** (16px → 32px) — match exato com native-rv
+- `h2/h3:first-of-type` removido — so h1 deve ter mt:0. `:first-of-type` pega o primeiro h2 do container mesmo quando h2 segue h1, zerando indevidamente
+- `pre` margin-top: adicionado **1em** (0 → 16px) — match exato com native-rv
+- `pre:not(.frontmatter)` no diagnostic — `pre.frontmatter` (display:none) era capturado em vez do code block real
+
+**Resultado: todos os 11 elementos comparados (h1-h3, p, .callout, .callout-content, hr, ul, li, blockquote, pre) com computed styles identicos entre mirror e Reading View nativo.** Unico "mismatch" restante e padding-bottom do scroll area do Reading View (irrelevante pros mirrors).
 
 ### v37: CSS parity — callout/hr margins, h1 first-of-type, text selection, debug diagnostic
 

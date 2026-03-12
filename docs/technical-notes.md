@@ -2,7 +2,37 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v37 — CSS parity mirror vs native
+## Versao Atual: v38 — CSS parity com Reading View nativo
+
+### O que mudou na v38
+
+**CSS parity completo com Reading View nativo — todos os 11 elementos comparados tem computed styles identicos.**
+
+Abordagem: diagnostic triplo automatizado (mirror vs Reading View vs Live Preview) guiou fixes cirurgicos.
+
+**Diagnostic triplo (`debugComputedStyles` em templateRenderer.ts):**
+- Funcao recebe `plugin` + `templatePath` (antes: so `contentDiv` + `cacheKey`)
+- Usa `workspace.iterateAllLeaves()` pra encontrar o template aberto:
+  - Reading View: `mode === 'preview'` → busca `.markdown-preview-sizer`
+  - Live Preview: `mode === 'source'` + `source === false` → acessa `editorView.contentDOM`
+- Reading View: mesmos seletores HTML do mirror — comparacao direta 1:1
+- Live Preview: mapeamento CM6 → semantico (`.HyperMD-header-1` → h1, `.cm-callout .callout` → .callout, `.HyperMD-list-line` → li, `.HyperMD-quote` → blockquote, etc.)
+- Diff triplo: `mirror vs native-rv`, `mirror vs native-lp`, `native-rv vs native-lp`
+- O diff rv-vs-lp prova que divergencias com LP sao do proprio Obsidian, nao nossas
+
+**CSS fixes (4 mismatches eliminados):**
+1. `hr` margin: **1em → 2em** (16px → 32px) — nativo-rv usa 2em
+2. `:first-of-type` limpeza: removido h2/h3, mantido **so h1** — `:first-of-type` pega o primeiro h2 do container (mesmo que h2 venha depois de h1), zerando mt indevidamente. Nativo-rv nao faz isso
+3. `pre` margin-top: adicionado **1em** (0px → 16px) — MarkdownRenderer gera mt:0 por default, nativo-rv tem 16px
+4. Seletor diagnostic `pre` → `pre:not(.frontmatter)` — evita pegar o `<pre>` fantasma (display:none) do MarkdownRenderer
+
+**Decisao de target: Reading View, nao Live Preview.**
+- Mirror usa `MarkdownRenderer.renderMarkdown()` que produz HTML semantico (h1, p, .callout)
+- Reading View usa a mesma engine → comparacao justa
+- Live Preview usa linhas CM6 (`.cm-line`) com modelo de spacing completamente diferente (padding em vez de margin, sem margins entre blocos)
+- Delta LP vs RV e responsabilidade do Obsidian, nao nossa
+
+---
 
 ### O que mudou na v37
 
@@ -44,8 +74,6 @@ Problema: mirrors CM6 e DOM tinham callouts/hr com margin 0, h1 com 40px margin-
 **Tentativa descartada: `.markdown-preview-view` como classe no contentDiv:**
 - Adicionar a classe faz o theme aplicar backgrounds, paddings, widths, resets que bagunçam o layout completamente
 - Decisao: manter margins manuais nos poucos elementos que divergem (callout, hr, h1)
-
-**Pendente:** espaçamento mirror vs nativo Live Preview. O nativo herda margins maiores do theme via `.markdown-preview-view` ancestor. Nossos margins manuais (1em) sao proximos mas nao identicos.
 
 ---
 

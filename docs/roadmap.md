@@ -2,6 +2,16 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v38 — CSS parity com Reading View nativo
+
+- [x] Diagnostic triplo: mirror vs Reading View vs Live Preview (via `iterateAllLeaves`)
+- [x] Seletores CM6 mapeados pra Live Preview (HyperMD-header, cm-callout, etc.)
+- [x] `hr` margin 1em → 2em (match nativo-rv: 32px)
+- [x] `h2/h3:first-of-type` removido (so h1 deve ter mt:0)
+- [x] `pre` margin-top adicionado (0 → 16px)
+- [x] `pre:not(.frontmatter)` no diagnostic
+- [x] Resultado: 11/11 elementos com computed styles identicos ao Reading View nativo
+
 ## Concluido: v37 — CSS parity mirror vs native
 
 - [x] Callout/hr margins com especificidade alta + `!important`
@@ -33,7 +43,7 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 - [x] `.github/workflows/ci.yml` — build + lint + test em push/PR
 - [x] Skill `obsidian-plugin-scaffold` atualizada com secao CI/CD
 
-## Proximo: v37 — Position engine refinement
+## Proximo: v39 — Position engine refinement
 
 - [ ] **below-properties → CM6 top** — preferir CM6 sobre DOM (resultado visual identico, melhor reatividade). ~5 linhas em `main.ts` + label em `settings.ts`. Plano: [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
 
