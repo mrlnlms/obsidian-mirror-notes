@@ -43,9 +43,17 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       });
     };
 
-    // Registrar dependencia cross-note se tem source externo
+    // Chave unica por bloco (usada em ambos registries)
+    const blockKey = `${ctx.sourcePath}::${lineStart}`;
+
+    // Template dependency (todos os code blocks — re-render quando template muda)
+    plugin.templateDeps.register(config.templatePath, blockKey, doRender);
+    child.register(() => {
+      plugin.templateDeps.unregisterBlock(blockKey);
+    });
+
+    // Source dependency (so se tem source externo — re-render quando source muda)
     if (config.sourcePath) {
-      const blockKey = `${ctx.sourcePath}::${lineStart}`;
       plugin.sourceDeps.register(config.sourcePath, ctx.sourcePath, blockKey, doRender);
       child.register(() => {
         plugin.sourceDeps.unregisterBlock(blockKey);

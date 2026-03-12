@@ -16,15 +16,15 @@ export { DEFAULT_SETTINGS } from './src/settings/types';
 
 /** Position dropdown options with visual labels */
 function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
-    dropdown.addOption("above-title", "Above title");
-    dropdown.addOption("top", "Top of note");
-    dropdown.addOption("above-properties", "Above properties");
-    dropdown.addOption("below-properties", "Below properties");
-    dropdown.addOption("bottom", "Bottom of note");
-    dropdown.addOption("above-backlinks", "Above backlinks");
-    dropdown.addOption("below-backlinks", "Below backlinks");
-    dropdown.addOption("left", "Left margin");
-    dropdown.addOption("right", "Right margin");
+    dropdown.addOption("above-title", "Above title (DOM)");
+    dropdown.addOption("top", "Top of note (CM6 widget)");
+    dropdown.addOption("above-properties", "Above properties (DOM)");
+    dropdown.addOption("below-properties", "Below properties (DOM)");
+    dropdown.addOption("bottom", "Bottom of note (CM6 widget)");
+    dropdown.addOption("above-backlinks", "Above backlinks (DOM)");
+    dropdown.addOption("below-backlinks", "Below backlinks (DOM)");
+    dropdown.addOption("left", "Left margin (CM6 panel)");
+    dropdown.addOption("right", "Right margin (CM6 panel)");
     return dropdown;
 }
 

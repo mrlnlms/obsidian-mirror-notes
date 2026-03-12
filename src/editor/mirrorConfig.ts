@@ -137,14 +137,14 @@ export function getApplicableConfig(
   let result: ApplicableMirrorConfig | null = null;
 
   if (matchedMirror) {
-    if (!settings.global_settings_overide) {
-      // Global NÃO tem "Replace custom Mirrors" → Custom sempre vence
+    if (!globalMirrorActive || !settings.global_settings_overide) {
+      // Global desabilitado OU sem "Replace custom Mirrors" → Custom sempre vence
       result = configFromMirror(matchedMirror);
     } else if (matchedMirror.custom_settings_overide) {
-      // Global TEM override, mas custom tambem → Custom vence
+      // Global ativo COM override, mas custom tambem tem override → Custom vence
       result = configFromMirror(matchedMirror);
     }
-    // else: global override ativo e custom nao tem override → cai pro global abaixo
+    // else: global ativo com override e custom sem override → cai pro global abaixo
   }
 
   // 4. Se chegou aqui sem result, aplicar global mirror (se ativo)

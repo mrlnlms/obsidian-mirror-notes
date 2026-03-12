@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v34.
+Trabalho tecnico a ser feito. Atualizado na v35.
 
 ## Pendente
 
@@ -54,3 +54,7 @@ Trabalho tecnico a ser feito. Atualizado na v34.
 - [x] Dependencia circular mirrorState ↔ mirrorDecorations — eliminada (v33)
 - [x] Root utils/ movido pra src/suggesters/ (v33)
 - [x] @ts-ignore centralizado em obsidianInternals.ts (v33)
+- [x] Fix re-render excessivo DOM injector — setupDomPosition removido do hot path de digitacao (v35)
+- [x] Logger otimizado — early return com debug off, elimina console.log desnecessario (v35)
+- [x] Margin panel — docChanged → geometryChanged, elimina forced layout reflow por keystroke (v35)
+- [x] Template reactivity — TemplateDependencyRegistry + handleTemplateChange (v35)

@@ -2,6 +2,15 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v35 — Performance fix + Template reactivity
+
+- [x] Fix re-render excessivo DOM injector (setupDomPosition fora do hot path)
+- [x] Logger otimizado (early return com debug off)
+- [x] Margin panel: docChanged → geometryChanged (sem forced reflow)
+- [x] TemplateDependencyRegistry — mirrors atualizam quando template e editado
+- [x] handleTemplateChange debounced — cobertura completa (metadataCache + vault.modify)
+- [x] clearRenderCache global removido (hash invalida naturalmente)
+
 ## Concluido: v34 — CI/CD + Release workflow
 
 - [x] `.github/workflows/release.yml` — auto-release no push de tag

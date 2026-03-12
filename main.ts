@@ -6,6 +6,7 @@ import { Logger } from './src/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
+import { TemplateDependencyRegistry } from './src/rendering/templateDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
 import { MirrorPosition } from './src/editor/mirrorTypes';
@@ -17,11 +18,13 @@ import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerende
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
   sourceDeps = new SourceDependencyRegistry();
+  templateDeps = new TemplateDependencyRegistry();
   /** Position overrides when DOM injection falls back to CM6 */
   positionOverrides = new Map<string, MirrorPosition>();
   private activeEditors: Map<string, boolean> = new Map();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
   private crossNoteTimeout: NodeJS.Timeout | null = null;
+  private templateUpdateTimeout: NodeJS.Timeout | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -47,6 +50,7 @@ export default class MirrorUIPlugin extends Plugin {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
               this.setupEditor(view);
+              this.setupDomPosition(view);
             }
           }, TIMING.EDITOR_SETUP_DELAY);
         }
@@ -59,6 +63,7 @@ export default class MirrorUIPlugin extends Plugin {
         if (leaf?.view instanceof MarkdownView) {
           setTimeout(() => {
             this.setupEditor(leaf.view as MarkdownView);
+            this.setupDomPosition(leaf.view as MarkdownView);
           }, TIMING.EDITOR_SETUP_DELAY);
         }
       })
@@ -75,6 +80,7 @@ export default class MirrorUIPlugin extends Plugin {
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
           this.setupEditor(leaf.view);
+          this.setupDomPosition(leaf.view);
           rerenderPreview(leaf.view);
         }
       });
@@ -87,33 +93,32 @@ export default class MirrorUIPlugin extends Plugin {
     let metadataUpdateTimeout: NodeJS.Timeout | null = null;
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
-        // Branch 1: arquivo ativo (CM6 widgets)
+        // Branch 1: arquivo ativo — atualizar mirrors da nota sendo editada
         const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
         if (activeView && activeView.file && file.path === activeView.file.path) {
-          const cm = getEditorView(activeView);
-          if (cm) {
-            if (metadataUpdateTimeout) {
-              clearTimeout(metadataUpdateTimeout);
-            }
+          if (metadataUpdateTimeout) {
+            clearTimeout(metadataUpdateTimeout);
+          }
 
-            metadataUpdateTimeout = setTimeout(() => {
-              const now = Date.now();
-              const lastInteraction = this.getLastUserInteraction();
+          metadataUpdateTimeout = setTimeout(() => {
+            // DOM injection + hideProps: sempre seguro (nao toca no CM6)
+            this.setupDomPosition(activeView);
+            this.updateHidePropsForView(activeView);
 
-              if (now - lastInteraction > TIMING.USER_INACTIVITY_THRESHOLD) {
-                Logger.log('Metadata changed, updating mirror');
+            // CM6 forced update: so quando inativo (safety net — StateField ja auto-detecta)
+            const now = Date.now();
+            if (now - this.getLastUserInteraction() > TIMING.USER_INACTIVITY_THRESHOLD) {
+              Logger.log('Metadata changed, forcing CM6 update');
+              const cm = getEditorView(activeView);
+              if (cm) {
                 cm.dispatch({
                   effects: forceMirrorUpdateEffect.of()
                 });
-                this.updateHidePropsForView(activeView);
-                this.setupDomPosition(activeView);
-              } else {
-                Logger.log('Metadata changed but user is active, skipping update');
               }
+            }
 
-              metadataUpdateTimeout = null;
-            }, TIMING.METADATA_CHANGE_DEBOUNCE);
-          }
+            metadataUpdateTimeout = null;
+          }, TIMING.METADATA_CHANGE_DEBOUNCE);
         }
 
         // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
@@ -130,10 +135,13 @@ export default class MirrorUIPlugin extends Plugin {
             this.crossNoteTimeout = null;
           }, TIMING.METADATA_CHANGE_DEBOUNCE);
         }
+
+        // Branch 3: template mudou — re-render todos mirrors que usam esse template
+        this.handleTemplateChange(file.path);
       })
     );
 
-    // Listener para mudancas nas configuracoes com debounce maior
+    // Listener para mudancas nas configuracoes e templates
     this.registerEvent(
       this.app.vault.on('modify', (file) => {
         if (file.path === `.obsidian/plugins/${this.manifest.id}/data.json`) {
@@ -152,12 +160,17 @@ export default class MirrorUIPlugin extends Plugin {
                     effects: forceMirrorUpdateEffect.of()
                   });
                   this.updateHidePropsForView(leaf.view as MarkdownView);
+                  this.setupDomPosition(leaf.view as MarkdownView);
                 }
               }
             });
             this.settingsUpdateDebounce = null;
           }, TIMING.SETTINGS_FILE_DEBOUNCE);
+          return;
         }
+
+        // Template content changed (vault.on('modify') cobre body changes que metadataCache pode nao disparar)
+        this.handleTemplateChange(file.path);
       })
     );
 
@@ -319,6 +332,13 @@ export default class MirrorUIPlugin extends Plugin {
 
     const actualPos = await injectDomMirror(this, view, config, frontmatter);
 
+    // Registrar dependencia de template (re-render quando template muda)
+    const blockKey = `dom-${file.path}-${config.position}`;
+    this.templateDeps.register(config.templatePath, blockKey, async () => {
+      const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
+      await injectDomMirror(this, view, config, fm);
+    });
+
     if (actualPos !== config.position) {
       Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path}`);
       this.positionOverrides.set(file.path, actualPos);
@@ -327,6 +347,35 @@ export default class MirrorUIPlugin extends Plugin {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
       }
     }
+  }
+
+  /** Dispara re-render de todos mirrors que dependem de um template path */
+  private handleTemplateChange(filePath: string) {
+    const templateCbs = this.templateDeps.getDependentCallbacks(filePath);
+    if (templateCbs.length === 0) return;
+
+    if (this.templateUpdateTimeout) {
+      clearTimeout(this.templateUpdateTimeout);
+    }
+
+    this.templateUpdateTimeout = setTimeout(() => {
+      Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
+      for (const cb of templateCbs) {
+        cb();
+      }
+      // Forcar update em CM6 widgets que usam esse template
+      this.app.workspace.iterateAllLeaves(leaf => {
+        if (leaf.view instanceof MarkdownView && leaf.view.file) {
+          const cm = getEditorView(leaf.view as MarkdownView);
+          if (!cm) return;
+          const fieldState = cm.state.field(mirrorStateField, false);
+          if (fieldState?.mirrorState?.config?.templatePath === filePath) {
+            cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
+          }
+        }
+      });
+      this.templateUpdateTimeout = null;
+    }, TIMING.METADATA_CHANGE_DEBOUNCE);
   }
 
   setupEditor(view: MarkdownView) {
@@ -356,12 +405,11 @@ export default class MirrorUIPlugin extends Plugin {
         ])
       });
     } else {
-      Logger.log(`setupEditor: StateField already present for ${file.path}, skipping`);
+      return; // StateField already present, nothing to do
     }
 
     setTimeout(() => {
       this.updateHidePropsForView(view);
-      this.setupDomPosition(view);
     }, TIMING.HIDE_PROPS_DELAY);
   }
 
@@ -382,12 +430,16 @@ export default class MirrorUIPlugin extends Plugin {
     this.activeEditors.clear();
     this.positionOverrides.clear();
     this.sourceDeps.clear();
+    this.templateDeps.clear();
 
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
     if (this.crossNoteTimeout) {
       clearTimeout(this.crossNoteTimeout);
+    }
+    if (this.templateUpdateTimeout) {
+      clearTimeout(this.templateUpdateTimeout);
     }
 
     Logger.log('Plugin unloaded successfully');

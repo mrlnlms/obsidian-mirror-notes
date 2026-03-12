@@ -33,13 +33,15 @@ class MirrorLogger {
   }
 
   log(...args: any[]) {
+    if (!this._enabled) return;
     console.log('[MirrorNotes]', ...args);
-    if (this._enabled) this.write('LOG', args);
+    this.write('LOG', args);
   }
 
   warn(...args: any[]) {
+    if (!this._enabled) return;
     console.warn('[MirrorNotes]', ...args);
-    if (this._enabled) this.write('WARN', args);
+    this.write('WARN', args);
   }
 
   error(...args: any[]) {

@@ -31,9 +31,9 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
       return;
     }
 
-    // Rebuild if position changed or forced update
+    // Rebuild only if position/config changed or geometry changed (not on every keystroke)
     const newSide = config.position as 'left' | 'right';
-    if (newSide !== this.side || update.docChanged) {
+    if (newSide !== this.side || update.geometryChanged) {
       this.checkAndBuild();
     }
   }

@@ -29,14 +29,9 @@ export function buildDecorations(state: EditorState, mirrorState: MirrorState, p
   }
 
   try {
-    let widget = MirrorTemplateWidget.widgetInstanceCache.get(widgetId);
-    if (!widget) {
-      Logger.log(`Creating new widget instance for: ${widgetId}`);
-      widget = new MirrorTemplateWidget(plugin, mirrorState, config, widgetId);
-      MirrorTemplateWidget.widgetInstanceCache.set(widgetId, widget);
-    } else {
-      Logger.log(`Using cached widget instance for: ${widgetId}`);
-    }
+    // Criar widget novo a cada rebuild — CM6 usa eq() pra decidir se reutiliza o DOM
+    const widget = new MirrorTemplateWidget(plugin, mirrorState, config, widgetId, mirrorState.frontmatterHash || '');
+    Logger.log(`Building widget for: ${widgetId}`);
 
     if (config.position === 'top') {
       const topPos = Math.min(frontmatterEndPos, docLength);

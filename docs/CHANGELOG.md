@@ -2,7 +2,23 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v34 — CI/CD + Release workflow
+## Versao Atual: v35 — Performance fix + Template reactivity
+
+### v35: Performance fix (DOM injector, Logger, Margin panel) + Template reactivity
+
+**Performance — hot path de digitacao zerado:**
+- `setupDomPosition()` removido do `setupEditor()` (chamado a cada keystroke via `editor-change`). Chamadas explicitas em `file-open`, `active-leaf-change`, `onLayoutReady`, `settings-change`
+- `setupEditor()` faz early return imediato quando StateField ja existe (sem log, sem setTimeout)
+- `Logger.log()` e `Logger.warn()` fazem early return quando debug desligado (antes: `console.log` sempre)
+- Margin panel: `update.docChanged` → `update.geometryChanged` (elimina forced layout reflow por keystroke)
+- `clearRenderCache()` global removido do `handleTemplateChange` — hash cache invalida naturalmente quando conteudo do template muda
+
+**Template reactivity:**
+- `TemplateDependencyRegistry` — registry de dependencias por template path (analogo ao `SourceDependencyRegistry`)
+- `handleTemplateChange()` em main.ts — debounced 500ms, re-render todos mirrors (DOM + CM6 + code blocks) que usam o template editado
+- Triggers: `metadataCache.on('changed')` (Branch 3) + `vault.on('modify')` (body changes)
+- Code blocks registram template deps automaticamente via `templateDeps.register()` com cleanup no lifecycle
+- DOM injection registra template deps em `setupDomPosition()`
 
 ### v34: CI/CD + Release workflow
 

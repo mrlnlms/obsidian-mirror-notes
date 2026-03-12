@@ -75,15 +75,24 @@ function handleForcedUpdate(
     freshConfig?.hideProps !== value.config?.hideProps;
 
   if (!configChanged) {
-    Logger.log('Forced update — config unchanged, keeping widget alive');
+    Logger.log('Forced update — config unchanged, rebuilding with fresh content');
+    // Limpar caches pra forcar re-render (ex: template content mudou)
+    clearRenderCache();
+    MirrorTemplateWidget.domCache.clear();
+    const newWidgetId = generateWidgetId();
+    clearWidgetCaches(value.widgetId);
+
+    const newState: MirrorState = {
+      ...value,
+      frontmatter: newFrontmatter || value.frontmatter,
+      frontmatterHash: newFrontmatterHash || value.frontmatterHash,
+      widgetId: newWidgetId,
+      lastDocText: docText
+    };
+
     return {
-      mirrorState: {
-        ...value,
-        frontmatter: newFrontmatter || value.frontmatter,
-        frontmatterHash: newFrontmatterHash || value.frontmatterHash,
-        lastDocText: docText
-      },
-      decorations
+      mirrorState: newState,
+      decorations: buildDecorations(tr.state, newState, plugin)
     };
   }
 
@@ -252,15 +261,17 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
       return configResult;
     }
 
-    // Only frontmatter values changed, keep widget
+    // Frontmatter values changed — rebuild decorations pra widget receber dados frescos
+    const updatedState: MirrorState = {
+      ...value,
+      frontmatter: newFrontmatter,
+      frontmatterHash: newFrontmatterHash,
+      lastDocText: docText
+    };
+
     return {
-      mirrorState: {
-        ...value,
-        frontmatter: newFrontmatter,
-        frontmatterHash: newFrontmatterHash,
-        lastDocText: docText
-      },
-      decorations
+      mirrorState: updatedState,
+      decorations: buildDecorations(tr.state, updatedState, plugin)
     };
   },
 

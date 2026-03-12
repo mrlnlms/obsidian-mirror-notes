@@ -13,7 +13,8 @@ export class MirrorTemplateWidget extends WidgetType {
     private plugin: MirrorUIPlugin,
     private state: MirrorState,
     private config: ApplicableMirrorConfig,
-    private widgetId: string
+    private widgetId: string,
+    private frontmatterHash: string
   ) {
     super();
   }
@@ -93,7 +94,8 @@ export class MirrorTemplateWidget extends WidgetType {
     const otherWidget = other as MirrorTemplateWidget;
     return this.widgetId === otherWidget.widgetId &&
       this.config.templatePath === otherWidget.config.templatePath &&
-      this.config.position === otherWidget.config.position;
+      this.config.position === otherWidget.config.position &&
+      this.frontmatterHash === otherWidget.frontmatterHash;
   }
 
   destroy() {

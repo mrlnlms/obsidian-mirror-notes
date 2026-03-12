@@ -2,7 +2,50 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v34 — CI/CD + Release workflow
+## Versao Atual: v35 — Performance fix + Template reactivity
+
+### O que mudou na v35
+
+**Performance — eliminacao de trabalho desnecessario no hot path de digitacao:**
+
+Antes: cada keystroke em nota com DOM injection disparava `setupDomPosition()` (~20 chamadas/2s), cada uma fazendo querySelector + vault.cachedRead + regex + simpleHash. O hash cache do `templateRenderer` evitava o `MarkdownRenderer.renderMarkdown()` pesado, mas o resto era desperdicio puro.
+
+Causa raiz: `editor-change` chamava `setupEditor()` que sempre agendava `setupDomPosition()` via setTimeout. DOM anchors (`.inline-title`, `.metadata-container`, `.embedded-backlinks`) nao se movem com keystrokes — nunca precisavam de re-injecao.
+
+Mudancas em `main.ts`:
+- `setupEditor()`: removido `setupDomPosition()` do setTimeout. Early return quando StateField ja existe (sem log, sem setTimeout)
+- `file-open`, `active-leaf-change`, `onLayoutReady`: chamadas explicitas a `setupDomPosition()`
+- `settings-change` handler: adicionado `setupDomPosition()` pra cobrir mudanca CM6→DOM
+
+Mudancas em `src/logger.ts`:
+- `log()` e `warn()`: early return quando `_enabled === false`. Antes: `console.log()` rodava sempre
+- `error()`: mantido sempre visivel no console (erros nao devem ser silenciados)
+
+Mudancas em `src/editor/marginPanelExtension.ts`:
+- `update()`: `update.docChanged` → `update.geometryChanged`. Elimina `updatePosition()` (que le `offsetLeft`, forcando layout reflow) em cada keystroke. Agora so reposiciona em resize/scroll/sidebar toggle.
+
+**Template reactivity — mirrors atualizam quando template e editado:**
+
+Novo `src/rendering/templateDependencyRegistry.ts`:
+- `TemplateDependencyRegistry` — mesma interface do `SourceDependencyRegistry`
+- `register(templatePath, blockKey, rerender)` — com `unregisterBlock` automatico pra evitar duplicatas
+- `getDependentCallbacks(templatePath)` — O(1) Map lookup
+
+Novo `handleTemplateChange()` em `main.ts`:
+- Chamado por `metadataCache.on('changed')` (Branch 3) e `vault.on('modify')` (body changes)
+- Debounce 500ms via `templateUpdateTimeout`
+- Executa callbacks dos template deps (DOM injection + code blocks)
+- Itera leaves pra dispatchar `forceMirrorUpdateEffect` em CM6 widgets que usam o template
+
+Registros:
+- Code blocks: `templateDeps.register()` no processor, cleanup via `MarkdownRenderChild.register()`
+- DOM injection: `templateDeps.register()` em `setupDomPosition()`, re-registra a cada chamada (idempotente)
+
+`clearRenderCache()` global removido do `handleTemplateChange` — desnecessario porque o hash cache invalida naturalmente quando o conteudo processado muda (template diferente → hash diferente → cache miss).
+
+**Novo arquivo:** `src/rendering/templateDependencyRegistry.ts`
+
+---
 
 ### O que mudou na v34
 
@@ -318,7 +361,7 @@ titulo: Override Custom
 
 ---
 
-## Arquitetura (v33)
+## Arquitetura (v35)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, hideProps)
@@ -333,6 +376,7 @@ src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcesso
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
 src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
 src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
+src/rendering/templateDependencyRegistry.ts — TemplateDependencyRegistry (template change reactivity)
 src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + helpers extraidos
 src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
 src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)
@@ -366,11 +410,11 @@ styles.css                                 — Plugin styles + hideProps + code 
 
 ### Eventos registrados
 
-- `editor-change` — re-setup do editor ao editar
-- `file-open` — setup ao abrir arquivo (delay TIMING.EDITOR_SETUP_DELAY)
-- `active-leaf-change` — setup ao trocar aba (delay TIMING.EDITOR_SETUP_DELAY)
-- `metadataCache.changed` — branch 1: force update se usuario inativo (delay TIMING.METADATA_CHANGE_DEBOUNCE). Branch 2: cross-note — invoca callbacks de re-render para blocos dependentes (debounce TIMING.METADATA_CHANGE_DEBOUNCE)
-- `vault.modify` em `data.json` — re-update ao mudar settings (debounce TIMING.SETTINGS_FILE_DEBOUNCE)
+- `editor-change` — registra StateField se nao existe (early return se ja registrado, zero custo)
+- `file-open` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
+- `active-leaf-change` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
+- `metadataCache.changed` — branch 1: DOM injection + hideProps + force CM6 update se inativo. Branch 2: cross-note source deps. Branch 3: template deps (re-render mirrors que usam o template editado)
+- `vault.modify` — em `data.json`: re-update settings. Em outros arquivos: template deps (re-render se o arquivo e um template usado)
 - DOM: `keydown` + `mousedown` — tracking de ultima interacao do usuario
 
 ---

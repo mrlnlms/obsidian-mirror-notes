@@ -7,7 +7,7 @@ const copyToDemo = {
 	name: "copy-to-demo",
 	setup(build) {
 		build.onEnd(() => {
-			const dest = "demo/.obsidian/plugins/mirror-notes";
+			const dest = "demo/.obsidian/plugins/obsidian-mirror-notes";
 			mkdirSync(dest, { recursive: true });
 			copyFileSync("main.js", `${dest}/main.js`);
 			copyFileSync("manifest.json", `${dest}/manifest.json`);
