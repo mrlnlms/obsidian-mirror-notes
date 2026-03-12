@@ -2,7 +2,24 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v36 — Reactivity fix (cross-pane + template editing)
+## Versao Atual: v37 — CSS parity mirror vs native
+
+### v37: CSS parity — callout/hr margins, h1 first-of-type, text selection, debug diagnostic
+
+**CSS parity entre CM6 widget, DOM injection e rendering nativo:**
+- Callout/hr margins: regras com especificidade alta + `!important` pra vencer theme resets. `.callout` e `hr` passaram de mt:0/mb:0 pra mt:16px/mb:16px
+- h1 margin-top: MarkdownRenderer injeta `<pre class="frontmatter language-yaml">` (display:none) antes do h1, quebrando `:first-child`. Fix: `:first-of-type` pra h1/h2/h3 + `:first-child` generico
+- Text selection restaurada: `user-select: text !important` no `.markdown-rendered` e filhos (overrida `user-select: none` do widget container)
+- below-properties margin-top: 10px → 0 (`.metadata-container` ja tem margin-bottom nativo, somava gap extra)
+- Debug outlines melhorados: cores por tipo de container (vermelho=CM6, verde=DOM, laranja=code block, cinza=metadata-container)
+- `debugComputedStyles` reescrito: captura mirror + nativo + filhos diretos + ancestors (5 niveis) + diff automatico prop a prop
+
+**Descoberta: `.markdown-preview-view` como classe no contentDiv nao funciona:**
+- Tentativa de herdar styles do theme adicionando `.markdown-preview-view` no container de render
+- Resultado: theme aplica backgrounds, paddings, widths extras que bagunçam layout
+- Decisao: manter margins manuais nos poucos elementos que precisam (callout, hr, h1)
+
+**Pendente (minor):** espaçamento entre elementos nos mirrors vs nativo (Live Preview). Nativo herda margins maiores do theme via `.markdown-preview-view` ancestor. Mirrors usam margins manuais que sao proximos mas nao identicos.
 
 ### v36: Reactivity fix — filePathFacet + handleTemplateChange + inactivity guard removal
 

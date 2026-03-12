@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v36.
+Trabalho tecnico a ser feito. Atualizado na v37.
 
 ## Pendente
 
@@ -9,6 +9,7 @@ Trabalho tecnico a ser feito. Atualizado na v36.
 - **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Prioridade baixa — fallbacks de posicao funcionam independentemente
 - **parseFrontmatter hardcoda listas em tags** — linhas com `-` sao jogadas em `result.tags` ignorando a key real
 - **Tag matching (condicional nova)** — filtrar mirrors por tag da nota (feature do VirtualNotes, nao existe no MN). Tipo: "aplicar mirror X se a nota tiver tag #project"
+- **CSS parity com Live Preview nativo** — mirrors usam margins manuais (1em pra callout/hr) que sao proximos mas nao identicos ao nativo (que herda via `.markdown-preview-view`). Adicionar `.markdown-preview-view` como classe nao funciona (theme aplica backgrounds/paddings/widths extras). Investigar abordagem seletiva: copiar apenas as regras de spacing do theme, ou usar CSS custom properties
 - **Margin panel avancado** — tratamento de line numbers (`cm-gutters.offsetWidth`), readable-line-width (`contentDOM.offsetLeft`), resize observer
 - **Reading View DOM injection pra top/bottom** — CM6 widgets so existem em Live Preview. Pra top/bottom em Reading View: DOM injection em `.mod-header.mod-ui` / `.mod-footer`
 - **VN min-height** — avaliar se margin panels precisam de `min-height` como VN faz (528px footer, 100px above-backlinks)
@@ -64,3 +65,4 @@ Trabalho tecnico a ser feito. Atualizado na v36.
 - [x] Cenario A — Properties UI nao trigava update → guard de inatividade removido (v36)
 - [x] Dead code — lastUserInteraction, USER_INACTIVITY_THRESHOLD removidos (v36)
 - [x] Investigacao `.metadata-container` sem YAML — confirmado: Obsidian sempre cria o container no DOM, independente de ter YAML ou setting "hidden". Fallback `above/below-properties → top` e codigo morto na pratica (v36)
+- [x] CSS parity CM6 vs DOM — callout/hr margins, h1 first-of-type, text selection, below-properties margin-top, debug diagnostic (v37)

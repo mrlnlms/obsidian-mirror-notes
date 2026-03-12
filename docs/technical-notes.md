@@ -2,7 +2,52 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v36 — Reactivity fix (cross-pane + template editing)
+## Versao Atual: v37 — CSS parity mirror vs native
+
+### O que mudou na v37
+
+**CSS parity — computed styles identicos entre CM6 widget e DOM injection:**
+
+Problema: mirrors CM6 e DOM tinham callouts/hr com margin 0, h1 com 40px margin-top extra, e text selection quebrada. Tudo causado por especificidade CSS insuficiente e o MarkdownRenderer injetando elementos inesperados.
+
+**Callout/hr margins (mt:0 → mt:16px):**
+- Regras `.markdown-rendered .callout { margin: 1em }` nao aplicavam — theme do Obsidian sobrescrevia com regras mais especificas
+- Fix: seletores com `.mirror-container-styled`, `.mirror-ui-widget`, `.mirror-dom-injection`, `.mirror-code-block` + `!important`
+
+**h1 margin-top (40px → 0):**
+- `MarkdownRenderer.renderMarkdown()` injeta `<pre class="frontmatter language-yaml" style="display:none">` como primeiro filho do `.markdown-rendered`
+- Regra `:first-child { margin-top: 0 }` pegava esse `<pre>` invisivel, nao o h1
+- Fix: `:first-of-type` pra h1/h2/h3 garante que o primeiro heading tem margin-top: 0
+
+**below-properties margin-top (10px → 0):**
+- `.metadata-container` (anchor do DOM injection) ja tem margin-bottom nativo
+- Nosso `margin-top: 10px` somava, criando gap maior que o CM6 widget (que nao tem esse ancestral)
+
+**Text selection:**
+- `user-select: none` no `.mirror-ui-widget` propagava para `.markdown-rendered`
+- Fix: `user-select: text !important` no `.markdown-rendered` e filhos
+
+**Debug diagnostic (`debugComputedStyles` em templateRenderer.ts):**
+- Captura 3 contextos: mirror, nativo (busca `.markdown-preview-sizer` ou `.markdown-rendered` fora de containers mirror), ancestors (5 niveis)
+- Loga filhos diretos do `.markdown-rendered` com tag, classe, display e margin-top — essencial pra descobrir o `<pre>` fantasma
+- Diff automatico prop a prop entre mirror e nativo com labels MISMATCH/OK
+- Busca nativa expandida: tenta `.markdown-preview-view .markdown-preview-sizer`, `.markdown-preview-view .markdown-rendered`, `.markdown-reading-view .markdown-rendered`
+
+**Debug outlines por tipo de container:**
+- Vermelho = CM6 widget (`:not(.mirror-dom-injection)`)
+- Verde = DOM injection
+- Laranja = code block processor
+- Azul tracejado = `.markdown-rendered` interno
+- Cinza tracejado = `.metadata-container` (referencia de posicao)
+- Amarelo/cyan/magenta = editor CM6 layers
+
+**Tentativa descartada: `.markdown-preview-view` como classe no contentDiv:**
+- Adicionar a classe faz o theme aplicar backgrounds, paddings, widths, resets que bagunçam o layout completamente
+- Decisao: manter margins manuais nos poucos elementos que divergem (callout, hr, h1)
+
+**Pendente:** espaçamento mirror vs nativo Live Preview. O nativo herda margins maiores do theme via `.markdown-preview-view` ancestor. Nossos margins manuais (1em) sao proximos mas nao identicos.
+
+---
 
 ### O que mudou na v36
 

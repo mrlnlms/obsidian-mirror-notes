@@ -2,6 +2,15 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v37 — CSS parity mirror vs native
+
+- [x] Callout/hr margins com especificidade alta + `!important`
+- [x] h1 `:first-of-type` (MarkdownRenderer injeta `<pre>` fantasma antes do h1)
+- [x] Text selection restaurada (`user-select: text !important`)
+- [x] below-properties margin-top: 0 (compensar margin nativo do metadata-container)
+- [x] Debug diagnostic: mirror + nativo + filhos + ancestors + diff automatico
+- [x] Debug outlines por tipo de container (vermelho/verde/laranja)
+
 ## Concluido: v36 — Reactivity fix (cross-pane + template editing)
 
 - [x] `filePathFacet` — cada editor CM6 recebe seu file.path via Facet (fix `getActiveFile()` cross-pane)
