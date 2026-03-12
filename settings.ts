@@ -187,6 +187,20 @@ export class MirrorUISettingsTab extends PluginSettingTab {
             .setClass("toogle-header");
 
         new Setting(globalMirrorSettings)
+            .setName("Show container border")
+            .setDesc("Display a subtle background and border around mirrored content.")
+            .addToggle((cb) => {
+                cb.setValue(this.plugin.settings.global_show_container_border)
+                .onChange((value) => {
+                    this.plugin.settings.global_show_container_border = value;
+                    this.plugin.saveSettings();
+                    this.display();
+                    this.updateAllEditors();
+                });
+            })
+            .setClass("toogle-header");
+
+        new Setting(globalMirrorSettings)
             .setName("Replace custom Mirrors")
             .setDesc("Por padrao, custom Mirrors sobrescrevem o global Mirror. Com esta opcao, o plugin ira sobrescrever os custom Mirros, a menos que estes estejam setados para sobrecrever esta funcao.")
             .addToggle((cb) => {
@@ -432,6 +446,19 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     cb.setValue(customMirrors[index].custom_settings_hide_props)
                     .onChange((value) => {
                         customMirrors[index].custom_settings_hide_props = value;
+                        this.plugin.saveSettings();
+                        this.display();
+                        this.updateAllEditors();
+                    });
+                })
+                .setClass("toogle-header");
+            new Setting(card)
+                .setName("Show container border")
+                .setDesc("Display a subtle background and border around this mirror's content.")
+                .addToggle((cb) => {
+                    cb.setValue(customMirrors[index].custom_show_container_border)
+                    .onChange((value) => {
+                        customMirrors[index].custom_show_container_border = value;
                         this.plugin.saveSettings();
                         this.display();
                         this.updateAllEditors();

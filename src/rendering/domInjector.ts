@@ -106,12 +106,16 @@ export async function injectDomMirror(
   let container = injectedContainers.get(key);
   if (!container || !container.isConnected) {
     container = document.createElement('div');
-    container.className = `mirror-ui-widget mirror-dom-injection mirror-position-${config.position}`;
     container.setAttribute('data-mirror-key', key);
     container.setAttribute('data-position', config.position);
     container.setAttribute('contenteditable', 'false');
     injectedContainers.set(key, container);
   }
+
+  // Atualizar classes sempre (showContainer pode mudar via settings)
+  const classes = ['mirror-ui-widget', 'mirror-dom-injection', `mirror-position-${config.position}`];
+  if (config.showContainer) classes.push('mirror-container-styled');
+  container.className = classes.join(' ');
 
   // Insert at the right position
   const { target, method } = resolved;

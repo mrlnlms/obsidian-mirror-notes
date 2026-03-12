@@ -15,6 +15,7 @@ export interface MirrorUIPluginSettings {
     global_settings_preview_pos: string;
     global_settings_overide: boolean;
     global_settings_hide_props: boolean;
+    global_show_container_border: boolean;
     auto_update_paths: boolean;
     customMirrors: Array<CustomMirror>;
 }
@@ -31,6 +32,7 @@ export interface CustomMirror {
     custom_settings_preview_pos: string;
     custom_settings_overide: boolean;
     custom_settings_hide_props: boolean;
+    custom_show_container_border: boolean;
     custom_auto_update_paths: boolean;
     filterFiles: Array<FolderTemplate>;
     filterFolders: Array<FolderTemplate>;
@@ -49,6 +51,7 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     global_settings_preview_pos: "top",
     global_settings_overide: false,
     global_settings_hide_props: false,
+    global_show_container_border: true,
     auto_update_paths: true,
     customMirrors: []
 };
@@ -66,6 +69,7 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         custom_settings_preview_pos: "top",
         custom_settings_overide: false,
         custom_settings_hide_props: false,
+        custom_show_container_border: true,
         custom_auto_update_paths: true,
         filterFiles: [],
         filterFolders: [],

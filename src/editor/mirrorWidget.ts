@@ -34,32 +34,9 @@ export class MirrorTemplateWidget extends WidgetType {
     if (!container) {
       Logger.log(`Creating new widget container for: ${cacheKey}`);
       container = document.createElement("div");
-      container.className = `mirror-ui-widget elemento-geral mirror-position-${this.config.position}`;
       container.setAttribute("data-widget-id", this.widgetId);
       container.setAttribute("data-position", this.config.position);
       container.setAttribute("contenteditable", "false");
-      container.style.cssText = `
-        background: var(--background-secondary);
-        border: 1px solid var(--background-modifier-border);
-        border-radius: 6px;
-        padding: 15px;
-        margin: 10px 0;
-        position: relative;
-        min-height: 100px;
-        width: 100%;
-        box-sizing: border-box;
-        user-select: none;
-        -webkit-user-select: none;
-        pointer-events: none;
-      `;
-      if (this.config.position === "bottom") {
-        container.style.cssText += `
-          margin-top: 30px !important;
-          margin-bottom: 20px !important;
-          clear: both;
-          display: block;
-        `;
-      }
       container.addEventListener("mousedown", (e) => {
         if (e.target !== container) {
           e.stopPropagation();
@@ -70,6 +47,11 @@ export class MirrorTemplateWidget extends WidgetType {
       MirrorTemplateWidget.domCache.set(cacheKey, container);
       container.innerHTML = `<div style="text-align: center; opacity: 0.5;">Loading template...</div>`;
     }
+
+    // Atualizar classes sempre (showContainer pode mudar via settings)
+    const classes = ['mirror-ui-widget', `mirror-position-${this.config.position}`];
+    if (this.config.showContainer) classes.push('mirror-container-styled');
+    container.className = classes.join(' ');
 
     this.updateContentIfNeeded(container, view);
     return container;
@@ -97,6 +79,7 @@ export class MirrorTemplateWidget extends WidgetType {
     return this.widgetId === otherWidget.widgetId &&
       this.config.templatePath === otherWidget.config.templatePath &&
       this.config.position === otherWidget.config.position &&
+      this.config.showContainer === otherWidget.config.showContainer &&
       this.frontmatterHash === otherWidget.frontmatterHash;
   }
 

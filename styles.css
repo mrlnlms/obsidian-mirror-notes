@@ -298,26 +298,20 @@
   position: relative !important;
   display: block !important;
   clear: both !important;
-  
+
   /* Margens para separação visual */
-  margin-top: 15px !important;
-  margin-bottom: 15px !important;
-  
+  margin-top: 30px !important;
+  margin-bottom: 20px !important;
+
   /* Prevenir interferência com edição */
   pointer-events: none !important;
   user-select: none !important;
   -webkit-user-select: none !important;
-  
+
   /* Estabilidade de renderização */
   contain: none;
   box-sizing: border-box;
-
-  /* Estilo visual */
   width: 100%;
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 15px;
 }
 
 .mirror-position-bottom > * {
@@ -335,6 +329,14 @@
   box-sizing: border-box;
   position: relative;
   display: block;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+.mirror-position-top > * {
+  pointer-events: auto;
 }
 
 /* Forçar o widget a criar seu próprio contexto de linha */
@@ -377,11 +379,58 @@
 /* Removido: transform: translateZ(0) + perspective criavam contextos de composição
    isolados que causavam efeito de "máscara" no widget durante resize */
 
-/* Prevenir re-layouts causados por mudanças de fonte */
-.mirror-ui-widget {
-  font-family: var(--font-interface);
-  font-size: var(--font-ui-medium);
+/* ========== RENDERED CONTENT ISOLATION ========== */
+/* CM6 widget: reset editor properties leaked by .cm-editor .cm-content */
+.mirror-ui-widget .markdown-rendered {
+  white-space: normal;
   line-height: var(--line-height-normal);
+  font-family: var(--font-text);
+  font-size: var(--font-text-size);
+}
+/* Permitir seleção de texto no conteúdo renderizado */
+.mirror-ui-widget .markdown-rendered,
+.mirror-ui-widget .markdown-rendered *,
+.mirror-dom-injection .markdown-rendered,
+.mirror-dom-injection .markdown-rendered * {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
+
+/* Callouts/hr: o Obsidian scopa margins sob .markdown-preview-view,
+   que nao e ancestral dos nossos containers. Reproduzir aqui.
+   Especificidade alta (.mirror-container-styled) pra vencer theme resets. */
+.mirror-container-styled .markdown-rendered .callout,
+.mirror-ui-widget .markdown-rendered .callout,
+.mirror-dom-injection .markdown-rendered .callout,
+.mirror-code-block .markdown-rendered .callout {
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+.mirror-container-styled .markdown-rendered hr,
+.mirror-ui-widget .markdown-rendered hr,
+.mirror-dom-injection .markdown-rendered hr,
+.mirror-code-block .markdown-rendered hr {
+  margin-top: 1em !important;
+  margin-bottom: 1em !important;
+}
+/* Primeiro filho no mirror: colapsar margin-top como o nativo faz.
+   MarkdownRenderer pode injetar elementos antes do h1 (e.g. frontmatter div),
+   por isso usamos :first-child E :first-of-type pra h1-h6. */
+.mirror-ui-widget .markdown-rendered > :first-child,
+.mirror-dom-injection .markdown-rendered > :first-child,
+.mirror-code-block .markdown-rendered > :first-child {
+  margin-top: 0 !important;
+}
+.mirror-container-styled .markdown-rendered > h1:first-of-type,
+.mirror-container-styled .markdown-rendered > h2:first-of-type,
+.mirror-container-styled .markdown-rendered > h3:first-of-type,
+.mirror-ui-widget .markdown-rendered > h1:first-of-type,
+.mirror-ui-widget .markdown-rendered > h2:first-of-type,
+.mirror-dom-injection .markdown-rendered > h1:first-of-type,
+.mirror-dom-injection .markdown-rendered > h2:first-of-type,
+.mirror-code-block .markdown-rendered > h1:first-of-type,
+.mirror-code-block .markdown-rendered > h2:first-of-type {
+  margin-top: 0 !important;
 }
 
 /* Adicione estas linhas ao final do arquivo styles.css */
@@ -425,13 +474,17 @@
   display: block !important;
 }
 
+/* ========== CONTAINER VISUAL (condicional via setting) ========== */
+.mirror-container-styled {
+  background: color-mix(in srgb, var(--background-secondary) 70%, transparent);
+  border: 1px solid color-mix(in srgb, var(--background-modifier-border) 50%, transparent);
+  border-radius: 6px;
+  padding: 15px;
+}
+
 /* ========== CODE BLOCK PROCESSOR ========== */
 /* Estilo do bloco ```mirror ... ``` renderizado */
 .mirror-code-block {
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 15px;
   margin: 10px 0;
   box-sizing: border-box;
   overflow: visible;
@@ -500,10 +553,6 @@
 
 /* ========== DOM-INJECTED POSITIONS ========== */
 .mirror-dom-injection {
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 15px;
   box-sizing: border-box;
   user-select: none;
   -webkit-user-select: none;
@@ -541,10 +590,6 @@
 
 /* ========== MARGIN PANELS ========== */
 .mirror-margin-panel {
-  background: var(--background-secondary);
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 10px;
   box-sizing: border-box;
   overflow: auto;
   user-select: none;

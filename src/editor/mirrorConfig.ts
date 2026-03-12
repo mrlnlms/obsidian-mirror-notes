@@ -63,7 +63,8 @@ function configFromMirror(mirror: CustomMirror): ApplicableMirrorConfig {
   return {
     templatePath: mirror.custom_settings_live_preview_note,
     position: mirror.custom_settings_live_preview_pos as MirrorPosition,
-    hideProps: mirror.custom_settings_hide_props
+    hideProps: mirror.custom_settings_hide_props,
+    showContainer: mirror.custom_show_container_border
   };
 }
 
@@ -157,7 +158,8 @@ export function getApplicableConfig(
     result = {
       templatePath: settings.global_settings_live_preview_note,
       position: settings.global_settings_live_preview_pos as MirrorPosition,
-      hideProps: settings.global_settings_hide_props
+      hideProps: settings.global_settings_hide_props,
+      showContainer: settings.global_show_container_border
     };
   }
 

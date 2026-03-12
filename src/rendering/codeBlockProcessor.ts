@@ -18,7 +18,8 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     }
 
     // Container estilizado (sem .mirror-ui-widget pra nao herdar regras CM6)
-    const container = el.createEl('div', { cls: 'mirror-code-block' });
+    const showBorder = plugin.settings.global_show_container_border;
+    const container = el.createEl('div', { cls: `mirror-code-block${showBorder ? ' mirror-container-styled' : ''}` });
 
     // Registrar no lifecycle do Obsidian (necessario pro Reading View)
     const child = new MarkdownRenderChild(container);

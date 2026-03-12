@@ -77,7 +77,8 @@ function handleForcedUpdate(
     (!!freshConfig) !== value.enabled ||
     freshConfig?.position !== value.config?.position ||
     freshConfig?.templatePath !== value.config?.templatePath ||
-    freshConfig?.hideProps !== value.config?.hideProps;
+    freshConfig?.hideProps !== value.config?.hideProps ||
+    freshConfig?.showContainer !== value.config?.showContainer;
 
   if (!configChanged) {
     Logger.log('Forced update — config unchanged, rebuilding with fresh content');
@@ -144,12 +145,13 @@ function handleConfigChange(
   const positionChanged = value.config?.position !== config?.position;
   const templateChanged = value.config?.templatePath !== config?.templatePath;
   const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
+  const containerChanged = value.config?.showContainer !== config?.showContainer;
 
-  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged) {
+  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged && !containerChanged) {
     return null; // No config change
   }
 
-  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}`);
+  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}, container:${containerChanged}`);
 
   if (enabledChanged || positionChanged || templateChanged) {
     clearWidgetCaches(value.widgetId);

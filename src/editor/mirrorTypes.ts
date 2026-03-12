@@ -27,6 +27,7 @@ export interface ApplicableMirrorConfig {
   templatePath: string;
   position: MirrorPosition;
   hideProps: boolean;
+  showContainer: boolean;
 }
 
 export interface MirrorState {

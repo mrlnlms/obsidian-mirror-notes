@@ -69,7 +69,9 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
 
     // Create panel element
     const panel = document.createElement('div');
-    panel.className = `mirror-margin-panel mirror-margin-${side}`;
+    const classes = ['mirror-margin-panel', `mirror-margin-${side}`];
+    if (config.showContainer) classes.push('mirror-container-styled');
+    panel.className = classes.join(' ');
     panel.setAttribute('contenteditable', 'false');
     panel.style.position = 'absolute';
     panel.style.top = '0';
