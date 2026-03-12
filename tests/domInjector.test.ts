@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
-  isDomPosition, resolveTarget, getFallbackPosition,
+  isDomPosition, isDomTargetVisible, resolveTarget, getFallbackPosition,
   injectDomMirror, removeDomMirror, removeAllDomMirrors, cleanupAllDomMirrors,
 } from '../src/rendering/domInjector';
 import { renderMirrorTemplate } from '../src/rendering/templateRenderer';
@@ -53,6 +53,46 @@ function createViewContent(options: {
   }
   return div;
 }
+
+// =============================================================================
+// isDomTargetVisible
+// =============================================================================
+
+describe('isDomTargetVisible', () => {
+  function fakeApp(config: Record<string, any>) {
+    return { vault: { getConfig: (key: string) => config[key] } } as any;
+  }
+
+  it('above-title visible when showInlineTitle is true', () => {
+    expect(isDomTargetVisible(fakeApp({ showInlineTitle: true }), 'above-title')).toBe(true);
+  });
+
+  it('above-title hidden when showInlineTitle is false', () => {
+    expect(isDomTargetVisible(fakeApp({ showInlineTitle: false }), 'above-title')).toBe(false);
+  });
+
+  it('above-properties visible when propertiesInDocument is "visible"', () => {
+    expect(isDomTargetVisible(fakeApp({ propertiesInDocument: 'visible' }), 'above-properties')).toBe(true);
+  });
+
+  it('below-properties hidden when propertiesInDocument is "hidden"', () => {
+    expect(isDomTargetVisible(fakeApp({ propertiesInDocument: 'hidden' }), 'below-properties')).toBe(false);
+  });
+
+  it('below-properties visible when propertiesInDocument is "source"', () => {
+    expect(isDomTargetVisible(fakeApp({ propertiesInDocument: 'source' }), 'below-properties')).toBe(true);
+  });
+
+  it('backlinks always visible (no setting gate)', () => {
+    expect(isDomTargetVisible(fakeApp({}), 'above-backlinks')).toBe(true);
+    expect(isDomTargetVisible(fakeApp({}), 'below-backlinks')).toBe(true);
+  });
+
+  it('CM6 positions always visible', () => {
+    expect(isDomTargetVisible(fakeApp({}), 'top')).toBe(true);
+    expect(isDomTargetVisible(fakeApp({}), 'bottom')).toBe(true);
+  });
+});
 
 // =============================================================================
 // isDomPosition
@@ -143,8 +183,8 @@ describe('resolveTarget', () => {
 // =============================================================================
 
 describe('getFallbackPosition', () => {
-  it('above-title → top', () => {
-    expect(getFallbackPosition('above-title')).toBe('top');
+  it('above-title → above-properties (stays in DOM hierarchy)', () => {
+    expect(getFallbackPosition('above-title')).toBe('above-properties');
   });
 
   it('above-properties → top', () => {
@@ -218,7 +258,7 @@ describe('injectDomMirror', () => {
 
     const result = await injectDomMirror(plugin, view, config, {});
 
-    expect(result).toBe('top'); // fallback for above-title
+    expect(result).toBe('above-properties'); // fallback stays in DOM hierarchy
     expect(vc.querySelector('.mirror-dom-injection')).toBeNull();
   });
 

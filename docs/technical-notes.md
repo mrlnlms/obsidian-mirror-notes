@@ -2,7 +2,43 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v38 — CSS parity com Reading View nativo
+## Versao Atual: v39 — isDomTargetVisible + smart fallback chain + reactive config
+
+### O que mudou na v39
+
+**Problema: DOM targets "sempre presentes" impediam fallback:**
+
+O Obsidian nunca remove `.inline-title` nem `.metadata-container` do DOM — quando o usuario desliga "Show inline title" ou muda "Properties in document" pra "Hidden", o Obsidian apenas aplica `display:none` via CSS. O `querySelector` do `resolveTarget()` sempre encontrava o elemento, entao o fallback nunca disparava. O mirror era injetado ao lado de um elemento invisivel.
+
+**Solucao: `isDomTargetVisible()` em domInjector.ts:**
+- Consulta `app.vault.getConfig('showInlineTitle')` e `app.vault.getConfig('propertiesVisibility')` antes de aceitar o target DOM
+- `resolveTarget()` aceita parametro opcional `app` — se passado, checa visibilidade antes de fazer querySelector
+- Se o target existe no DOM mas esta configurado como invisivel, retorna `null` → fallback dispara
+
+**Fallback chain com hierarquia DOM preservada:**
+- Antes: qualquer falha de target DOM → CM6 top (salto direto)
+- Agora: `above-title` → tenta `above-properties` → so entao CM6 top
+- `getFallbackPosition()` atualizado pra suportar fallback DOM→DOM antes de cair pro CM6
+- `setupDomPosition` em main.ts faz retry quando fallback retorna outra posicao DOM (em vez de assumir CM6)
+- `removeAllDomMirrors(file.path)` chamado antes da re-injecao pra evitar containers duplicados no retry
+
+**Deteccao reativa de config (`vault.on('raw')`):**
+- `.obsidian/app.json` nao e um arquivo do vault normal — `vault.on('modify')` nao dispara pra ele
+- `css-change` tambem nao dispara pra mudancas de config (testado: toggle inline title, properties visibility)
+- `vault.on('raw')` detecta qualquer mudanca no filesystem, incluindo `.obsidian/app.json`
+- Listener filtra por `app.json` no path e chama `refreshAllEditors()` — mirrors se reposicionam em tempo real
+
+**Testes (126 total, +7 novos):**
+- `isDomTargetVisible`: 7 casos cobrindo combinacoes de showInlineTitle (true/false) e propertiesVisibility (visible/hidden/source)
+- `getFallbackPosition`: atualizado pra validar fallback chain DOM→DOM→CM6
+- Mock `pluginFactory.ts`: `vault.getConfig()` adicionado com defaults (`showInlineTitle: true`, `propertiesVisibility: 'visible'`)
+
+**Infraestrutura de teste:**
+- `test-visibility/` — 4 notas com mirrors em posicoes diferentes pra testar visibilidade
+- `templates/positions/visibility-test.md` — template dedicado
+- 4 configs adicionadas ao `data.json`
+
+---
 
 ### O que mudou na v38
 
@@ -232,13 +268,15 @@ O MN agora tem 3 engines de renderizacao, cada uma cobrindo uma parte da anatomi
 - above-backlinks, below-backlinks → bottom (se `.embedded-backlinks` nao existe)
 - left, right → sempre funciona (scrollDOM sempre existe)
 
-**Descoberta: `.metadata-container` sempre existe no DOM (v36, mar/2026)**
+**Descoberta: `.metadata-container` sempre existe no DOM (v36, refinado v39)**
 
 Diagnostico via Logger em `setupDomPosition` confirmou que o Obsidian **sempre** cria `.metadata-container` em Live Preview, independente de:
 - nota ter YAML frontmatter ou nao (mesmo nota vazia recem-criada)
 - setting "Properties in document" estar "visible" ou "hidden"
 
-O container sempre tem 3 filhos (metadata-error-container, metadata-properties-heading, collapse icon). Visualmente, sem YAML nao aparece botao de "add property", mas o elemento DOM existe. Isso significa que o fallback `above/below-properties → top` e codigo morto na pratica.
+O container sempre tem 3 filhos (metadata-error-container, metadata-properties-heading, collapse icon). Visualmente, sem YAML nao aparece botao de "add property", mas o elemento DOM existe.
+
+**Implicacao (v39):** `querySelector` sempre encontra o target, entao fallback baseado em "target nao existe" nunca dispara. O fix e `isDomTargetVisible()` que consulta `app.vault.getConfig()` pra checar se o elemento esta visivel (configurado pra aparecer), nao apenas se existe no DOM. Mesma logica pra `.inline-title` (controlado por `showInlineTitle`).
 
 **Decisao arquitetural: preferir CM6 sobre DOM**
 

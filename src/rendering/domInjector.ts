@@ -1,4 +1,4 @@
-import { MarkdownView, Component, MarkdownRenderChild } from "obsidian";
+import { MarkdownView, Component, MarkdownRenderChild, App } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
 import { renderMirrorTemplate } from "./templateRenderer";
@@ -18,11 +18,31 @@ function injectionKey(filePath: string, position: MirrorPosition): string {
   return `dom-${filePath}-${position}`;
 }
 
+/** Check if a DOM position's target element is actually visible based on Obsidian settings.
+ *  Obsidian hides elements via CSS (display:none), never removes from DOM. */
+export function isDomTargetVisible(app: App, position: MirrorPosition): boolean {
+  switch (position) {
+    case 'above-title':
+      // @ts-ignore — getConfig not in official typings
+      return !!app.vault.getConfig("showInlineTitle");
+    case 'above-properties':
+    case 'below-properties':
+      // @ts-ignore
+      return app.vault.getConfig("propertiesInDocument") !== "hidden";
+    default:
+      return true;
+  }
+}
+
 /** Resolve the target element and insertion method for a DOM position */
 export function resolveTarget(
   viewContent: HTMLElement,
-  position: MirrorPosition
+  position: MirrorPosition,
+  app?: App
 ): { target: HTMLElement; method: 'before' | 'after' | 'appendChild' } | null {
+  // If Obsidian setting hides the target, treat as not found (trigger fallback)
+  if (app && !isDomTargetVisible(app, position)) return null;
+
   switch (position) {
     case 'above-title': {
       const title = viewContent.querySelector(SELECTOR_INLINE_TITLE) as HTMLElement;
@@ -57,10 +77,11 @@ export function resolveTarget(
   }
 }
 
-/** Get the fallback position when the target element doesn't exist */
-export function getFallbackPosition(position: MirrorPosition): 'top' | 'bottom' {
+/** Get the fallback position when the target element is hidden or doesn't exist */
+export function getFallbackPosition(position: MirrorPosition): MirrorPosition {
   switch (position) {
     case 'above-title':
+      return 'above-properties';
     case 'above-properties':
     case 'below-properties':
       return 'top';
@@ -91,7 +112,7 @@ export async function injectDomMirror(
   if (!viewContent) return config.position;
 
   const key = injectionKey(file.path, config.position);
-  const resolved = resolveTarget(viewContent, config.position);
+  const resolved = resolveTarget(viewContent, config.position, plugin.app);
 
   // If target element not found, return fallback position for CM6 to handle
   if (!resolved) {

@@ -2,7 +2,32 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v38 — CSS parity com Reading View nativo
+## Versao Atual: v39 — isDomTargetVisible + smart fallback chain + reactive config
+
+### v39: isDomTargetVisible + smart fallback chain + reactive config detection
+
+**Feature: `isDomTargetVisible()` + smart fallback chain:**
+- Nova funcao `isDomTargetVisible()` que consulta `app.vault.getConfig()` antes da injecao DOM
+- Obsidian nunca remove `.inline-title` / `.metadata-container` do DOM — so esconde via CSS (`display:none`). Sem essa checagem, `querySelector` sempre encontrava o elemento e fallback nunca disparava
+- `resolveTarget()` agora aceita parametro opcional `app` pra verificar visibilidade antes do querySelector
+- Fallback chain preserva hierarquia DOM: `above-title → above-properties → CM6 top` (em vez de pular direto pro CM6 top)
+- `setupDomPosition` em main.ts faz retry de injecao quando fallback retorna outra posicao DOM
+- `removeAllDomMirrors(file.path)` chamado antes da re-injecao pra evitar containers duplicados
+
+**Feature: Deteccao reativa de mudanca de config:**
+- Listener `vault.on('raw')` detecta mudancas em `.obsidian/app.json` (toggle inline title, visibilidade de properties)
+- Chama `refreshAllEditors()` automaticamente — mirrors se reposicionam em tempo real sem restart
+- Evento `css-change` foi testado mas NAO dispara pra essas mudancas de config
+
+**Testes:**
+- 126 testes passando (era 119)
+- Novos: `isDomTargetVisible` (7 casos), `getFallbackPosition` atualizado pra chain DOM
+- Mock: `pluginFactory.ts` agora inclui `vault.getConfig()` com defaults
+
+**Infraestrutura de teste:**
+- Pasta `test-visibility/` com 4 notas de teste (vis-above-title, vis-above-props, vis-below-props, vis-cm6-top)
+- Template `templates/positions/visibility-test.md`
+- 4 configs de mirror adicionadas ao data.json pra testes de visibilidade
 
 ### v38: CSS parity com Reading View nativo — diagnostic triplo + fixes guiados por dados
 

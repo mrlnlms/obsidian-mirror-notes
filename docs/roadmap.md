@@ -2,6 +2,16 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md).
 
+## Concluido: v39 — isDomTargetVisible + smart fallback chain + reactive config
+
+- [x] `isDomTargetVisible()` — consulta `app.vault.getConfig()` antes de aceitar target DOM
+- [x] `resolveTarget()` com parametro `app` opcional pra checagem de visibilidade
+- [x] Fallback chain DOM→DOM→CM6 (above-title → above-properties → CM6 top)
+- [x] `setupDomPosition` retry + `removeAllDomMirrors` pre-injecao
+- [x] `vault.on('raw')` detecta mudancas em `.obsidian/app.json` → `refreshAllEditors()`
+- [x] 126 testes (+7 novos: isDomTargetVisible, getFallbackPosition atualizado)
+- [x] Infraestrutura de teste: `test-visibility/` + template + configs no data.json
+
 ## Concluido: v38 — CSS parity com Reading View nativo
 
 - [x] Diagnostic triplo: mirror vs Reading View vs Live Preview (via `iterateAllLeaves`)
@@ -43,9 +53,11 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 - [x] `.github/workflows/ci.yml` — build + lint + test em push/PR
 - [x] Skill `obsidian-plugin-scaffold` atualizada com secao CI/CD
 
-## Proximo: v39 — Position engine refinement
+## Proximo: v40 — Position engine refinement
 
 - [ ] **below-properties → CM6 top** — preferir CM6 sobre DOM (resultado visual identico, melhor reatividade). ~5 linhas em `main.ts` + label em `settings.ts`. Plano: [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
+- [ ] **Bottom/backlinks visibility** — aplicar pattern `isDomTargetVisible` pra above-backlinks e below-backlinks (backlinks podem estar ocultos)
+- [ ] **Remaining position options** — alinhar todas as posicoes DOM com checagem de visibilidade consistente
 
 ## Pre-lancamento (must-have)
 

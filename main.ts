@@ -71,6 +71,18 @@ export default class MirrorUIPlugin extends Plugin {
       })
     );
 
+    // Re-processar mirrors quando settings visuais do Obsidian mudam (inline title, properties)
+    // css-change nao cobre config changes; monitorar app.json via vault raw event
+    this.registerEvent(
+      // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
+      this.app.vault.on('raw', (path: string) => {
+        if (path === '.obsidian/app.json') {
+          Logger.log('[config-change] app.json changed, refreshing editors');
+          this.refreshAllEditors();
+        }
+      })
+    );
+
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
 
@@ -341,14 +353,24 @@ export default class MirrorUIPlugin extends Plugin {
     }
 
     this.positionOverrides.delete(file.path);
+    removeAllDomMirrors(file.path);
 
-    const actualPos = await injectDomMirror(this, view, config, frontmatter);
+    let actualPos = await injectDomMirror(this, view, config, frontmatter);
+
+    // Se fallback retornou outra posicao DOM, re-injetar nessa posicao
+    if (actualPos !== config.position && isDomPosition(actualPos)) {
+      const retryConfig = { ...config, position: actualPos };
+      actualPos = await injectDomMirror(this, view, retryConfig, frontmatter);
+    }
 
     // Registrar dependencia de template (re-render quando template muda)
     const blockKey = `dom-${file.path}-${config.position}`;
     this.templateDeps.register(config.templatePath, blockKey, async () => {
       const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-      await injectDomMirror(this, view, config, fm);
+      let pos = await injectDomMirror(this, view, config, fm);
+      if (pos !== config.position && isDomPosition(pos)) {
+        pos = await injectDomMirror(this, view, { ...config, position: pos }, fm);
+      }
     });
 
     if (actualPos !== config.position) {

@@ -15,6 +15,14 @@ export function createFakePlugin(overrides?: Partial<any>) {
           return file;
         },
         cachedRead: async () => '# {{title}}\n\nConteudo do template',
+        getConfig: (key: string) => {
+          const defaults: Record<string, any> = {
+            showInlineTitle: true,
+            propertiesInDocument: 'visible',
+            readableLineLength: true,
+          };
+          return defaults[key];
+        },
       },
       workspace: { getActiveFile: () => ({ path: 'test.md' }) },
       metadataCache: { getFileCache: () => null },
