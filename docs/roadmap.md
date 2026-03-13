@@ -72,6 +72,7 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 - [x] Cleanup `debugComputedStyles` (~200 linhas de CSS diagnostic temporario)
 - [x] Lint zerado — 5 unused imports removidos
 - [x] 138 testes passando (+7 novos)
+- [x] Code blocks sem `source:` re-renderizam com frontmatter da propria nota (self-dependency no SourceDependencyRegistry)
 
 ## Proximo: v42 — Position engine refinement
 

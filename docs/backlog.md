@@ -1,19 +1,30 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v41.
+Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da checklist v32).
 
-## Pendente
+## Bugs
+
+- **`{{title}}` sem frontmatter** — templateRenderer deve fazer fallback pra `file.basename` quando `frontmatter.title` e undefined. Considerar `{{title}}` como variavel reservada. Fix rapido (~5 linhas). Prioridade alta
+- **`{{position}}` literal** — decidir se templateRenderer deve expor variaveis do config do mirror (posicao, template path) alem do frontmatter. Decisao de design — baixa prioridade
+- **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Baixa prioridade — fallbacks de posicao funcionam independentemente
+
+## Features
 
 - **Logica AND/OR nas condicionais** — hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje. Afeta `mirrorConfig.ts` (matching) e `settings.ts` (UI pra combinar condicoes)
-- **below-properties → CM6 top** — `below-properties` deve resolver pra CM6 `top` em vez de DOM injection (resultado visual identico, melhor performance). DOM fica como fallback. Plano completo em [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
-- **MutationObserver pra backlinks** — detectar quando Obsidian popula/esvazia `.embedded-backlinks` (close+reopen da aba). Permitiria re-posicionar mirror automaticamente sem navegar. Baixa prioridade — comportamento atual (checar no navigate) e aceitavel
-- **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Prioridade baixa — fallbacks de posicao funcionam independentemente
-- **Suporte a multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, o segundo e descartado com warning. Config de teste "Edge: Conflito" (pos-top.md claimado por 2 mirrors) preservada como referencia. Warning aparece toda vez que mirrorIndex rebuilda — aceitar como ruido ate implementar multi-mirror ou silenciar com flag
 - **Tag matching (condicional nova)** — filtrar mirrors por tag da nota (feature do VirtualNotes, nao existe no MN). Tipo: "aplicar mirror X se a nota tiver tag #project"
-- **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Considerado resolvido pro scope atual
-- **Margin panel avancado** — tratamento de line numbers (`cm-gutters.offsetWidth`), readable-line-width (`contentDOM.offsetLeft`), resize observer
+- **Suporte a multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, o segundo e descartado com warning. Config de teste "Edge: Conflito" (pos-top.md claimado por 2 mirrors) preservada como referencia. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM
 - **Reading View DOM injection pra top/bottom** — CM6 widgets so existem em Live Preview. Pra top/bottom em Reading View: DOM injection em `.mod-header.mod-ui` / `.mod-footer`
-- **VN min-height** — avaliar se margin panels precisam de `min-height` como VN faz (528px footer, 100px above-backlinks)
+
+## Position engine
+
+- **below-properties → CM6 top** — `below-properties` deve resolver pra CM6 `top` em vez de DOM injection (resultado visual identico, melhor performance). DOM fica como fallback. Plano completo em [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
+- **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
+- **Fallback DOM → CM6 salto visual** — o padrao CM6 (relativo ao conteudo) vs DOM (ancorado no container) causa salto perceptivel no fallback. Avaliar se fallbacks devem ser transparentes ou se o usuario precisa ser avisado. Baixa prioridade — UX polish
+- **MutationObserver pra backlinks** — detectar quando Obsidian popula/esvazia `.embedded-backlinks` (close+reopen da aba). Permitiria re-posicionar mirror automaticamente sem navegar. Baixa prioridade — comportamento atual (checar no navigate) e aceitavel
+
+## Considerado resolvido
+
+- **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
 
 ## Integracao com outros plugins
 
@@ -81,3 +92,12 @@ Trabalho tecnico a ser feito. Atualizado na v41.
 - [x] Throttle de forced update 1000ms → 500ms — checkbox boolean travava em cliques rapidos (v41)
 - [x] Lint zerado — 5 unused imports removidos (v41)
 - [x] Reatividade code block pra frontmatter da propria nota — self-dependency no SourceDependencyRegistry (v41)
+- [x] CM6 nao carrega no startup + hot-swap nao reativo — `filePathFacet` fix cross-pane (v36)
+- [x] Fallback below-backlinks ausente — `getFallbackPosition('below-backlinks')` → `'bottom'` (v32)
+- [x] Logica prioridade global vs custom — checar `globalMirrorActive` antes de `global_settings_overide` (v32)
+- [x] Line-height CM6 vs DOM — CSS parity normalizada (v37/v38)
+- [x] above-title com inline title OFF — coberto por `isDomTargetVisible` + fallback chain (v39)
+- [x] Backlinks desabilitados com notas eq — coberto por two-layer check (v40)
+- [x] below-properties ≈ top — decisao: CM6 top, plano em `plan-below-properties-cm6.md` (v39)
+- [x] above-title fallback — coberto por fallback chain DOM→DOM→CM6 (v39)
+- [x] Log de conflito em buildMirrorIndex — warning quando dois mirrors apontam pro mesmo arquivo (v32)
