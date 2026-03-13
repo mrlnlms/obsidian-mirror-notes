@@ -4,8 +4,6 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 
 ## Bugs
 
-- **`{{title}}` sem frontmatter** — templateRenderer deve fazer fallback pra `file.basename` quando `frontmatter.title` e undefined. Considerar `{{title}}` como variavel reservada. Fix rapido (~5 linhas). Prioridade alta
-- **`{{position}}` literal** — decidir se templateRenderer deve expor variaveis do config do mirror (posicao, template path) alem do frontmatter. Decisao de design — baixa prioridade
 - **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Baixa prioridade — fallbacks de posicao funcionam independentemente
 
 ## Features
@@ -21,6 +19,7 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 ## Considerado resolvido
 
 - **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
+- **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
 
 ## Integracao com outros plugins
 
