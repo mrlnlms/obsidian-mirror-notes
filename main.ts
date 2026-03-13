@@ -28,7 +28,7 @@ export default class MirrorUIPlugin extends Plugin {
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   private knownTemplatePaths = new Set<string>();
   /** Cached Obsidian config values — only refresh editors when these actually change */
-  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible' };
+  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false, backlinkInDocument: false };
 
   async onload() {
     await this.loadSettings();
@@ -79,20 +79,37 @@ export default class MirrorUIPlugin extends Plugin {
     this.lastObsidianConfig.showInlineTitle = !!this.app.vault.getConfig("showInlineTitle");
     // @ts-ignore
     this.lastObsidianConfig.propertiesInDocument = this.app.vault.getConfig("propertiesInDocument") || 'visible';
+    // @ts-ignore — internalPlugins not in official typings
+    const blInit = (this.app as any).internalPlugins?.plugins?.['backlink'];
+    this.lastObsidianConfig.backlinkEnabled = !!blInit?.enabled;
+    this.lastObsidianConfig.backlinkInDocument = !!blInit?.instance?.options?.backlinkInDocument;
     this.registerEvent(
       // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
       this.app.vault.on('raw', (path: string) => {
-        if (path !== '.obsidian/app.json') return;
-        // @ts-ignore
-        const showTitle = !!this.app.vault.getConfig("showInlineTitle");
-        // @ts-ignore
-        const propsMode = this.app.vault.getConfig("propertiesInDocument") || 'visible';
-        if (showTitle === this.lastObsidianConfig.showInlineTitle &&
-            propsMode === this.lastObsidianConfig.propertiesInDocument) return;
-        this.lastObsidianConfig.showInlineTitle = showTitle;
-        this.lastObsidianConfig.propertiesInDocument = propsMode;
-        Logger.log(`[config-change] showInlineTitle=${showTitle}, propertiesInDocument=${propsMode}`);
-        this.refreshAllEditors();
+        if (path === '.obsidian/app.json') {
+          // @ts-ignore
+          const showTitle = !!this.app.vault.getConfig("showInlineTitle");
+          // @ts-ignore
+          const propsMode = this.app.vault.getConfig("propertiesInDocument") || 'visible';
+          if (showTitle === this.lastObsidianConfig.showInlineTitle &&
+              propsMode === this.lastObsidianConfig.propertiesInDocument) return;
+          this.lastObsidianConfig.showInlineTitle = showTitle;
+          this.lastObsidianConfig.propertiesInDocument = propsMode;
+          Logger.log(`[config-change] showInlineTitle=${showTitle}, propertiesInDocument=${propsMode}`);
+          this.refreshAllEditors();
+        }
+        if (path === '.obsidian/core-plugins.json' || path === '.obsidian/backlink.json') {
+          // @ts-ignore — internalPlugins not in official typings
+          const bl = (this.app as any).internalPlugins?.plugins?.['backlink'];
+          const enabled = !!bl?.enabled;
+          const inDocument = !!bl?.instance?.options?.backlinkInDocument;
+          if (enabled === this.lastObsidianConfig.backlinkEnabled &&
+              inDocument === this.lastObsidianConfig.backlinkInDocument) return;
+          this.lastObsidianConfig.backlinkEnabled = enabled;
+          this.lastObsidianConfig.backlinkInDocument = inDocument;
+          Logger.log(`[config-change] backlink=${enabled}, backlinkInDocument=${inDocument}`);
+          this.refreshAllEditors();
+        }
       })
     );
 
@@ -240,18 +257,28 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   /** Atualiza todos os editores abertos com config fresca (chamado apos saveSettings) */
-  private refreshAllEditors() {
+  private async refreshAllEditors() {
     clearConfigCache();
+    this.positionOverrides.clear();
+    // Collect all open markdown leaves
+    const views: MarkdownView[] = [];
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof MarkdownView && leaf.view.file) {
-        const cm = getEditorView(leaf.view as MarkdownView);
-        if (cm) {
-          cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-          this.updateHidePropsForView(leaf.view as MarkdownView);
-          this.setupDomPosition(leaf.view as MarkdownView);
-        }
+        views.push(leaf.view as MarkdownView);
       }
     });
+    // Pass 1: resolve DOM positions and set overrides (async)
+    for (const view of views) {
+      await this.setupDomPosition(view);
+    }
+    // Pass 2: dispatch CM6 updates (reads overrides set in pass 1)
+    for (const view of views) {
+      const cm = getEditorView(view);
+      if (cm) {
+        cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
+        this.updateHidePropsForView(view);
+      }
+    }
   }
 
   private rebuildKnownTemplatePaths() {

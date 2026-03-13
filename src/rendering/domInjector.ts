@@ -29,6 +29,13 @@ export function isDomTargetVisible(app: App, position: MirrorPosition): boolean 
     case 'below-properties':
       // @ts-ignore
       return app.vault.getConfig("propertiesInDocument") !== "hidden";
+    case 'above-backlinks':
+    case 'below-backlinks': {
+      // @ts-ignore — internalPlugins not in official typings
+      const bl = (app as any).internalPlugins?.plugins?.['backlink'];
+      if (!bl?.enabled) return false;
+      return !!bl.instance?.options?.backlinkInDocument;
+    }
     default:
       return true;
   }

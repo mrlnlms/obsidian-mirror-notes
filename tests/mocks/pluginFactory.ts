@@ -26,6 +26,11 @@ export function createFakePlugin(overrides?: Partial<any>) {
       },
       workspace: { getActiveFile: () => ({ path: 'test.md' }) },
       metadataCache: { getFileCache: () => null },
+      internalPlugins: {
+        plugins: {
+          backlink: { enabled: true, instance: { options: { backlinkInDocument: true } } },
+        },
+      },
     },
     settings: { ...DEFAULT_SETTINGS },
     positionOverrides: new Map(),

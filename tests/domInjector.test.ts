@@ -59,8 +59,11 @@ function createViewContent(options: {
 // =============================================================================
 
 describe('isDomTargetVisible', () => {
-  function fakeApp(config: Record<string, any>) {
-    return { vault: { getConfig: (key: string) => config[key] } } as any;
+  function fakeApp(config: Record<string, any>, internalPlugins?: Record<string, any>) {
+    return {
+      vault: { getConfig: (key: string) => config[key] },
+      internalPlugins: { plugins: internalPlugins || {} },
+    } as any;
   }
 
   it('above-title visible when showInlineTitle is true', () => {
@@ -83,9 +86,27 @@ describe('isDomTargetVisible', () => {
     expect(isDomTargetVisible(fakeApp({ propertiesInDocument: 'source' }), 'below-properties')).toBe(true);
   });
 
-  it('backlinks always visible (no setting gate)', () => {
-    expect(isDomTargetVisible(fakeApp({}), 'above-backlinks')).toBe(true);
-    expect(isDomTargetVisible(fakeApp({}), 'below-backlinks')).toBe(true);
+  it('backlinks visible when core plugin ON + backlinkInDocument ON', () => {
+    const bl = { backlink: { enabled: true, instance: { options: { backlinkInDocument: true } } } };
+    expect(isDomTargetVisible(fakeApp({}, bl), 'above-backlinks')).toBe(true);
+    expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(true);
+  });
+
+  it('backlinks hidden when core plugin OFF', () => {
+    const bl = { backlink: { enabled: false, instance: null } };
+    expect(isDomTargetVisible(fakeApp({}, bl), 'above-backlinks')).toBe(false);
+    expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(false);
+  });
+
+  it('backlinks hidden when core plugin ON but backlinkInDocument OFF', () => {
+    const bl = { backlink: { enabled: true, instance: { options: { backlinkInDocument: false } } } };
+    expect(isDomTargetVisible(fakeApp({}, bl), 'above-backlinks')).toBe(false);
+    expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(false);
+  });
+
+  it('backlinks hidden when internalPlugins not available', () => {
+    expect(isDomTargetVisible(fakeApp({}), 'above-backlinks')).toBe(false);
+    expect(isDomTargetVisible(fakeApp({}), 'below-backlinks')).toBe(false);
   });
 
   it('CM6 positions always visible', () => {
