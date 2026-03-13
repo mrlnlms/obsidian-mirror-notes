@@ -11,7 +11,6 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 ## Features
 
 - **Logica AND/OR nas condicionais** — hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje. Afeta `mirrorConfig.ts` (matching) e `settings.ts` (UI pra combinar condicoes)
-- **Tag matching (condicional nova)** — filtrar mirrors por tag da nota (feature do VirtualNotes, nao existe no MN). Tipo: "aplicar mirror X se a nota tiver tag #project"
 - **Suporte a multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, o segundo e descartado com warning. Config de teste "Edge: Conflito" (pos-top.md claimado por 2 mirrors) preservada como referencia. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM
 - **Reading View DOM injection pra top/bottom** — CM6 widgets so existem em Live Preview. Pra top/bottom em Reading View: DOM injection em `.mod-header.mod-ui` / `.mod-footer`
 
@@ -19,9 +18,6 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 
 - **below-properties → CM6 top** — `below-properties` deve resolver pra CM6 `top` em vez de DOM injection (resultado visual identico, melhor performance). DOM fica como fallback. Plano completo em [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
 - **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
-- **Fallback DOM → CM6 salto visual** — o padrao CM6 (relativo ao conteudo) vs DOM (ancorado no container) causa salto perceptivel no fallback. Avaliar se fallbacks devem ser transparentes ou se o usuario precisa ser avisado. Baixa prioridade — UX polish
-- **MutationObserver pra backlinks** — detectar quando Obsidian popula/esvazia `.embedded-backlinks` (close+reopen da aba). Permitiria re-posicionar mirror automaticamente sem navegar. Baixa prioridade — comportamento atual (checar no navigate) e aceitavel
-
 ## Considerado resolvido
 
 - **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
@@ -101,3 +97,6 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 - [x] below-properties ≈ top — decisao: CM6 top, plano em `plan-below-properties-cm6.md` (v39)
 - [x] above-title fallback — coberto por fallback chain DOM→DOM→CM6 (v39)
 - [x] Log de conflito em buildMirrorIndex — warning quando dois mirrors apontam pro mesmo arquivo (v32)
+- [x] Fallback DOM → CM6 salto visual — resolvido em duas frentes: posicionamento correto via isDomTargetVisible + fallback chain (v39), CSS parity com Reading View nativo (v37/v38)
+- [x] Tag matching — ja funciona via `filterProps` existente. `mirrorConfig.ts` faz `Array.isArray(val) ? val.some(...)` pra arrays como `tags`. Teste cobrindo (v32/v41)
+- [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
