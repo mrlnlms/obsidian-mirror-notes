@@ -16,7 +16,7 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 
 ## Position engine
 
-- **below-properties → CM6 top** — `below-properties` deve resolver pra CM6 `top` em vez de DOM injection (resultado visual identico, melhor performance). DOM fica como fallback. Plano completo em [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
+- **Simplificar menu de posicoes** — remover opcoes redundantes que os fallbacks ja cobrem. Primeiro candidato: `below-properties` (decisao arquitetural: CM6 `top`, DOM so ficou ativo pra debug CSS parity). Ativar intercept no `setupDomPosition` e remover opcao do dropdown. Logica e fallback chain documentados em technical-notes.md (secao Arquitetura > Position Engine). Plano de implementacao em [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
 - **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
 ## Considerado resolvido
 

@@ -328,57 +328,7 @@ src/utils/
 
 ### O que mudou na v32
 
-**Arquitetura de posicoes — 3 engines:**
-
-O MN agora tem 3 engines de renderizacao, cada uma cobrindo uma parte da anatomia da nota:
-
-| Engine | Posicoes | Tecnica | Onde opera |
-|--------|----------|---------|------------|
-| CM6 StateField | top, bottom | `Decoration.widget({ side: 0/1 })` | Dentro do `.cm-content` |
-| DOM Injector | above-title, above/below-properties, above/below-backlinks | `insertBefore`/`insertAfter` no DOM | Fora do `.cm-editor` |
-| Margin ViewPlugin | left, right | ViewPlugin no `scrollDOM`, position absolute | Lateral do editor |
-
-**Flow de posicoes:**
-1. `getApplicableConfig()` retorna config com position original do settings
-2. Se position e CM6 (top/bottom): StateField → buildDecorations (existente)
-3. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
-4. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
-5. Se position e margin: `mirrorMarginPanelPlugin` (ViewPlugin) detecta no `update()` e injeta
-
-**Fallback chain:**
-- above-title → top (se `.inline-title` nao existe)
-- above-properties → DOM obrigatorio (unico caso que precisa de DOM — CM6 nao alcanca acima do frontmatter)
-- below-properties → CM6 top (resultado visual identico, melhor performance e reatividade)
-- sem properties → CM6 top (mesmo caso)
-- above-backlinks, below-backlinks → bottom (se `.embedded-backlinks` nao existe)
-- left, right → sempre funciona (scrollDOM sempre existe)
-
-**Descoberta: `.metadata-container` sempre existe no DOM (v36, refinado v39)**
-
-Diagnostico via Logger em `setupDomPosition` confirmou que o Obsidian **sempre** cria `.metadata-container` em Live Preview, independente de:
-- nota ter YAML frontmatter ou nao (mesmo nota vazia recem-criada)
-- setting "Properties in document" estar "visible" ou "hidden"
-
-O container sempre tem 3 filhos (metadata-error-container, metadata-properties-heading, collapse icon). Visualmente, sem YAML nao aparece botao de "add property", mas o elemento DOM existe.
-
-**Implicacao (v39):** `querySelector` sempre encontra o target, entao fallback baseado em "target nao existe" nunca dispara. O fix e `isDomTargetVisible()` que consulta `app.vault.getConfig()` pra checar se o elemento esta visivel (configurado pra aparecer), nao apenas se existe no DOM. Mesma logica pra `.inline-title` (controlado por `showInlineTitle`).
-
-**Decisao arquitetural: preferir CM6 sobre DOM**
-
-Preferencia: usar CM6 sempre que possivel (menos intrusivo, reatividade nativa via StateField).
-
-| Posicao | Implementacao | Motivo |
-|---------|---------------|--------|
-| above-properties | DOM (obrigatorio) | CM6 nao consegue inserir antes do `.metadata-container` |
-| below-properties | CM6 top (preferencial) | Resultado visual identico, melhor performance |
-| sem properties | CM6 top | Mesmo caso |
-
-A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`.
-
-**positionOverrides (Map no plugin):**
-- Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
-- `getApplicableConfig()` checa este map antes de retornar — aplica override se existir
-- Override e limpo em `updateAllEditors()` e `setupDomPosition()` (fresh attempt)
+**Position engine:** 3 engines (CM6, DOM, Margin) + fallback chain + positionOverrides. Detalhes completos na secao **Arquitetura > Position Engine** acima.
 
 **filterProps fix:**
 - `mirrorConfig.ts` linhas 111-121: matching de YAML properties agora trata:
@@ -666,6 +616,47 @@ styles.css                                 — Plugin styles + hideProps + code 
 - `metadataCache.changed` — branch 1: DOM injection + hideProps + force CM6 update se inativo. Branch 2: cross-note source deps. Branch 3: template deps (re-render mirrors que usam o template editado)
 - `vault.modify` — em `data.json`: re-update settings. Em outros arquivos: template deps (re-render se o arquivo e um template usado)
 - DOM: `keydown` + `mousedown` — tracking de ultima interacao do usuario
+
+### Position Engine — 3 engines + fallback chain (v32, refinado v39/v40)
+
+**3 engines de renderizacao, cada uma cobrindo uma parte da anatomia da nota:**
+
+| Engine | Posicoes | Tecnica | Onde opera |
+|--------|----------|---------|------------|
+| CM6 StateField | top, bottom | `Decoration.widget({ side: 0/1 })` | Dentro do `.cm-content` |
+| DOM Injector | above-title, above/below-properties, above/below-backlinks | `insertBefore`/`insertAfter` no DOM | Fora do `.cm-editor` |
+| Margin ViewPlugin | left, right | ViewPlugin no `scrollDOM`, position absolute | Lateral do editor |
+
+**Flow:**
+1. `getApplicableConfig()` retorna config com position original do settings
+2. Se position e CM6 (top/bottom): StateField → buildDecorations
+3. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
+4. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
+5. Se position e margin: `mirrorMarginPanelPlugin` (ViewPlugin) detecta no `update()` e injeta
+
+**Fallback chain:**
+- above-title → above-properties → CM6 top
+- above-properties → DOM obrigatorio (unico caso — CM6 nao alcanca acima do `.metadata-container`)
+- above-backlinks, below-backlinks → CM6 bottom (se `.embedded-backlinks` nao existe ou esta vazio)
+
+**Decisao arquitetural: preferir CM6 sobre DOM sempre que possivel**
+
+| Posicao | Implementacao | Motivo |
+|---------|---------------|--------|
+| above-properties | DOM (obrigatorio) | CM6 nao consegue inserir antes do `.metadata-container` |
+| below-properties | CM6 top (preferencial) | Resultado visual identico, melhor performance |
+| sem properties | CM6 top | Mesmo caso |
+
+A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. DOM so ficou ativo pra debug de CSS parity lado a lado (v37/v38). Task pendente: ativar o intercept no `setupDomPosition` e simplificar menu de posicoes pro usuario.
+
+**`isDomTargetVisible()` (v39):** `.inline-title` e `.metadata-container` nunca saem do DOM — Obsidian so aplica `display:none`. `querySelector` sempre encontra. Fix: consultar `app.vault.getConfig()` antes de aceitar target. Se target configurado como invisivel → `null` → fallback dispara.
+
+**Backlinks two-layer check (v40):** `backlinkInDocument` NAO e reativo pra abas abertas. `isDomTargetVisible` so checa `bl.enabled` (plugin ON/OFF). `resolveTarget` usa `children.length > 0` pra DOM truth.
+
+**`positionOverrides` (Map no plugin):**
+- Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
+- `getApplicableConfig()` checa este map antes de retornar — aplica override se existir
+- Override e limpo em `updateAllEditors()` e `setupDomPosition()` (fresh attempt)
 
 ---
 
