@@ -8,13 +8,15 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Multiple Mirror Configurations**: Create custom mirrors for different types of notes
 - **Flexible Filtering**: Filter by file name, folder path, or YAML properties
 - **Template Variables**: Use `{{variable}}` syntax to inject frontmatter values into templates
-- **Position Control**: Place templates at the top or bottom of your notes
+- **Position Control**: 9 positions — top, bottom, above/below title, above/below properties, above/below backlinks, left/right margins
 - **Hide Properties Option**: Optionally hide the frontmatter section in notes with mirrors
 - **Inline Mirror Blocks**: Embed templates anywhere with ` ```mirror``` ` code blocks — works in Live Preview and Reading View
 - **Cross-Note Reactivity**: Mirror blocks with `source:` update automatically when the source note's frontmatter changes — even across split views
+- **Smart Fallback Chain**: If a DOM target is hidden (e.g., properties off), the mirror automatically falls back to the next valid position
+- **Reactive Config Detection**: Mirrors reposition in real-time when you toggle Obsidian settings (inline title, properties, backlinks)
 - **Insert Command**: Right-click menu and command palette entry with file autocomplete
 - **Live Preview Support**: Works seamlessly in Obsidian's Live Preview mode
-- **Performance Optimized**: Intelligent caching and debouncing for smooth editing
+- **Performance Optimized**: Intelligent caching, scoped invalidation, and debouncing for smooth editing
 
 ## Installation
 
@@ -148,15 +150,14 @@ Create multiple mirrors with different configurations:
 - **Filter by Properties**: Match YAML frontmatter values
 
 ### Settings
-- **Position**: Top or Bottom of the note
-- **Hide Properties**: Hide the frontmatter section
+- **Position**: 9 positions across 3 engines (CM6, DOM, margin panels)
+- **Hide Properties**: Hide the frontmatter section (CSS-based, currently limited — see Known Issues)
 - **Override**: Control mirror priority (custom vs global)
+- **Rename-Aware**: Template and filter paths auto-update when you rename or move files
 
-## Known Issues (v25)
+## Known Issues
 
-- **Hide Properties not working**: The CSS-based approach (`updateHidePropsForView()` adds `.mirror-hide-properties` class) fires correctly but the CSS selector does not match the current Obsidian DOM structure. Frontmatter remains visible.
-- **YAML list filtering broken**: `filterProps` matching uses strict equality (`===`), which fails for array values like `tags: [tag1, tag2]`. Only simple string properties work (e.g., `type: projects`).
-- **parseFrontmatter hardcodes lists to tags**: All YAML list items (lines starting with `-`) are pushed to `result.tags` regardless of the actual property key.
+- **Hide Properties CSS**: The selector `.mirror-hide-properties .metadata-container` does not match the current Obsidian DOM structure. Frontmatter remains visible even when enabled.
 
 ## Development
 
@@ -172,33 +173,15 @@ The plugin never modifies the note's content — it only adds visual elements to
 
 ### Architecture
 
-```
-main.ts                                    — Plugin lifecycle, CM6 setup, code block, hideProps
-settings.ts                                — Settings tab UI (delegates to builders)
-src/settings/types.ts                      — Interfaces, defaults, CustomMirror
-src/settings/filterBuilder.ts              — Reusable filter UI builder (files/folders/props)
-src/settings/pathValidator.ts              — Inline path validation for settings inputs
-src/commands/insertMirrorBlock.ts          — Insert mirror block command + modal
-src/rendering/templateRenderer.ts          — Shared rendering engine (CM6 + code block)
-src/rendering/codeBlockProcessor.ts        — Code block processor (```mirror```) + cross-note deps
-src/rendering/blockParser.ts               — Key:value parser for code blocks
-src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
-src/rendering/sourceDependencyRegistry.ts  — Cross-note dependency tracking
-src/editor/mirrorState.ts                  — CM6 StateField + StateEffects
-src/editor/mirrorWidget.ts                 — CM6 WidgetType (delegates to templateRenderer)
-src/editor/mirrorConfig.ts                 — Configuration + filter matching logic
-src/editor/decorationBuilder.ts            — CM6 Decoration builder
-src/editor/mirrorTypes.ts                  — Shared type definitions
-src/editor/mirrorUtils.ts                  — parseFrontmatter, hashObject, generateWidgetId
-src/editor/timingConfig.ts                 — Centralized timing constants
-src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
-src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
-src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
-src/utils/obsidianInternals.ts             — Typed wrappers for Obsidian internal APIs
-src/utils/settingsPaths.ts                 — Auto-update paths on file/folder rename
-src/logger.ts                              — Logger with toggle via settings
-styles.css                                 — Plugin styles + hideProps + code block CSS
-```
+Three rendering engines with a shared template renderer:
+
+- **CM6 StateField** — `top`, `bottom` positions via `Decoration.widget` (Live Preview)
+- **DOM Injector** — `above-title`, `above/below-properties`, `above/below-backlinks` via DOM manipulation
+- **Margin ViewPlugin** — `left`, `right` panels via absolute positioning in `scrollDOM`
+
+Smart fallback chain: if a DOM target is hidden, the mirror falls back to the next valid position (e.g., `above-title → above-properties → CM6 top`).
+
+See [docs/architecture.md](docs/architecture.md) for the full file map, flows, and technical details.
 
 ### Building from Source
 ```bash
@@ -210,7 +193,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-33 versions across 5 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+41 versions across 6 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -219,6 +202,7 @@ npm run dev      # watch mode
 | Era 3: CSS | Nov 2024 | v19 — Styles rewrite |
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
+| Era 6: Hardening | Mar 2026 | v34-v41 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache |
 
 ## Support
 
