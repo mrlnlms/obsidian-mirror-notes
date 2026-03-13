@@ -7,7 +7,7 @@ import { TIMING } from './src/editor/timingConfig';
 import { Logger } from './src/logger';
 import { addPathValidation } from './src/settings/pathValidator';
 import { buildFilterSection } from './src/settings/filterBuilder';
-import { createDefaultCustomMirror, CustomMirror } from './src/settings/types';
+import { createDefaultCustomMirror } from './src/settings/types';
 import { getEditorView, addSearchClass } from './src/utils/obsidianInternals';
 
 // Re-export types for backwards compatibility (consumers import from './settings')

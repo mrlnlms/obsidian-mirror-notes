@@ -262,6 +262,81 @@ describe('getApplicableConfig', () => {
     expect(config!.templatePath).toBe('templates/folder.md');
   });
 
+  // ---- metadataCache native types (post-parseFrontmatter removal) ----
+  // Antes, parseFrontmatter retornava tudo como string ("true", "5", tags errados).
+  // Agora metadataCache fornece tipos nativos. Estes testes validam que filterProps
+  // funciona corretamente com os tipos reais que o Obsidian retorna.
+
+  it('matches filterProps with native boolean true from metadataCache', () => {
+    const mirror = createCustomMirror({
+      filterFiles: [],
+      filterFolders: [],
+      filterProps: [{ folder: 'published', template: 'true' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+    const file = makeTFile('nota.md');
+
+    // metadataCache retorna boolean nativo, nao string
+    const config = getApplicableConfig(plugin, file, { published: true });
+    expect(config).not.toBeNull();
+  });
+
+  it('matches filterProps with native boolean false from metadataCache', () => {
+    const mirror = createCustomMirror({
+      filterFiles: [],
+      filterFolders: [],
+      filterProps: [{ folder: 'archived', template: 'false' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+    const file = makeTFile('nota.md');
+
+    const config = getApplicableConfig(plugin, file, { archived: false });
+    expect(config).not.toBeNull();
+  });
+
+  it('matches filterProps with native number from metadataCache', () => {
+    const mirror = createCustomMirror({
+      filterFiles: [],
+      filterFolders: [],
+      filterProps: [{ folder: 'priority', template: '5' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+    const file = makeTFile('nota.md');
+
+    // metadataCache retorna number nativo, nao string "5"
+    const config = getApplicableConfig(plugin, file, { priority: 5 });
+    expect(config).not.toBeNull();
+  });
+
+  it('matches filterProps with array under correct key from metadataCache', () => {
+    const mirror = createCustomMirror({
+      filterFiles: [],
+      filterFolders: [],
+      filterProps: [{ folder: 'categories', template: 'project' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+    const file = makeTFile('nota.md');
+
+    // metadataCache retorna array na chave correta (categories, nao tags)
+    // parseFrontmatter antigo colocava tudo em result.tags — bug eliminado
+    const config = getApplicableConfig(plugin, file, { categories: ['project', 'active'] });
+    expect(config).not.toBeNull();
+  });
+
+  it('does not match filterProps when array value is under wrong key', () => {
+    const mirror = createCustomMirror({
+      filterFiles: [],
+      filterFolders: [],
+      filterProps: [{ folder: 'categories', template: 'project' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+    const file = makeTFile('nota.md');
+
+    // Frontmatter tem "project" mas em tags, nao em categories
+    const config = getApplicableConfig(plugin, file, { tags: ['project'] });
+    expect(config).toBeNull();
+  });
+
   // ---- Disabled mirror ignored ----
   it('disabled mirror is skipped even with matching filterProps', () => {
     const mirror = createCustomMirror({

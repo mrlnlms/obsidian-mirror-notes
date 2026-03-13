@@ -23,7 +23,7 @@ export default class MirrorUIPlugin extends Plugin {
   positionOverrides = new Map<string, MirrorPosition>();
   private activeEditors: Map<string, boolean> = new Map();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
-  private crossNoteTimeout: NodeJS.Timeout | null = null;
+  private crossNoteTimeouts = new Map<string, NodeJS.Timeout>();
   private templateUpdateTimeout: NodeJS.Timeout | null = null;
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   private knownTemplatePaths = new Set<string>();
@@ -165,16 +165,15 @@ export default class MirrorUIPlugin extends Plugin {
         // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
         const callbacks = this.sourceDeps.getDependentCallbacks(file.path);
         if (callbacks.length > 0) {
-          if (this.crossNoteTimeout) {
-            clearTimeout(this.crossNoteTimeout);
-          }
-          this.crossNoteTimeout = setTimeout(() => {
+          const existing = this.crossNoteTimeouts.get(file.path);
+          if (existing) clearTimeout(existing);
+          this.crossNoteTimeouts.set(file.path, setTimeout(() => {
             Logger.log(`Cross-note refresh: ${callbacks.length} block(s) depend on ${file.path}`);
             for (const cb of callbacks) {
               cb();
             }
-            this.crossNoteTimeout = null;
-          }, TIMING.METADATA_CHANGE_DEBOUNCE);
+            this.crossNoteTimeouts.delete(file.path);
+          }, TIMING.METADATA_CHANGE_DEBOUNCE));
         }
 
         // Branch 3: template mudou — re-render todos mirrors que usam esse template
@@ -512,9 +511,8 @@ export default class MirrorUIPlugin extends Plugin {
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
-    if (this.crossNoteTimeout) {
-      clearTimeout(this.crossNoteTimeout);
-    }
+    for (const t of this.crossNoteTimeouts.values()) clearTimeout(t);
+    this.crossNoteTimeouts.clear();
     if (this.templateUpdateTimeout) {
       clearTimeout(this.templateUpdateTimeout);
     }

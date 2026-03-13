@@ -2,7 +2,6 @@ import { ViewPlugin, ViewUpdate, EditorView } from "@codemirror/view";
 import { mirrorStateField, mirrorPluginFacet } from "./mirrorState";
 import { MARGIN_POSITIONS } from "./mirrorTypes";
 import { renderMirrorTemplate } from "../rendering/templateRenderer";
-import { Logger } from "../logger";
 
 const PANEL_WIDTH = 250;
 

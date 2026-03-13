@@ -1,78 +1,45 @@
 import { describe, it, expect } from 'vitest';
-import { parseFrontmatter, hashObject } from '../src/editor/mirrorUtils';
+import { extractRawYaml, hashObject } from '../src/editor/mirrorUtils';
 
 // =============================================================================
-// parseFrontmatter
+// extractRawYaml
 // =============================================================================
 
-describe('parseFrontmatter', () => {
-  it('parses normal key: value pairs', () => {
+describe('extractRawYaml', () => {
+  it('extracts raw YAML between delimiters', () => {
     const content = '---\ntitle: My Note\ntype: project\n---\nBody text';
-    const result = parseFrontmatter(content);
-    expect(result).toEqual({ title: 'My Note', type: 'project' });
+    expect(extractRawYaml(content)).toBe('title: My Note\ntype: project');
   });
 
-  it('removes quotes from values', () => {
-    const content = '---\ntitle: "Quoted Title"\nauthor: \'Single Quoted\'\n---';
-    const result = parseFrontmatter(content);
-    expect(result.title).toBe('Quoted Title');
-    expect(result.author).toBe('Single Quoted');
-  });
-
-  it('returns empty object for empty frontmatter', () => {
-    const content = '---\n---\nBody';
-    const result = parseFrontmatter(content);
-    expect(result).toEqual({});
-  });
-
-  it('returns empty object when no frontmatter present', () => {
+  it('returns empty string when no frontmatter', () => {
     const content = 'Just a regular note\nWith some text';
-    const result = parseFrontmatter(content);
-    expect(result).toEqual({});
+    expect(extractRawYaml(content)).toBe('');
   });
 
-  it('returns empty object for content without --- delimiters', () => {
+  it('returns empty string without --- delimiters', () => {
     const content = 'title: fake\ntype: not-frontmatter';
-    const result = parseFrontmatter(content);
-    expect(result).toEqual({});
+    expect(extractRawYaml(content)).toBe('');
   });
 
-  // BUG DOCUMENTADO: listas YAML sempre vao pra result.tags independente da key
-  it('puts all list items into result.tags regardless of key (known bug)', () => {
-    const content = '---\ncategories:\n- cat1\n- cat2\n---';
-    const result = parseFrontmatter(content);
-    // Comportamento atual (bug): lista vai pra tags, nao pra categories
-    expect(result.tags).toEqual(['cat1', 'cat2']);
-    expect(result.categories).toBeUndefined();
-    // TODO: comportamento esperado seria result.categories = ['cat1', 'cat2']
+  it('returns empty string for empty frontmatter block', () => {
+    const content = '---\n\n---\nBody';
+    // Regex matches the newline between delimiters
+    expect(extractRawYaml(content)).toBe('');
   });
 
-  it('returns boolean as string', () => {
-    const content = '---\ncompleted: true\narchived: false\n---';
-    const result = parseFrontmatter(content);
-    expect(result.completed).toBe('true');
-    expect(result.archived).toBe('false');
+  it('preserves exact content including whitespace and special chars', () => {
+    const content = '---\ntags:\n  - alpha\n  - beta\ncompleted: true\n---';
+    expect(extractRawYaml(content)).toBe('tags:\n  - alpha\n  - beta\ncompleted: true');
   });
 
-  it('returns number as string', () => {
-    const content = '---\npriority: 5\nweight: 0.8\n---';
-    const result = parseFrontmatter(content);
-    expect(result.priority).toBe('5');
-    expect(result.weight).toBe('0.8');
+  it('preserves colons in values', () => {
+    const content = '---\nurl: https://example.com\n---';
+    expect(extractRawYaml(content)).toBe('url: https://example.com');
   });
 
-  it('ignores lines without colon', () => {
-    const content = '---\ntitle: Valid\njust-a-line\n---';
-    const result = parseFrontmatter(content);
-    expect(result).toEqual({ title: 'Valid' });
-  });
-
-  it('handles key with empty value (no value after colon)', () => {
-    const content = '---\ntitle: \ntype: project\n---';
-    const result = parseFrontmatter(content);
-    // Empty value after colon — key is ignored because value.trim() is empty
-    expect(result.title).toBeUndefined();
-    expect(result.type).toBe('project');
+  it('handles multiline YAML values', () => {
+    const content = '---\ndescription: |\n  line one\n  line two\n---\nBody';
+    expect(extractRawYaml(content)).toBe('description: |\n  line one\n  line two');
   });
 });
 
@@ -106,5 +73,51 @@ describe('hashObject', () => {
     const a = { title: 'Test' };
     const b = { name: 'Test' };
     expect(hashObject(a)).not.toBe(hashObject(b));
+  });
+
+  it('produces consistent hash for strings', () => {
+    expect(hashObject('title: Test')).toBe(hashObject('title: Test'));
+  });
+
+  it('produces different hashes for different strings', () => {
+    expect(hashObject('title: A')).not.toBe(hashObject('title: B'));
+  });
+});
+
+// =============================================================================
+// Integration: hash detection + stale metadataCache scenario
+// =============================================================================
+
+describe('hash detection with stale cache', () => {
+  it('raw YAML hash detects change even when metadataCache has not updated yet', () => {
+    // Simula o cenario: user editou frontmatter no editor, mas metadataCache ainda tem valores antigos
+    const docV1 = '---\nstatus: draft\npriority: 3\n---\nBody';
+    const docV2 = '---\nstatus: done\npriority: 3\n---\nBody';
+
+    const hashV1 = hashObject(extractRawYaml(docV1));
+    const hashV2 = hashObject(extractRawYaml(docV2));
+
+    // Hash da string bruta detecta a mudanca imediatamente
+    expect(hashV1).not.toBe(hashV2);
+
+    // metadataCache ainda retorna frontmatter antigo (stale)
+    const staleFrontmatter = { status: 'draft', priority: 3 };
+
+    // O hash stale e consistente consigo mesmo (nao causa falso positivo)
+    const staleHash = hashObject(extractRawYaml(docV1));
+    expect(staleHash).toBe(hashV1);
+
+    // Quando metadataCache atualiza, frontmatter fresco esta disponivel
+    const freshFrontmatter = { status: 'done', priority: 3 };
+
+    // Os dois frontmatters sao diferentes (convergencia apos cache update)
+    expect(staleFrontmatter.status).not.toBe(freshFrontmatter.status);
+  });
+
+  it('identical YAML content produces same hash (no false positive)', () => {
+    const doc = '---\ntitle: Test\ntags:\n  - alpha\n---\nBody';
+
+    // Duas chamadas com mesmo conteudo = mesmo hash = nenhum reprocessamento
+    expect(hashObject(extractRawYaml(doc))).toBe(hashObject(extractRawYaml(doc)));
   });
 });

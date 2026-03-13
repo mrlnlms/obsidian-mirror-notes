@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { DEFAULT_SETTINGS, MirrorUIPluginSettings, CustomMirror } from '../../settings';
+import { DEFAULT_SETTINGS, CustomMirror } from '../../settings';
 import MirrorUIPlugin from '../../main';
 import { TFile } from 'obsidian';
 

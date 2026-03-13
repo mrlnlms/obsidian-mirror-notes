@@ -2,7 +2,49 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v40 — backlinks timing fix + children-based DOM detection
+## Versao Atual: v41 — metadataCache unificado + scoped cache + cleanup
+
+### O que mudou na v41
+
+**Contexto: unificacao de fonte de verdade + revisao de cache/invalidacao**
+
+Duas frentes: (1) migracao do CM6 path pra usar `metadataCache` como fonte unica de frontmatter, eliminando parser YAML manual com bugs conhecidos; (2) revisao de robustez de convergencia entre CM6 widgets, DOM injection e code block processor.
+
+**1. Scoped cache invalidation (`mirrorState.ts`):**
+
+`handleForcedUpdate()` chamava `clearRenderCache()` (sem argumento) e `MirrorTemplateWidget.domCache.clear()` — limpando caches de TODOS os editores quando qualquer um recebia forced update. Na pratica o impacto era baixo (hash check e barato, domCache e self-correcting), mas era over-invalidation desnecessaria.
+
+Fix: `clearRenderCache(oldCacheKey)` + `domCache.delete(oldCacheKey)` — so o widget atualizado perde cache. Outros editores mantem seus caches intactos.
+
+**2. Per-source timeout (`main.ts`):**
+
+`crossNoteTimeout` era unico. Se `metadataCache.on('changed')` disparava pra source A, e dentro de 500ms disparava pra source B, o `clearTimeout` cancelava o timeout de A — callbacks de A eram descartados.
+
+Fix: `crossNoteTimeouts = new Map<string, NodeJS.Timeout>()` — cada file.path tem seu proprio debounce.
+
+**3. Cleanup: `debugComputedStyles` removido (`templateRenderer.ts`):**
+
+Funcao de ~200 linhas marcada como "DEBUG temporario" — CSS diagnostic triplo (mirror vs Reading View vs Live Preview). Imports orfaos (`MarkdownView`, `getEditorView`) tambem removidos.
+
+**4. metadataCache como fonte unica de frontmatter (`mirrorUtils.ts`, `mirrorState.ts`):**
+
+`parseFrontmatter()` fazia parsing YAML manual (split por `\n`, busca `:`) com bugs: listas sempre iam pra `result.tags` independente da chave real, tipos achatados (boolean/number → string). Usado so no CM6 path — code blocks e DOM injection ja usavam `metadataCache`.
+
+Fix: `parseFrontmatter` removido, substituido por `extractRawYaml` (3 linhas — retorna string YAML bruta pra hashing). Valores de frontmatter agora vem de `metadataCache.getFileCache()` via helper `getMetadataCacheFrontmatter()`. Todos os 3 caminhos (CM6, code block, DOM) usam a mesma fonte.
+
+Trade-off: delay de ~200ms entre edicao e atualizacao de variaveis no template CM6 (metadataCache atualiza async). `forceMirrorUpdateEffect` via `metadataCache.on('changed')` garante convergencia.
+
+**5. Throttle de forced update 1000ms → 500ms (`timingConfig.ts`):**
+
+Checkbox boolean clicado rapidamente: segundo toggle caia dentro da janela de throttle e era ignorado. Mirror ficava no estado anterior. 500ms ainda protege contra rajadas de `metadataCache.on('changed')`.
+
+**6. Lint zerado — 5 unused imports removidos**
+
+**Findings NAO implementados (e por que):**
+- Callback snapshot antes do debounce (Finding 4): render em container desconectado e inofensivo.
+- Ordenacao invertida no settings handler (Finding 5): so acontece via edicao externa do `data.json` — cenario de dev.
+
+---
 
 ### O que mudou na v40
 

@@ -7,7 +7,8 @@ import { clearRenderCache } from "../rendering/templateRenderer";
 import { buildDecorations } from "./decorationBuilder";
 import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
-import { parseFrontmatter, hashObject, generateWidgetId } from "./mirrorUtils";
+import { extractRawYaml, hashObject, generateWidgetId } from "./mirrorUtils";
+import { TFile } from "obsidian";
 import { Logger } from '../logger';
 
 // =================================================================================
@@ -31,6 +32,13 @@ export const forceMirrorUpdateEffect = StateEffect.define<void>();
 // =================================================================================
 // STATE FIELD — HELPERS
 // =================================================================================
+/** Busca frontmatter do metadataCache do Obsidian (fonte unica de verdade) */
+function getMetadataCacheFrontmatter(plugin: MirrorUIPlugin, filePath: string): Record<string, any> {
+  const file = plugin.app.vault.getAbstractFileByPath(filePath);
+  if (!file || !(file instanceof TFile)) return {};
+  return plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
+}
+
 const fileDebounceMap = new Map<string, number>();
 const lastForcedUpdateMap = new Map<string, number>();
 
@@ -82,9 +90,10 @@ function handleForcedUpdate(
 
   if (!configChanged) {
     Logger.log('Forced update — config unchanged, rebuilding with fresh content');
-    // Limpar caches pra forcar re-render (ex: template content mudou)
-    clearRenderCache();
-    MirrorTemplateWidget.domCache.clear();
+    // Limpar caches deste widget pra forcar re-render (ex: template content mudou)
+    const oldCacheKey = `${value.widgetId}-${value.config?.position}`;
+    clearRenderCache(oldCacheKey);
+    MirrorTemplateWidget.domCache.delete(oldCacheKey);
     const newWidgetId = generateWidgetId();
     clearWidgetCaches(value.widgetId);
 
@@ -120,8 +129,9 @@ function handleForcedUpdate(
   };
 
   clearWidgetCaches(value.widgetId);
-  MirrorTemplateWidget.domCache.clear();
-  clearRenderCache();
+  const oldCacheKey = `${value.widgetId}-${value.config?.position}`;
+  MirrorTemplateWidget.domCache.delete(oldCacheKey);
+  clearRenderCache(oldCacheKey);
 
   return {
     mirrorState: newMirrorState,
@@ -191,8 +201,8 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const plugin = state.facet(mirrorPluginFacet)!;
     const filePath = state.facet(filePathFacet);
     const file = filePath ? plugin?.app.vault.getAbstractFileByPath(filePath) as any : null;
-    const frontmatter = parseFrontmatter(state.doc.toString());
-    const frontmatterHash = hashObject(frontmatter);
+    const frontmatterHash = hashObject(extractRawYaml(state.doc.toString()));
+    const frontmatter = filePath ? getMetadataCacheFrontmatter(plugin, filePath) : {};
     const config = getApplicableConfig(plugin, file, frontmatter);
 
     const mirrorState: MirrorState = {
@@ -253,13 +263,15 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
       }
     }
 
-    // Check if frontmatter actually changed
-    const newFrontmatter = parseFrontmatter(docText);
-    const newFrontmatterHash = hashObject(newFrontmatter);
+    // Check if frontmatter actually changed (hash da string YAML bruta)
+    const newFrontmatterHash = hashObject(extractRawYaml(docText));
 
     if (newFrontmatterHash === value.frontmatterHash && !forcedUpdate) {
       return { mirrorState: { ...value, lastDocText: docText }, decorations };
     }
+
+    // Valores do frontmatter via metadataCache (fonte unica de verdade)
+    const newFrontmatter = getMetadataCacheFrontmatter(plugin, filePath);
 
     fileDebounceMap.set(filePath, now);
 

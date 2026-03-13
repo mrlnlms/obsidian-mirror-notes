@@ -2,7 +2,40 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v40 — backlinks timing fix + children-based DOM detection
+## Versao Atual: v41 — metadataCache unificado + scoped cache + cleanup
+
+### v41: cache/invalidation protocol hardening
+
+**Fix: `clearRenderCache()` e `domCache.clear()` globais:**
+- Antes: forced update em qualquer editor limpava o hash cache e domCache de TODOS os editores
+- Agora: scoped — so limpa o cacheKey do widget sendo atualizado (`clearRenderCache(oldCacheKey)` + `domCache.delete(oldCacheKey)`)
+- Impacto pratico: elimina hash checks desnecessarios em editores que nao mudaram
+
+**Fix: `crossNoteTimeout` compartilhado entre sources:**
+- Antes: timeout unico — se source A e B mudavam dentro de 500ms, callbacks de A eram descartados
+- Agora: `crossNoteTimeouts` (Map por `file.path`) — cada source tem debounce independente
+- Cenario: plugins de automacao (Dataview, Templater batch) editando multiplos arquivos em sequencia
+
+**Cleanup: `debugComputedStyles` removido:**
+- Funcao de ~200 linhas marcada como "DEBUG temporario" (CSS diagnostic triplo mirror/RV/LP)
+- Imports nao utilizados removidos (`MarkdownView`, `getEditorView` do templateRenderer)
+
+**Fix: `parseFrontmatter` removido — metadataCache como fonte unica:**
+- Antes: parser YAML manual (split por `\n`, busca `:`) com bugs conhecidos (listas hardcoded em `tags`, tipos achatados pra string)
+- Agora: CM6 path usa `metadataCache.getFileCache()` pra valores de frontmatter (mesmo source que code blocks e DOM injection)
+- Hash de deteccao de mudanca usa string YAML bruta (`extractRawYaml`) — deteccao imediata sem parsing
+- `parseFrontmatter` substituido por `extractRawYaml` (~40 linhas → 3 linhas)
+- Bug corrigido: filterProps com arrays em chaves diferentes de `tags` (ex: `categories`) agora funciona corretamente
+
+**Fix: throttle de forced update 1000ms → 500ms:**
+- Clicar checkbox boolean rapidamente fazia o segundo toggle ser ignorado pelo throttle
+- Mirror ficava preso no estado anterior ate proximo evento
+- Reduzido em `timingConfig.ts`
+
+**Chore: 5 unused imports removidos (lint zerado):**
+- `CustomMirror` (settings.ts), `Logger` (marginPanelExtension.ts), `Component`/`MarkdownRenderChild` (domInjector.ts), `MirrorUIPluginSettings` (pluginFactory.ts)
+
+**Testes:** 138 passando (+7 novos: extractRawYaml, hash detection com stale cache, filterProps com tipos nativos do metadataCache)
 
 ### v40: backlinks visibility — DOM-truth via children.length
 

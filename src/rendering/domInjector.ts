@@ -1,4 +1,4 @@
-import { MarkdownView, Component, MarkdownRenderChild, App } from "obsidian";
+import { MarkdownView, App } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
 import { renderMirrorTemplate } from "./templateRenderer";
