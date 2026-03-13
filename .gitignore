@@ -29,8 +29,8 @@ demo/.obsidian/plugins/obsidian42-brat/
 # Internal docs (not versioned)
 docs/learnings.md
 docs/notes.md
-docs/dev-history.md
-docs/claudememoryfiles/
+docs/archive/
+docs/research/
 
 # Debug log
 debug.log
