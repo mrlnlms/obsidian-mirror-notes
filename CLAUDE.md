@@ -65,3 +65,12 @@ Cada doc tem um proposito unico. NAO duplicar informacao entre eles. Na duvida, 
 - `docs/notes.md` — notas pessoais do usuario (gitignored)
 - `docs/dev-history.md` — referencia interna (gitignored)
 - `docs/claudememoryfiles/` — arquivos movidos/arquivados (gitignored)
+
+## Skills Obsidian — Regras de atualizacao
+
+- Padrao novo descoberto → adicionar DIRETAMENTE ao skill relevante (cm6, core, settings, design, development)
+- NAO usar learnings.md como intermediario pra skills
+- learnings.md e responsabilidade do usuario (registro pessoal)
+- Cada pattern tem UMA casa (o skill mais relevante). Nunca duplicar entre skills
+- Anti-pattern descoberto → adicionar na secao "Common Pitfalls" do skill relevante
+- Revisao periodica: ao fechar uma era (grupo de versoes), verificar se skills tem conteudo obsoleto
