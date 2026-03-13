@@ -4,7 +4,7 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 
 ## Versao Atual: v41 — metadataCache unificado + scoped cache + cleanup
 
-### v41: cache/invalidation protocol hardening
+### v41: cache/invalidation protocol hardening + code block self-dependency
 
 **Fix: `clearRenderCache()` e `domCache.clear()` globais:**
 - Antes: forced update em qualquer editor limpava o hash cache e domCache de TODOS os editores
@@ -26,6 +26,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Hash de deteccao de mudanca usa string YAML bruta (`extractRawYaml`) — deteccao imediata sem parsing
 - `parseFrontmatter` substituido por `extractRawYaml` (~40 linhas → 3 linhas)
 - Bug corrigido: filterProps com arrays em chaves diferentes de `tags` (ex: `categories`) agora funciona corretamente
+
+**Fix: code blocks sem `source:` agora re-renderizam com frontmatter da propria nota:**
+- Antes: code blocks sem `source:` nao se registravam no `SourceDependencyRegistry` — frontmatter local mudava mas ninguem invocava `doRender()`
+- Agora: code blocks sem `source:` registram self-dependency (`ctx.sourcePath` como source) — `metadataCache.on('changed')` encontra os callbacks e re-renderiza
+- Hash cache do `templateRenderer` previne re-render desnecessario se conteudo nao mudou
 
 **Fix: throttle de forced update 1000ms → 500ms:**
 - Clicar checkbox boolean rapidamente fazia o segundo toggle ser ignorado pelo throttle

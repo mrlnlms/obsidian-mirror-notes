@@ -2,13 +2,13 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v41 — metadataCache unificado + scoped cache + cleanup
+## Versao Atual: v41 — metadataCache unificado + scoped cache + code block self-dependency
 
 ### O que mudou na v41
 
-**Contexto: unificacao de fonte de verdade + revisao de cache/invalidacao**
+**Contexto: unificacao de fonte de verdade + revisao de cache/invalidacao + reatividade code blocks**
 
-Duas frentes: (1) migracao do CM6 path pra usar `metadataCache` como fonte unica de frontmatter, eliminando parser YAML manual com bugs conhecidos; (2) revisao de robustez de convergencia entre CM6 widgets, DOM injection e code block processor.
+Tres frentes: (1) migracao do CM6 path pra usar `metadataCache` como fonte unica de frontmatter, eliminando parser YAML manual com bugs conhecidos; (2) revisao de robustez de convergencia entre CM6 widgets, DOM injection e code block processor; (3) code blocks sem `source:` agora reagem a mudancas no frontmatter da propria nota.
 
 **1. Scoped cache invalidation (`mirrorState.ts`):**
 
@@ -34,7 +34,15 @@ Fix: `parseFrontmatter` removido, substituido por `extractRawYaml` (3 linhas —
 
 Trade-off: delay de ~200ms entre edicao e atualizacao de variaveis no template CM6 (metadataCache atualiza async). `forceMirrorUpdateEffect` via `metadataCache.on('changed')` garante convergencia.
 
-**5. Throttle de forced update 1000ms → 500ms (`timingConfig.ts`):**
+**5. Code block self-dependency (`codeBlockProcessor.ts`):**
+
+Code blocks sem `source:` nao se registravam no `SourceDependencyRegistry`. Quando o frontmatter da propria nota mudava, `metadataCache.on('changed')` disparava `forceMirrorUpdateEffect` (CM6 widgets) e `sourceDeps.getDependentCallbacks()` (code blocks com source externo), mas code blocks sem source ficavam de fora.
+
+Fix: code blocks sem `source:` agora chamam `plugin.sourceDeps.register(ctx.sourcePath, ctx.sourcePath, blockKey, doRender)` — registram a propria nota como source. Branch 2 do `metadataCache.on('changed')` em `main.ts` encontra os callbacks naturalmente. Cleanup via `child.register()` garante unregister quando bloco e destruido.
+
+Decisao: so registrar quando `!config.sourcePath`. Com source externo, o bloco ja esta registrado pro source — registrar self-dependency causaria double-render sem beneficio (frontmatter local tem prioridade menor no merge).
+
+**6. Throttle de forced update 1000ms → 500ms (`timingConfig.ts`):**
 
 Checkbox boolean clicado rapidamente: segundo toggle caia dentro da janela de throttle e era ignorado. Mirror ficava no estado anterior. 500ms ainda protege contra rajadas de `metadataCache.on('changed')`.
 
