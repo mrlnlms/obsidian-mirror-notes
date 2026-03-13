@@ -42,7 +42,10 @@ function createViewContent(options: {
   if (options.backlinks) {
     const el = document.createElement('div');
     el.className = 'embedded-backlinks';
-    el.textContent = 'backlinks';
+    // Add a child element to simulate actual backlinks content (e.g. .backlink-pane)
+    const pane = document.createElement('div');
+    pane.className = 'backlink-pane';
+    el.appendChild(pane);
     div.appendChild(el);
   }
   if (options.sizer) {
@@ -98,10 +101,11 @@ describe('isDomTargetVisible', () => {
     expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(false);
   });
 
-  it('backlinks hidden when core plugin ON but backlinkInDocument OFF', () => {
+  it('backlinks visible when core plugin ON regardless of backlinkInDocument', () => {
+    // isDomTargetVisible only checks plugin ON/OFF — actual content is checked in resolveTarget
     const bl = { backlink: { enabled: true, instance: { options: { backlinkInDocument: false } } } };
-    expect(isDomTargetVisible(fakeApp({}, bl), 'above-backlinks')).toBe(false);
-    expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(false);
+    expect(isDomTargetVisible(fakeApp({}, bl), 'above-backlinks')).toBe(true);
+    expect(isDomTargetVisible(fakeApp({}, bl), 'below-backlinks')).toBe(true);
   });
 
   it('backlinks hidden when internalPlugins not available', () => {
@@ -196,6 +200,43 @@ describe('resolveTarget', () => {
   it('CM6 position (top) → null (not a DOM position)', () => {
     const vc = createViewContent({ title: true, properties: true });
     expect(resolveTarget(vc, 'top')).toBeNull();
+  });
+
+  it('above-backlinks returns null when plugin OFF', () => {
+    const vc = createViewContent({ backlinks: true });
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: false, instance: null } } },
+    } as any;
+    expect(resolveTarget(vc, 'above-backlinks', app)).toBeNull();
+  });
+
+  it('above-backlinks returns null when element exists but has no children (empty shell)', () => {
+    // Simulates backlinkInDocument just toggled ON but DOM not updated yet
+    const vc = document.createElement('div');
+    vc.className = 'view-content';
+    const emptyBacklinks = document.createElement('div');
+    emptyBacklinks.className = 'embedded-backlinks';
+    // No child elements — empty shell
+    vc.appendChild(emptyBacklinks);
+
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: true, instance: { options: { backlinkInDocument: true } } } } },
+    } as any;
+    expect(resolveTarget(vc, 'above-backlinks', app)).toBeNull();
+  });
+
+  it('above-backlinks DOM injects when element has children (real content)', () => {
+    const vc = createViewContent({ backlinks: true }); // has .backlink-pane child
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: true, instance: { options: { backlinkInDocument: false } } } } },
+    } as any;
+    // Even though API says OFF, element has children → DOM inject (not reactive yet)
+    const result = resolveTarget(vc, 'above-backlinks', app);
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('before');
   });
 });
 

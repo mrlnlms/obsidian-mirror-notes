@@ -53,11 +53,17 @@ Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no 
 - [x] `.github/workflows/ci.yml` — build + lint + test em push/PR
 - [x] Skill `obsidian-plugin-scaffold` atualizada com secao CI/CD
 
-## Proximo: v40 — Position engine refinement
+## Concluido: v40 — Backlinks timing fix + children-based DOM detection
+
+- [x] `isDomTargetVisible` pra backlinks — so checa `bl.enabled`, nao `backlinkInDocument` (nao reativo)
+- [x] `resolveTarget` — `children.length > 0` pra detectar conteudo real do `.embedded-backlinks`
+- [x] below-backlinks `.cm-sizer` fallback — gated por `!backlinks` (so quando elemento nao existe)
+- [x] vault.on('raw') — removido `backlink.json`, so `core-plugins.json` trigga refresh
+- [x] 132 testes (+6 novos: backlinks visibility, empty shell, real content)
+
+## Proximo: v41 — Position engine refinement
 
 - [ ] **below-properties → CM6 top** — preferir CM6 sobre DOM (resultado visual identico, melhor reatividade). ~5 linhas em `main.ts` + label em `settings.ts`. Plano: [plan-below-properties-cm6.md](plan-below-properties-cm6.md)
-- [ ] **Bottom/backlinks visibility** — aplicar pattern `isDomTargetVisible` pra above-backlinks e below-backlinks (backlinks podem estar ocultos)
-- [ ] **Remaining position options** — alinhar todas as posicoes DOM com checagem de visibilidade consistente
 
 ## Pre-lancamento (must-have)
 

@@ -31,10 +31,12 @@ export function isDomTargetVisible(app: App, position: MirrorPosition): boolean 
       return app.vault.getConfig("propertiesInDocument") !== "hidden";
     case 'above-backlinks':
     case 'below-backlinks': {
+      // Only check plugin ON/OFF. backlinkInDocument is NOT reactive for open tabs
+      // (config changes immediately but DOM only updates on tab close+reopen).
+      // Actual content presence is checked in resolveTarget via children.length.
       // @ts-ignore — internalPlugins not in official typings
       const bl = (app as any).internalPlugins?.plugins?.['backlink'];
-      if (!bl?.enabled) return false;
-      return !!bl.instance?.options?.backlinkInDocument;
+      return !!bl?.enabled;
     }
     default:
       return true;
@@ -68,15 +70,21 @@ export function resolveTarget(
     }
     case 'above-backlinks': {
       const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
-      if (backlinks) return { target: backlinks, method: 'before' };
+      // Check for actual content children (e.g. .nav-header, .backlink-pane).
+      // backlinkInDocument is NOT reactive — element may be empty shell (just toggled ON,
+      // tab not reopened) or still populated (just toggled OFF, tab not closed).
+      if (backlinks && backlinks.children.length > 0) return { target: backlinks, method: 'before' };
       return null;
     }
     case 'below-backlinks': {
       const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
-      if (backlinks) return { target: backlinks, method: 'after' };
-      // Try .cm-sizer as last resort for appending at the very bottom
-      const sizer = viewContent.querySelector(SELECTOR_CM_SIZER) as HTMLElement;
-      if (sizer) return { target: sizer, method: 'appendChild' };
+      if (backlinks && backlinks.children.length > 0) return { target: backlinks, method: 'after' };
+      // If element exists but empty (backlinkInDocument not yet rendered), fall back to CM6.
+      // Only use .cm-sizer when element doesn't exist at all (plugin OFF, already gated by isDomTargetVisible).
+      if (!backlinks) {
+        const sizer = viewContent.querySelector(SELECTOR_CM_SIZER) as HTMLElement;
+        if (sizer) return { target: sizer, method: 'appendChild' };
+      }
       return null;
     }
     default:

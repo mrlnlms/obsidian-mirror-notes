@@ -2,7 +2,31 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v39 — isDomTargetVisible + smart fallback chain + reactive config
+## Versao Atual: v40 — backlinks timing fix + children-based DOM detection
+
+### v40: backlinks visibility — DOM-truth via children.length
+
+**Fix: backlinkInDocument nao e reativo pra abas abertas:**
+- `backlinkInDocument` muda config imediatamente, mas o DOM so atualiza no close+reopen da aba
+- Antes: `isDomTargetVisible` lia `backlinkInDocument` da API → dessincronizado com DOM real
+- Agora: `isDomTargetVisible` so checa `bl.enabled` (plugin ON/OFF, que E reativo)
+- `resolveTarget` checa `children.length > 0` no `.embedded-backlinks` pra detectar conteudo real
+- `.embedded-backlinks` vazio (0 children) = shell sem conteudo → CM6 fallback
+- `.embedded-backlinks` com filhos (`.nav-header`, `.backlink-pane`) = conteudo real → DOM inject
+
+**Fix: below-backlinks .cm-sizer fallback incorreto:**
+- `.cm-sizer` fallback so ativa quando `.embedded-backlinks` NAO existe (plugin OFF)
+- Antes: elemento vazio (exists + 0 children) caia no `.cm-sizer` e fazia DOM inject errado
+- Agora: elemento vazio → null → CM6 bottom fallback
+
+**Fix: vault.on('raw') nao reage a backlink.json:**
+- `backlink.json` (backlinkInDocument toggle) NAO trigga `refreshAllEditors`
+- So `core-plugins.json` (plugin ON/OFF) trigga refresh — o unico que e reativo no DOM
+- `lastObsidianConfig` simplificado: so `backlinkEnabled`, sem `backlinkInDocument`
+
+**Testes:**
+- 132 testes passando (+6)
+- Novos: `isDomTargetVisible` backlinks (plugin ON regardless of backlinkInDocument), `resolveTarget` empty shell vs real content
 
 ### v39: isDomTargetVisible + smart fallback chain + reactive config detection
 

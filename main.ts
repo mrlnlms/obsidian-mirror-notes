@@ -28,7 +28,7 @@ export default class MirrorUIPlugin extends Plugin {
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   private knownTemplatePaths = new Set<string>();
   /** Cached Obsidian config values — only refresh editors when these actually change */
-  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false, backlinkInDocument: false };
+  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false };
 
   async onload() {
     await this.loadSettings();
@@ -82,7 +82,6 @@ export default class MirrorUIPlugin extends Plugin {
     // @ts-ignore — internalPlugins not in official typings
     const blInit = (this.app as any).internalPlugins?.plugins?.['backlink'];
     this.lastObsidianConfig.backlinkEnabled = !!blInit?.enabled;
-    this.lastObsidianConfig.backlinkInDocument = !!blInit?.instance?.options?.backlinkInDocument;
     this.registerEvent(
       // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
       this.app.vault.on('raw', (path: string) => {
@@ -98,16 +97,15 @@ export default class MirrorUIPlugin extends Plugin {
           Logger.log(`[config-change] showInlineTitle=${showTitle}, propertiesInDocument=${propsMode}`);
           this.refreshAllEditors();
         }
-        if (path === '.obsidian/core-plugins.json' || path === '.obsidian/backlink.json') {
+        if (path === '.obsidian/core-plugins.json') {
+          // Only react to plugin ON/OFF — backlinkInDocument is NOT reactive for open tabs
+          // (Obsidian only updates the DOM on tab close+reopen for that setting)
           // @ts-ignore — internalPlugins not in official typings
           const bl = (this.app as any).internalPlugins?.plugins?.['backlink'];
           const enabled = !!bl?.enabled;
-          const inDocument = !!bl?.instance?.options?.backlinkInDocument;
-          if (enabled === this.lastObsidianConfig.backlinkEnabled &&
-              inDocument === this.lastObsidianConfig.backlinkInDocument) return;
+          if (enabled === this.lastObsidianConfig.backlinkEnabled) return;
           this.lastObsidianConfig.backlinkEnabled = enabled;
-          this.lastObsidianConfig.backlinkInDocument = inDocument;
-          Logger.log(`[config-change] backlink=${enabled}, backlinkInDocument=${inDocument}`);
+          Logger.log(`[config-change] backlink=${enabled}`);
           this.refreshAllEditors();
         }
       })

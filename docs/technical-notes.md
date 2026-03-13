@@ -2,7 +2,42 @@
 
 Documento tecnico atualizado a cada versao. Estado atual do codigo, arquitetura, bugs, e o que mudou.
 
-## Versao Atual: v39 — isDomTargetVisible + smart fallback chain + reactive config
+## Versao Atual: v40 — backlinks timing fix + children-based DOM detection
+
+### O que mudou na v40
+
+**Problema: `backlinkInDocument` NAO e reativo pra abas abertas:**
+
+O toggle `backlinkInDocument` no Obsidian muda a config em disco (`.obsidian/backlink.json`) imediatamente, mas o DOM so atualiza quando a aba e fechada e reaberta. Isso cria dessincronizacao:
+- Toggle ON → config diz true, mas `.embedded-backlinks` ta vazio (sem `.backlink-pane`)
+- Toggle OFF → config diz false, mas `.embedded-backlinks` ainda tem conteudo visivel
+- Plugin ON/OFF (`core-plugins.json`) E reativo — Obsidian adiciona/remove elementos imediatamente
+
+**Anatomia do `.embedded-backlinks`:**
+- Quando plugin ON + backlinkInDocument ON + aba reaberta: `children = [DIV.nav-header, DIV.backlink-pane]`
+- Quando plugin ON + backlinkInDocument OFF + aba reaberta: `children = []` (elemento existe mas vazio)
+- Quando plugin ON + backlinkInDocument acabou de mudar: DOM nao muda ate close+reopen
+- Quando plugin OFF: `.embedded-backlinks` nao existe no DOM
+
+**Solucao: two-layer check (API gate + DOM truth):**
+
+1. `isDomTargetVisible` (gate): so checa `bl.enabled` (plugin ON/OFF). NAO checa `backlinkInDocument` — config e DOM estao dessincronizados
+2. `resolveTarget` (switch case): `backlinks.children.length > 0` — verdade do DOM. Se tem filhos, conteudo existe. Se vazio, shell sem conteudo
+
+**Fix do fallback `.cm-sizer` em below-backlinks:**
+- Antes: `.embedded-backlinks` vazio → `children.length > 0` falha → cai no `.cm-sizer` → DOM inject no lugar errado
+- Agora: `.cm-sizer` so e usado quando `.embedded-backlinks` nao existe (`!backlinks`), nao quando existe mas ta vazio
+
+**vault.on('raw') — so core-plugins.json:**
+- `backlink.json` muda quando `backlinkInDocument` e toggled, mas reagir a isso e inutil (DOM nao muda)
+- So `core-plugins.json` trigga `refreshAllEditors` (plugin ON/OFF e reativo)
+
+**Testes (132 total, +6):**
+- `isDomTargetVisible`: backlinks visible when plugin ON regardless of backlinkInDocument
+- `resolveTarget`: empty shell (0 children) → null, real content (children > 0) → DOM inject
+- `resolveTarget`: plugin OFF → null (via isDomTargetVisible gate)
+
+---
 
 ### O que mudou na v39
 
