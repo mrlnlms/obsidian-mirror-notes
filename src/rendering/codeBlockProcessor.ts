@@ -61,6 +61,14 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       });
     }
 
+    // Self-dependency (re-render quando frontmatter da propria nota muda)
+    if (!config.sourcePath) {
+      plugin.sourceDeps.register(ctx.sourcePath, ctx.sourcePath, blockKey, doRender);
+      child.register(() => {
+        plugin.sourceDeps.unregisterBlock(blockKey);
+      });
+    }
+
     await doRender();
   });
 }
