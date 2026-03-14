@@ -66,11 +66,21 @@ Cada doc tem um proposito unico. NAO duplicar informacao entre eles. Na duvida, 
 - `docs/dev-history.md` — referencia interna (gitignored)
 - `docs/claudememoryfiles/` — arquivos movidos/arquivados (gitignored)
 
-## Skills Obsidian — Regras de atualizacao
+## Skills Obsidian
+
+### Consulta (entrada — antes de implementar)
+
+- Antes de mexer em CM6 (StateField, decorations, widgets, DOM do editor) → consultar `obsidian-cm6`
+- Antes de mexer em CSS do editor ou layout → consultar `obsidian-design` (anti-patterns de CSS)
+- Antes de mexer em events, lifecycle, vault, metadataCache → consultar `obsidian-core`
+- Antes de mexer em settings UI → consultar `obsidian-settings`
+- Objetivo: evitar erros ja documentados em sessoes anteriores (ex: max-width em cm-contentContainer quebra CM6)
+
+### Atualizacao (saida — depois de implementar)
 
 - Padrao novo descoberto → adicionar DIRETAMENTE ao skill relevante (cm6, core, settings, design, development)
+- Anti-pattern descoberto → adicionar na secao "Common Pitfalls" do skill relevante
 - NAO usar learnings.md como intermediario pra skills
 - learnings.md e responsabilidade do usuario (registro pessoal)
 - Cada pattern tem UMA casa (o skill mais relevante). Nunca duplicar entre skills
-- Anti-pattern descoberto → adicionar na secao "Common Pitfalls" do skill relevante
 - Revisao periodica: ao fechar uma era (grupo de versoes), verificar se skills tem conteudo obsoleto
