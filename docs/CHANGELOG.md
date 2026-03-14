@@ -2,7 +2,22 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v41 — metadataCache unificado + scoped cache + cleanup
+## Versao Atual: v42 — per-view Obsidian setting overrides
+
+### v42: ViewOverrides — hideProps, readableLineLength, showInlineTitle
+
+- Per-view overrides de settings do Obsidian via CSS classes e class nativa `is-readable-line-width`
+- `ViewOverrides` type: `hideProps` (boolean), `readableLineLength` (true/false/null), `showInlineTitle` (true/false/null)
+- Settings UI: secao "View overrides" em global e custom mirrors (toggle + 2 dropdowns inherit/on/off)
+- `updateHidePropsForView()` → `applyViewOverrides()` — generalizado pra 3 overrides
+- readableLineLength via toggle da class nativa `is-readable-line-width` (nao CSS hack)
+- showInlineTitle via CSS `display:none` / `display:block` per-view
+- Multi-pane: cada aba independente (CSS scoped por `.view-content`)
+- Restore automatico: `inherit` restaura setting global do Obsidian ao navegar entre notas
+- Cleanup no `onunload()`: remove classes + restaura `is-readable-line-width` pro valor global
+- Bug backlog "hideProperties CSS fix" fechado como falso positivo — seletor funciona, `.metadata-container` continua descendente de `.view-content`
+- Backward compat: `resolveViewOverrides()` migra campo legacy `hide_props` automaticamente
+- 143 testes (12 pra applyViewOverrides cobrindo todos overrides + edge cases)
 
 ### v41: cache/invalidation protocol hardening + code block self-dependency
 

@@ -2,7 +2,41 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v41 — metadataCache unificado + scoped cache + code block self-dependency
+## Versao Atual: v42 — per-view Obsidian setting overrides
+
+### O que mudou na v42
+
+**Contexto: permitir que cada mirror sobrescreva settings globais do Obsidian per-view**
+
+O backlog listava um bug em `hideProperties` — o seletor CSS supostamente nao funcionava no Obsidian atual. Diagnostico DOM via Logger revelou que era falso positivo: `.metadata-container` continua descendente de `.view-content` (pai mudou de `.cm-editor` pra `.cm-sizer`, mas descendant selector cobre). O verdadeiro problema nos testes iniciais era matching errado (`filterFiles` com path completo vs `file.name`).
+
+Com hideProps confirmado funcional, generalizamos o padrao pra 3 overrides:
+
+**1. ViewOverrides type (`types.ts`):**
+
+Interface `ViewOverrides` com `hideProps` (boolean), `readableLineLength` (true/false/null), `showInlineTitle` (true/false/null). `null` = inherit do Obsidian. Adicionado a `MirrorUIPluginSettings` (global) e `CustomMirror` (per-mirror). `resolveViewOverrides()` migra campo legacy `hide_props` automaticamente.
+
+**2. readableLineLength — class nativa, nao CSS hack:**
+
+Primeira tentativa: CSS `max-width` no `.cm-contentContainer`. Quebrava o layout do CM6 (conteudo colapsava em coluna de 1 caractere). Segunda tentativa: `var(--file-line-width)` com fallback. Faltava centralizar. Terceira (final): toggle da class nativa `is-readable-line-width` que o Obsidian ja usa no `.markdown-source-view`. Zero CSS, usa as regras nativas do Obsidian.
+
+Problema descoberto durante testes: ao navegar de uma nota com `readableLine=false` pra outra com `readableLine=null` (inherit), a class `is-readable-line-width` nao era restaurada — o estado da nota anterior contaminava a proxima. Fix: no caso `inherit`, consultar `app.vault.getConfig("readableLineLength")` e restaurar a class pro valor global.
+
+**3. showInlineTitle — CSS per-view:**
+
+CSS `display: none !important` na `.inline-title` quando `showInlineTitle=false`. CSS `display: block !important` quando `showInlineTitle=true`. Ambos scoped por `.view-content` — multi-pane funciona.
+
+**4. Settings UI (`settings.ts`):**
+
+Secao "View overrides" com heading separado. Toggle pra hideProps, dropdowns pra readableLineLength e showInlineTitle (Inherit/Force ON/Force OFF). Replicado em global mirror e cada custom mirror.
+
+**5. applyViewOverrides (`main.ts`):**
+
+Rename de `updateHidePropsForView()`. Aplica todos os overrides em sequencia. Chamado nos mesmos 5 pontos (metadataCache.changed, refreshAllEditors, setupEditor, etc). Onunload limpa classes CSS + restaura `is-readable-line-width` via `getConfig`.
+
+**Arquivos tocados:** `types.ts`, `mirrorTypes.ts`, `mirrorConfig.ts`, `mirrorState.ts`, `main.ts`, `settings.ts`, `styles.css`, `updateHideProps.test.ts`, `backlog.md`
+
+### v41 — metadataCache unificado + scoped cache + code block self-dependency
 
 ### O que mudou na v41
 

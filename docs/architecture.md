@@ -3,12 +3,12 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v41)
+## File Map (v42)
 
 ```
-main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, hideProps)
+main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, viewOverrides)
 settings.ts                                — MirrorUISettingsTab (UI, delega pra builders)
-src/settings/types.ts                      — Interfaces, defaults, CustomMirror, createDefaultCustomMirror()
+src/settings/types.ts                      — Interfaces, defaults, CustomMirror, ViewOverrides, createDefaultCustomMirror()
 src/settings/filterBuilder.ts              — buildFilterSection() — builder reutilizavel (files/folders/props)
 src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
 src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
@@ -30,7 +30,7 @@ src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlu
 src/utils/obsidianInternals.ts             — Wrappers tipados pra APIs internas do Obsidian
 src/utils/settingsPaths.ts                 — updateSettingsPaths() — auto-update paths on rename
 src/logger.ts                              — Logger com toggle via settings
-styles.css                                 — Plugin styles + hideProps + code block CSS
+styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
 ```
 
 ## Dois modos de operacao
@@ -43,7 +43,7 @@ O plugin renderiza templates de duas formas independentes:
 2. `mirrorState.ts` — StateField usa `extractRawYaml` (hash detection) e `getApplicableConfig` (mirrorConfig)
 3. `decorationBuilder.ts` — `buildDecorations()` cria `MirrorTemplateWidget` com `Decoration.widget`
 4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
-5. `main.ts` — `updateHidePropsForView()` adiciona/remove classe CSS pra esconder frontmatter
+5. `main.ts` — `applyViewOverrides()` aplica overrides per-view (hideProps, readableLineLength, showInlineTitle)
 
 ### Code block (Reading View + Live Preview, inline)
 
@@ -122,7 +122,7 @@ A implementacao DOM para `below-properties` permanece no codigo como fallback en
 - `editor-change` — registra StateField se nao existe (early return se ja registrado, zero custo)
 - `file-open` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
 - `active-leaf-change` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
-- `metadataCache.changed` — branch 1: DOM injection + hideProps + force CM6 update. Branch 2: cross-note source deps. Branch 3: template deps
+- `metadataCache.changed` — branch 1: DOM injection + viewOverrides + force CM6 update. Branch 2: cross-note source deps. Branch 3: template deps
 - `vault.modify` — em `data.json`: re-update settings. Em outros: template deps
 - `vault.on('raw')` — detecta mudancas em `.obsidian/app.json` e `core-plugins.json` → `refreshAllEditors()`
 
@@ -152,6 +152,22 @@ Todos os 3 caminhos (CM6, code block, DOM) usam `metadataCache.getFileCache()` c
 - **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path + frontmatterHash`. Evita iterar mirrors a cada keystroke
 - **Scoped invalidation** (v41): `clearRenderCache(cacheKey)` + `domCache.delete(cacheKey)` — so o widget atualizado perde cache
 - **Per-source timeout** (v41): `crossNoteTimeouts = Map<string, Timeout>` — cada source tem debounce independente
+
+## View Overrides (v42)
+
+Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescrever:
+
+| Override | Tipo | Efeito | Implementacao |
+|---|---|---|---|
+| hideProps | boolean | Esconde `.metadata-container` | CSS `display:none` scoped por `.view-content` |
+| readableLineLength | true/false/null | Forca readable on/off ou inherit | Toggle class nativa `is-readable-line-width` no `.markdown-source-view` |
+| showInlineTitle | true/false/null | Forca inline title on/off ou inherit | CSS `display:none`/`display:block` na `.inline-title` |
+
+- `null` = inherit: restaura setting global do Obsidian via `app.vault.getConfig()`
+- Multi-pane: cada view aplica overrides independentes (CSS scoped, class toggle por elemento)
+- `applyViewOverrides()` chamado em 5 hooks (metadataCache.changed, refreshAllEditors, setupEditor, file-open, active-leaf-change)
+- Onunload: remove classes CSS + restaura `is-readable-line-width` pro valor global
+- Config: `ViewOverrides` em `types.ts`, resolvido por `resolveViewOverrides()` em `mirrorConfig.ts`
 
 ## Notas tecnicas
 
