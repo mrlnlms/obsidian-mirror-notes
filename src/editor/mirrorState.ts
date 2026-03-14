@@ -86,7 +86,9 @@ function handleForcedUpdate(
     freshConfig?.position !== value.config?.position ||
     freshConfig?.templatePath !== value.config?.templatePath ||
     freshConfig?.hideProps !== value.config?.hideProps ||
-    freshConfig?.showContainer !== value.config?.showContainer;
+    freshConfig?.showContainer !== value.config?.showContainer ||
+    freshConfig?.viewOverrides?.readableLineLength !== value.config?.viewOverrides?.readableLineLength ||
+    freshConfig?.viewOverrides?.showInlineTitle !== value.config?.viewOverrides?.showInlineTitle;
 
   if (!configChanged) {
     Logger.log('Forced update — config unchanged, rebuilding with fresh content');
@@ -156,12 +158,15 @@ function handleConfigChange(
   const templateChanged = value.config?.templatePath !== config?.templatePath;
   const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
   const containerChanged = value.config?.showContainer !== config?.showContainer;
+  const overridesChanged =
+    value.config?.viewOverrides?.readableLineLength !== config?.viewOverrides?.readableLineLength ||
+    value.config?.viewOverrides?.showInlineTitle !== config?.viewOverrides?.showInlineTitle;
 
-  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged && !containerChanged) {
+  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged && !containerChanged && !overridesChanged) {
     return null; // No config change
   }
 
-  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}, container:${containerChanged}`);
+  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}, container:${containerChanged}, overrides:${overridesChanged}`);
 
   if (enabledChanged || positionChanged || templateChanged) {
     clearWidgetCaches(value.widgetId);

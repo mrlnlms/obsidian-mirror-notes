@@ -4,7 +4,7 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 
 ## Bugs
 
-- **hideProperties CSS fix** — seletor `.view-content.mirror-hide-properties .metadata-container` nao funciona no Obsidian atual. Investigar se seletor precisa mudar ou se API do Obsidian oferece alternativa. Baixa prioridade — fallbacks de posicao funcionam independentemente
+(nenhum bug aberto)
 
 ## Features
 
@@ -99,3 +99,4 @@ Trabalho tecnico a ser feito. Consolidado na v41 (inclui itens migrados da check
 - [x] Fallback DOM → CM6 salto visual — resolvido em duas frentes: posicionamento correto via isDomTargetVisible + fallback chain (v39), CSS parity com Reading View nativo (v37/v38)
 - [x] Tag matching — ja funciona via `filterProps` existente. `mirrorConfig.ts` faz `Array.isArray(val) ? val.some(...)` pra arrays como `tags`. Teste cobrindo (v32/v41)
 - [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
+- [x] hideProperties CSS — seletor funciona no Obsidian atual. Bug era falso positivo — `.metadata-container` continua descendente de `.view-content` (parent mudou pra `.cm-sizer` mas CSS descendant selector cobre). Diagnosticado v41

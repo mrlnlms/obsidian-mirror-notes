@@ -145,7 +145,7 @@ export default class MirrorUIPlugin extends Plugin {
           metadataUpdateTimeout = setTimeout(() => {
             // DOM injection + hideProps: sempre seguro (nao toca no CM6)
             this.setupDomPosition(activeView);
-            this.updateHidePropsForView(activeView);
+            this.applyViewOverrides(activeView);
 
             // CM6 forced update: sempre dispatchar (Properties UI edita YAML sem gerar
             // CM6 transactions, entao o StateField nao auto-detecta. O proprio StateField
@@ -199,7 +199,7 @@ export default class MirrorUIPlugin extends Plugin {
                   cm.dispatch({
                     effects: forceMirrorUpdateEffect.of()
                   });
-                  this.updateHidePropsForView(leaf.view as MarkdownView);
+                  this.applyViewOverrides(leaf.view as MarkdownView);
                   this.setupDomPosition(leaf.view as MarkdownView);
                 }
               }
@@ -273,7 +273,7 @@ export default class MirrorUIPlugin extends Plugin {
       const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-        this.updateHidePropsForView(view);
+        this.applyViewOverrides(view);
       }
     }
   }
@@ -355,7 +355,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
-  updateHidePropsForView(view: MarkdownView) {
+  applyViewOverrides(view: MarkdownView) {
     if (!view || !view.file) return;
 
     const cm = getEditorView(view);
@@ -365,16 +365,36 @@ export default class MirrorUIPlugin extends Plugin {
     if (!fieldState) return;
 
     const { mirrorState } = fieldState;
-    const shouldHide = mirrorState.enabled && mirrorState.config?.hideProps;
+    const overrides = mirrorState.enabled ? mirrorState.config?.viewOverrides : null;
 
     const viewContent = view.containerEl.querySelector('.view-content');
     if (!viewContent) return;
 
-    if (shouldHide) {
-      Logger.log(`Hiding properties for: ${view.file.path}`);
-      viewContent.classList.add('mirror-hide-properties');
-    } else {
-      viewContent.classList.remove('mirror-hide-properties');
+    // hideProps: boolean (true = hide, false = inherit)
+    const shouldHideProps = overrides?.hideProps ?? false;
+    viewContent.classList.toggle('mirror-hide-properties', shouldHideProps);
+
+    // readableLineLength: manipulate Obsidian's own is-readable-line-width class on the editor
+    const rlOverride = overrides?.readableLineLength ?? null;
+    const editorEl = viewContent.querySelector('.markdown-source-view');
+    if (editorEl) {
+      if (rlOverride !== null) {
+        editorEl.classList.toggle('is-readable-line-width', rlOverride);
+      } else {
+        // inherit: restore Obsidian's global setting
+        // @ts-ignore — getConfig not in official typings
+        const globalReadable = !!this.app.vault.getConfig("readableLineLength");
+        editorEl.classList.toggle('is-readable-line-width', globalReadable);
+      }
+    }
+
+    // showInlineTitle: true = force show, false = force hide, null = inherit
+    const titleOverride = overrides?.showInlineTitle ?? null;
+    viewContent.classList.toggle('mirror-force-inline-title', titleOverride === true);
+    viewContent.classList.toggle('mirror-hide-inline-title', titleOverride === false);
+
+    if (overrides && (overrides.hideProps || rlOverride !== null || titleOverride !== null)) {
+      Logger.log(`View overrides for ${view.file.path}: hideProps=${overrides.hideProps}, readableLine=${rlOverride}, inlineTitle=${titleOverride}`);
     }
   }
 
@@ -485,7 +505,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
 
     setTimeout(() => {
-      this.updateHidePropsForView(view);
+      this.applyViewOverrides(view);
     }, TIMING.HIDE_PROPS_DELAY);
   }
 
@@ -496,8 +516,17 @@ export default class MirrorUIPlugin extends Plugin {
       widget.remove();
     });
 
-    document.querySelectorAll('.mirror-hide-properties').forEach(el => {
-      el.classList.remove('mirror-hide-properties');
+    const overrideClasses = [
+      'mirror-hide-properties', 'mirror-force-inline-title', 'mirror-hide-inline-title'
+    ];
+    for (const cls of overrideClasses) {
+      document.querySelectorAll(`.${cls}`).forEach(el => el.classList.remove(cls));
+    }
+    // Restore Obsidian's readable line width to match global setting
+    // @ts-ignore — getConfig not in official typings
+    const globalReadable = !!this.app.vault.getConfig("readableLineLength");
+    document.querySelectorAll('.markdown-source-view').forEach(el => {
+      el.classList.toggle('is-readable-line-width', globalReadable);
     });
 
     cleanupAllDomMirrors();

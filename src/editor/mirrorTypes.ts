@@ -28,6 +28,7 @@ export interface ApplicableMirrorConfig {
   position: MirrorPosition;
   hideProps: boolean;
   showContainer: boolean;
+  viewOverrides: import('../settings/types').ViewOverrides;
 }
 
 export interface MirrorState {

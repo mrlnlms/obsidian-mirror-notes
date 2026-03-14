@@ -467,14 +467,25 @@
   display: none !important;
 }
 
-/* ========== HIDE PROPERTIES FEATURE ========== */
-/* Esconder metadata-container quando hideProps está ativo */
+/* ========== VIEW OVERRIDES (per-view Obsidian setting overrides) ========== */
+
+/* hideProps: esconder metadata-container */
 .view-content.mirror-hide-properties .metadata-container {
   display: none !important;
 }
-
-/* Garantir que widgets continuem visíveis */
 .view-content.mirror-hide-properties .mirror-ui-widget {
+  display: block !important;
+}
+
+/* readableLineLength: handled via JS toggling Obsidian's is-readable-line-width class — no CSS needed */
+
+/* showInlineTitle: force HIDE */
+.view-content.mirror-hide-inline-title .inline-title {
+  display: none !important;
+}
+
+/* showInlineTitle: force SHOW */
+.view-content.mirror-force-inline-title .inline-title {
   display: block !important;
 }
 

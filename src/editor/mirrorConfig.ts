@@ -2,7 +2,7 @@ import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
 import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
 import { hashObject } from "./mirrorUtils";
-import { CustomMirror, MirrorUIPluginSettings } from "../settings/types";
+import { CustomMirror, MirrorUIPluginSettings, DEFAULT_VIEW_OVERRIDES, ViewOverrides } from "../settings/types";
 import { Logger } from '../logger';
 
 // =================================================================================
@@ -59,12 +59,20 @@ export function clearConfigCache(): void {
 // MATCHING
 // =================================================================================
 
+/** Resolve viewOverrides com fallback pra legacy hide_props */
+function resolveViewOverrides(overrides: ViewOverrides | undefined, legacyHideProps: boolean): ViewOverrides {
+  if (overrides) return { ...overrides, hideProps: overrides.hideProps || legacyHideProps };
+  return { ...DEFAULT_VIEW_OVERRIDES, hideProps: legacyHideProps };
+}
+
 function configFromMirror(mirror: CustomMirror): ApplicableMirrorConfig {
+  const viewOverrides = resolveViewOverrides(mirror.custom_view_overrides, mirror.custom_settings_hide_props);
   return {
     templatePath: mirror.custom_settings_live_preview_note,
     position: mirror.custom_settings_live_preview_pos as MirrorPosition,
-    hideProps: mirror.custom_settings_hide_props,
-    showContainer: mirror.custom_show_container_border
+    hideProps: viewOverrides.hideProps,
+    showContainer: mirror.custom_show_container_border,
+    viewOverrides,
   };
 }
 
@@ -155,11 +163,13 @@ export function getApplicableConfig(
   // 4. Se chegou aqui sem result, aplicar global mirror (se ativo)
   if (!result && globalMirrorActive) {
     Logger.log(`Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
+    const globalOverrides = resolveViewOverrides(settings.global_view_overrides, settings.global_settings_hide_props);
     result = {
       templatePath: settings.global_settings_live_preview_note,
       position: settings.global_settings_live_preview_pos as MirrorPosition,
-      hideProps: settings.global_settings_hide_props,
-      showContainer: settings.global_show_container_border
+      hideProps: globalOverrides.hideProps,
+      showContainer: settings.global_show_container_border,
+      viewOverrides: globalOverrides,
     };
   }
 

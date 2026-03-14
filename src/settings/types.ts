@@ -3,6 +3,21 @@ export interface FolderTemplate {
     template: string;
 }
 
+/** Tri-state: true = force on, false = force off, null = inherit from Obsidian */
+export type OverrideValue = boolean | null;
+
+export interface ViewOverrides {
+    hideProps: boolean;
+    readableLineLength: OverrideValue;
+    showInlineTitle: OverrideValue;
+}
+
+export const DEFAULT_VIEW_OVERRIDES: ViewOverrides = {
+    hideProps: false,
+    readableLineLength: null,
+    showInlineTitle: null,
+};
+
 export interface MirrorUIPluginSettings {
     enable_getting_started: boolean;
     debug_logging: boolean;
@@ -14,7 +29,8 @@ export interface MirrorUIPluginSettings {
     global_settings_preview_note: string;
     global_settings_preview_pos: string;
     global_settings_overide: boolean;
-    global_settings_hide_props: boolean;
+    global_settings_hide_props: boolean; // legacy — migrado pra global_view_overrides.hideProps
+    global_view_overrides: ViewOverrides;
     global_show_container_border: boolean;
     auto_update_paths: boolean;
     customMirrors: Array<CustomMirror>;
@@ -31,7 +47,8 @@ export interface CustomMirror {
     custom_settings_preview_note: string;
     custom_settings_preview_pos: string;
     custom_settings_overide: boolean;
-    custom_settings_hide_props: boolean;
+    custom_settings_hide_props: boolean; // legacy — migrado pra custom_view_overrides.hideProps
+    custom_view_overrides: ViewOverrides;
     custom_show_container_border: boolean;
     custom_auto_update_paths: boolean;
     filterFiles: Array<FolderTemplate>;
@@ -51,6 +68,7 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     global_settings_preview_pos: "top",
     global_settings_overide: false,
     global_settings_hide_props: false,
+    global_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
     global_show_container_border: true,
     auto_update_paths: true,
     customMirrors: []
@@ -69,6 +87,7 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         custom_settings_preview_pos: "top",
         custom_settings_overide: false,
         custom_settings_hide_props: false,
+        custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
         custom_show_container_border: true,
         custom_auto_update_paths: true,
         filterFiles: [],

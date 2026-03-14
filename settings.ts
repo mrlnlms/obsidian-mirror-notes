@@ -50,7 +50,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         cm.dispatch({
                             effects: forceMirrorUpdateEffect.of()
                         });
-                        this.plugin.updateHidePropsForView(leaf.view as MarkdownView);
+                        this.plugin.applyViewOverrides(leaf.view as MarkdownView);
                         this.plugin.setupDomPosition(leaf.view as MarkdownView);
                         Logger.log(`Updated editor for: ${(leaf.view as MarkdownView).file!.path}`);
                     }
@@ -172,19 +172,65 @@ export class MirrorUISettingsTab extends PluginSettingTab {
             },
         });
 
+        // --- View Overrides section ---
+        new Setting(globalMirrorSettings)
+            .setName("View overrides")
+            .setDesc("Override Obsidian display settings for pages matched by this mirror.")
+            .setHeading();
+
+        const globalOverrides = this.plugin.settings.global_view_overrides ?? { hideProps: this.plugin.settings.global_settings_hide_props, readableLineLength: null, showInlineTitle: null };
+
         new Setting(globalMirrorSettings)
             .setName("Hide properties")
-            .setDesc("If set ON, it hides the properties on the target pages.")
+            .setDesc("Hide the properties panel on matched pages.")
             .addToggle((cb) => {
-                cb.setValue(this.plugin.settings.global_settings_hide_props)
+                cb.setValue(globalOverrides.hideProps)
                 .onChange((value) => {
                     this.plugin.settings.global_settings_hide_props = value;
+                    if (!this.plugin.settings.global_view_overrides) {
+                        this.plugin.settings.global_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                    }
+                    this.plugin.settings.global_view_overrides.hideProps = value;
                     this.plugin.saveSettings();
-                    this.display();
                     this.updateAllEditors();
                 });
-            })
-            .setClass("toogle-header");
+            });
+
+        new Setting(globalMirrorSettings)
+            .setName("Readable line length")
+            .setDesc("Override readable line length. Inherit = use Obsidian setting.")
+            .addDropdown((dd) => {
+                dd.addOption("inherit", "Inherit")
+                  .addOption("on", "Force ON")
+                  .addOption("off", "Force OFF")
+                  .setValue(globalOverrides.readableLineLength === true ? "on" : globalOverrides.readableLineLength === false ? "off" : "inherit")
+                  .onChange((value) => {
+                      if (!this.plugin.settings.global_view_overrides) {
+                          this.plugin.settings.global_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                      }
+                      this.plugin.settings.global_view_overrides.readableLineLength = value === "on" ? true : value === "off" ? false : null;
+                      this.plugin.saveSettings();
+                      this.updateAllEditors();
+                  });
+            });
+
+        new Setting(globalMirrorSettings)
+            .setName("Show inline title")
+            .setDesc("Override inline title visibility. Inherit = use Obsidian setting.")
+            .addDropdown((dd) => {
+                dd.addOption("inherit", "Inherit")
+                  .addOption("on", "Force ON")
+                  .addOption("off", "Force OFF")
+                  .setValue(globalOverrides.showInlineTitle === true ? "on" : globalOverrides.showInlineTitle === false ? "off" : "inherit")
+                  .onChange((value) => {
+                      if (!this.plugin.settings.global_view_overrides) {
+                          this.plugin.settings.global_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                      }
+                      this.plugin.settings.global_view_overrides.showInlineTitle = value === "on" ? true : value === "off" ? false : null;
+                      this.plugin.saveSettings();
+                      this.updateAllEditors();
+                  });
+            });
 
         new Setting(globalMirrorSettings)
             .setName("Show container border")
@@ -439,19 +485,66 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 onRedisplay,
             });
 
+            // --- View Overrides section ---
+            new Setting(card)
+                .setName("View overrides")
+                .setDesc("Override Obsidian display settings for pages matched by this mirror.")
+                .setHeading();
+
+            const customOverrides = customMirrors[index].custom_view_overrides ?? { hideProps: customMirrors[index].custom_settings_hide_props, readableLineLength: null, showInlineTitle: null };
+
             new Setting(card)
                 .setName("Hide properties")
-                .setDesc("If set ON, it hides the properties on the target pages.")
+                .setDesc("Hide the properties panel on matched pages.")
                 .addToggle((cb) => {
-                    cb.setValue(customMirrors[index].custom_settings_hide_props)
+                    cb.setValue(customOverrides.hideProps)
                     .onChange((value) => {
                         customMirrors[index].custom_settings_hide_props = value;
+                        if (!customMirrors[index].custom_view_overrides) {
+                            customMirrors[index].custom_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                        }
+                        customMirrors[index].custom_view_overrides.hideProps = value;
                         this.plugin.saveSettings();
-                        this.display();
                         this.updateAllEditors();
                     });
-                })
-                .setClass("toogle-header");
+                });
+
+            new Setting(card)
+                .setName("Readable line length")
+                .setDesc("Override readable line length. Inherit = use Obsidian setting.")
+                .addDropdown((dd) => {
+                    dd.addOption("inherit", "Inherit")
+                      .addOption("on", "Force ON")
+                      .addOption("off", "Force OFF")
+                      .setValue(customOverrides.readableLineLength === true ? "on" : customOverrides.readableLineLength === false ? "off" : "inherit")
+                      .onChange((value) => {
+                          if (!customMirrors[index].custom_view_overrides) {
+                              customMirrors[index].custom_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                          }
+                          customMirrors[index].custom_view_overrides.readableLineLength = value === "on" ? true : value === "off" ? false : null;
+                          this.plugin.saveSettings();
+                          this.updateAllEditors();
+                      });
+                });
+
+            new Setting(card)
+                .setName("Show inline title")
+                .setDesc("Override inline title visibility. Inherit = use Obsidian setting.")
+                .addDropdown((dd) => {
+                    dd.addOption("inherit", "Inherit")
+                      .addOption("on", "Force ON")
+                      .addOption("off", "Force OFF")
+                      .setValue(customOverrides.showInlineTitle === true ? "on" : customOverrides.showInlineTitle === false ? "off" : "inherit")
+                      .onChange((value) => {
+                          if (!customMirrors[index].custom_view_overrides) {
+                              customMirrors[index].custom_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
+                          }
+                          customMirrors[index].custom_view_overrides.showInlineTitle = value === "on" ? true : value === "off" ? false : null;
+                          this.plugin.saveSettings();
+                          this.updateAllEditors();
+                      });
+                });
+
             new Setting(card)
                 .setName("Show container border")
                 .setDesc("Display a subtle background and border around this mirror's content.")
