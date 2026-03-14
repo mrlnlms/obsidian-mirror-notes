@@ -2,9 +2,9 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md). Arquitetura atual em [architecture.md](architecture.md).
 
-## Proximo: v42 — Position engine refinement + cleanup
+## Proximo: v43
 
-- [ ] **Simplificar menu de posicoes** — remover opcoes redundantes que os fallbacks ja cobrem (ex: `below-properties` → CM6 `top`). Ver [backlog](backlog.md) e [architecture.md](architecture.md#position-engine--3-engines--fallback-chain)
+- [ ] **Simplificar menu de posicoes** — remover opcoes redundantes que os fallbacks ja cobrem (ex: `below-properties` → CM6 `top`). Plano em `zippy-herding-volcano`. Ver [backlog](backlog.md) e [architecture.md](architecture.md#position-engine--3-engines--fallback-chain)
 
 ## Pre-lancamento (must-have)
 
@@ -28,6 +28,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v42 | Per-view setting overrides | ViewOverrides (hideProps, readableLineLength, showInlineTitle), CSS per-view, class nativa `is-readable-line-width`, Settings UI com dropdowns |
 | v41 | metadataCache unificado + cache | parseFrontmatter removido, scoped cache, per-source timeout, code block self-dependency |
 | v40 | Backlinks timing | two-layer check (API gate + DOM truth), cm-sizer fallback fix |
 | v39 | isDomTargetVisible + fallback chain | smart fallback DOM→DOM→CM6, reactive config via vault.on('raw') |
