@@ -17,9 +17,9 @@ export { DEFAULT_SETTINGS } from './src/settings/types';
 /** Position dropdown options with visual labels */
 function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
     dropdown.addOption("above-title", "Above title (DOM)");
-    dropdown.addOption("top", "Top of note (CM6 widget)");
+    dropdown.addOption("top", "Top / Below properties (CM6, DOM fallback)");
     dropdown.addOption("above-properties", "Above properties (DOM)");
-    dropdown.addOption("below-properties", "Below properties (DOM)");
+    dropdown.addOption("below-properties", "[deprecated → use Top] Below properties (DOM)");
     dropdown.addOption("bottom", "Bottom of note (CM6 widget)");
     dropdown.addOption("above-backlinks", "Above backlinks (DOM)");
     dropdown.addOption("below-backlinks", "Below backlinks (DOM)");
