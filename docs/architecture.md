@@ -100,7 +100,7 @@ titulo: Override Custom
 | below-properties | CM6 top (preferencial) | Resultado visual identico, melhor performance |
 | sem properties | CM6 top | Mesmo caso |
 
-A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. DOM so ficou ativo pra debug de CSS parity lado a lado (v37/v38). Task pendente no [backlog](backlog.md): ativar o intercept no `setupDomPosition` e simplificar menu de posicoes pro usuario.
+A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. Mesmo padrao para `above-backlinks`/`bottom`: `above-backlinks` (DOM) e a opcao primaria, `bottom` (CM6) e o fallback quando backlinks nao estao visiveis. Ambos `below-properties` e `bottom` estao deprecated no dropdown (v43).
 
 ### isDomTargetVisible (v39)
 
@@ -114,7 +114,14 @@ A implementacao DOM para `below-properties` permanece no codigo como fallback en
 
 - Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
 - `getApplicableConfig()` checa este map antes de retornar — aplica override se existir
-- Override e limpo em `updateAllEditors()` e `setupDomPosition()` (fresh attempt)
+- Override e limpo ANTES de `getApplicableConfig` em `setupDomPosition()` (v43) — garante re-avaliacao fresh a cada chamada
+- Tambem limpo em `updateAllEditors()` (refresh global)
+
+### Cold start rendering (v43)
+
+`MarkdownRenderer.renderMarkdown` no `onLayoutReady` pode retornar success sem popular o DOM visivelmente. Fix: retry de 1s apos `onLayoutReady` com `clearRenderCache()` + re-execucao de `setupDomPosition` pra todas as leaves.
+
+Backlinks timing: quando `resolveTarget('above-backlinks')` falha por `.embedded-backlinks` sem children (plugin ativo mas conteudo nao populou ainda), alem do fallback pra CM6, agenda retry de 500ms que limpa o override e re-tenta DOM.
 
 ## Reactivity — eventos e registries
 

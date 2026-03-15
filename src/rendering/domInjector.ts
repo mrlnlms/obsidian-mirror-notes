@@ -108,18 +108,6 @@ export function getFallbackPosition(position: MirrorPosition): MirrorPosition {
   }
 }
 
-/** When position is 'bottom', check if we can use DOM above-backlinks instead of CM6.
- *  Returns 'above-backlinks' (DOM) if backlinks are visible and target exists,
- *  otherwise 'bottom' (CM6). */
-export function resolveBottomPosition(app: App, viewContent: HTMLElement):
-  { position: 'above-backlinks'; type: 'dom' } | { position: 'bottom'; type: 'cm6' } {
-  if (isDomTargetVisible(app, 'above-backlinks')) {
-    const target = resolveTarget(viewContent, 'above-backlinks', app);
-    if (target) return { position: 'above-backlinks', type: 'dom' };
-  }
-  return { position: 'bottom', type: 'cm6' };
-}
-
 /** Check if a position is a DOM position */
 export function isDomPosition(position: MirrorPosition): boolean {
   return DOM_POSITIONS.includes(position);

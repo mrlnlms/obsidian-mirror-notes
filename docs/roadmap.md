@@ -2,9 +2,9 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md). Arquitetura atual em [architecture.md](architecture.md).
 
-## Proximo: v43
+## Proximo: v44
 
-- [ ] **Simplificar menu de posicoes** — remover opcoes redundantes que os fallbacks ja cobrem (ex: `below-properties` → CM6 `top`). Plano em `zippy-herding-volcano`. Ver [backlog](backlog.md) e [architecture.md](architecture.md#position-engine--3-engines--fallback-chain)
+- [ ] Prioridades a definir. Ver [backlog](backlog.md)
 
 ## Pre-lancamento (must-have)
 
@@ -28,6 +28,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v43 | Position simplification + cold start | Unificar bottom/above-backlinks, dropdown deprecated, retry backlinks timing, cold start rendering fix |
 | v42 | Per-view setting overrides | ViewOverrides (hideProps, readableLineLength, showInlineTitle), CSS per-view, class nativa `is-readable-line-width`, Settings UI com dropdowns |
 | v41 | metadataCache unificado + cache | parseFrontmatter removido, scoped cache, per-source timeout, code block self-dependency |
 | v40 | Backlinks timing | two-layer check (API gate + DOM truth), cm-sizer fallback fix |

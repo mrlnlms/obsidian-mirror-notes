@@ -2,7 +2,16 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v42 — per-view Obsidian setting overrides
+## Versao Atual: v43 — unificar bottom/above-backlinks + cold start fix
+
+### v43: Position engine simplification + cold start rendering fix
+
+- Dropdown unificado: `above-backlinks` → "Bottom / Above backlinks (DOM, CM6 fallback)"
+- `bottom` (CM6 puro) marcado como deprecated no dropdown
+- `positionOverrides.delete` movido pra antes de `getApplicableConfig` — impede override stale
+- Retry 500ms pra posicoes backlinks quando `resolveTarget` falha por timing
+- Cold start fix: retry 1s no `onLayoutReady` com `clearRenderCache()` — MarkdownRenderer retornava success mas nao populava DOM no startup
+- Backlinks DOM: plugin sempre insere `.embedded-backlinks` mesmo com backlinkInDocument OFF — elemento existe mas vazio
 
 ### v42: ViewOverrides — hideProps, readableLineLength, showInlineTitle
 

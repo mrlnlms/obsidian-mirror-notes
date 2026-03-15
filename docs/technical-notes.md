@@ -2,7 +2,33 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v42 — per-view Obsidian setting overrides
+## Versao Atual: v43 — unificar bottom/above-backlinks + cold start fix
+
+### O que mudou na v43
+
+**Contexto: simplificar menu de posicoes e corrigir rendering no cold start**
+
+O dropdown tinha `bottom` (CM6) e `above-backlinks` (DOM) como opcoes separadas. Na pratica, o usuario quer "bottom da nota" — se backlinks estao ativos, o mirror deve aparecer acima deles (DOM); se nao, no fim do editor (CM6 fallback). Seguindo o padrao do `top` (CM6 primario, DOM deprecated com fallback), unificamos as opcoes.
+
+**1. Dropdown unificado (`settings.ts`):**
+- `above-backlinks` → "Bottom / Above backlinks (DOM, CM6 fallback)" — opcao primaria
+- `bottom` → deprecated, aponta pra "Bottom/Above backlinks"
+- Mesmo padrao do `top` / `below-properties`: DOM tenta primeiro, CM6 e fallback
+
+**2. positionOverrides stale (`main.ts`):**
+- `positionOverrides.delete(file.path)` movido pra ANTES de `getApplicableConfig()` em `setupDomPosition`
+- Problema: quando backlinks sumiam, override `bottom` persistia e impedia re-avaliacao do DOM na proxima abertura
+- Causa raiz: `getApplicableConfig` aplicava override antes do check `isDomPosition`, entao `above-backlinks` virava `bottom` e saía do fluxo DOM
+
+**3. Retry pra backlinks timing (`main.ts`):**
+- Quando `resolveTarget('above-backlinks')` falha (`.embedded-backlinks` sem children), alem do fallback pra CM6, agenda retry de 500ms
+- Backlinks plugin sempre insere `.embedded-backlinks` no DOM quando ativo, mas popula children com delay (nao e reativo pra abas abertas)
+
+**4. Cold start rendering fix (`main.ts`):**
+- `MarkdownRenderer.renderMarkdown` no `onLayoutReady` retornava success mas nao populava o DOM visivelmente
+- Fix: retry de 1s apos `onLayoutReady` com `clearRenderCache()` + re-execucao de `setupDomPosition` pra todas as leaves
+
+**Arquivos modificados:** `settings.ts`, `main.ts`
 
 ### O que mudou na v42
 

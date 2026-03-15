@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v42.
+Trabalho tecnico a ser feito. Atualizado na v43.
 
 ## Bugs
 
@@ -14,7 +14,7 @@ Trabalho tecnico a ser feito. Atualizado na v42.
 
 ## Position engine
 
-- **Simplificar menu de posicoes** — remover opcoes redundantes que os fallbacks ja cobrem. Primeiro candidato: `below-properties` (decisao arquitetural: CM6 `top`, DOM so ficou ativo pra debug CSS parity). Ativar intercept no `setupDomPosition` e remover opcao do dropdown. Logica e fallback chain documentados em technical-notes.md (secao Arquitetura > Position Engine). Plano de implementacao em [plan-below-properties-cm6.md](claudememoryfiles/plan-below-properties-cm6.md)
+- **Simplificar menu de posicoes (parcial v43)** — `bottom` + `above-backlinks` unificados. `below-properties` + `top` ja unificados (v42). Falta: remover opcoes deprecated do dropdown completamente (breaking change — migrar data.json de usuarios)
 - **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
 ## Considerado resolvido
 
@@ -101,3 +101,7 @@ Trabalho tecnico a ser feito. Atualizado na v42.
 - [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
 - [x] hideProperties CSS — seletor funciona no Obsidian atual. Bug era falso positivo — `.metadata-container` continua descendente de `.view-content` (parent mudou pra `.cm-sizer` mas CSS descendant selector cobre). Diagnosticado v42
 - [x] Per-view Obsidian setting overrides — ViewOverrides (hideProps, readableLineLength, showInlineTitle) com CSS per-view e class nativa `is-readable-line-width` (v42)
+- [x] Unificar bottom + above-backlinks — dropdown unificado, `above-backlinks` primario (DOM), `bottom` deprecated (CM6 fallback) (v43)
+- [x] Cold start rendering — MarkdownRenderer retornava success sem popular DOM. Retry 1s no onLayoutReady com clearRenderCache (v43)
+- [x] positionOverrides stale — override persistia entre sessoes, impedindo re-avaliacao DOM. Delete movido pra antes de getApplicableConfig (v43)
+- [x] Backlinks timing retry — resolveTarget falha por children.length === 0 no startup. Retry 500ms apos fallback (v43)

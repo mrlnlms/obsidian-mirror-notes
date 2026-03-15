@@ -21,8 +21,8 @@ function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
     dropdown.addOption("top", "Top / Below properties (CM6, DOM fallback)");
     dropdown.addOption("above-properties", "Above properties (DOM)");
     dropdown.addOption("below-properties", "[deprecated → use Top] Below properties (DOM)");
-    dropdown.addOption("bottom", "Bottom / Above backlinks (CM6, DOM fallback)");
-    dropdown.addOption("above-backlinks", "[deprecated → use Bottom] Above backlinks (DOM)");
+    dropdown.addOption("above-backlinks", "Bottom / Above backlinks (DOM, CM6 fallback)");
+    dropdown.addOption("bottom", "[deprecated → use Bottom/Above backlinks] Bottom (CM6 only)");
     dropdown.addOption("below-backlinks", "Below backlinks (DOM)");
     dropdown.addOption("left", "Left margin (CM6 panel)");
     dropdown.addOption("right", "Right margin (CM6 panel)");

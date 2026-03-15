@@ -11,7 +11,8 @@ import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
 import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors, resolveBottomPosition } from './src/rendering/domInjector';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
+import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
 
@@ -126,6 +127,16 @@ export default class MirrorUIPlugin extends Plugin {
           rerenderPreview(leaf.view);
         }
       });
+      // Cold start retry: MarkdownRenderer pode não popular o DOM na primeira tentativa.
+      // Backlinks também podem não ter children ainda. Re-renderiza DOM mirrors após delay.
+      setTimeout(() => {
+        this.app.workspace.iterateAllLeaves(leaf => {
+          if (leaf.view instanceof MarkdownView && leaf.view.file) {
+            clearRenderCache();
+            this.setupDomPosition(leaf.view);
+          }
+        });
+      }, 1000);
     });
 
     // Registrar a aba de configuracoes
@@ -402,45 +413,18 @@ export default class MirrorUIPlugin extends Plugin {
     const file = view.file;
     if (!file) return;
 
+    // Always clear override first so getApplicableConfig reads the original position.
+    // Without this, a stale 'bottom' override from a previous fallback would persist
+    // and prevent above-backlinks from being re-evaluated as a DOM position.
+    this.positionOverrides.delete(file.path);
+
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
     const config = getApplicableConfig(this, file, frontmatter);
-    if (!config) {
+    if (!config || !isDomPosition(config.position)) {
       removeAllDomMirrors(file.path);
       return;
     }
 
-    // 'bottom' tries DOM above-backlinks first, falls back to CM6
-    if (config.position === 'bottom') {
-      const viewContent = view.containerEl.querySelector('.view-content') as HTMLElement;
-      if (viewContent) {
-        const resolved = resolveBottomPosition(this.app, viewContent);
-        if (resolved.type === 'dom') {
-          // Backlinks visible — inject DOM above-backlinks
-          const domConfig = { ...config, position: resolved.position as MirrorPosition };
-          this.positionOverrides.delete(file.path);
-          removeAllDomMirrors(file.path);
-          await injectDomMirror(this, view, domConfig, frontmatter);
-
-          const blockKey = `dom-${file.path}-${config.position}`;
-          this.templateDeps.register(config.templatePath, blockKey, async () => {
-            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-            await injectDomMirror(this, view, domConfig, fm);
-          });
-          Logger.log(`bottom resolved to DOM above-backlinks for ${file.path}`);
-          return;
-        }
-      }
-      // No backlinks — let CM6 handle bottom
-      removeAllDomMirrors(file.path);
-      return;
-    }
-
-    if (!isDomPosition(config.position)) {
-      removeAllDomMirrors(file.path);
-      return;
-    }
-
-    this.positionOverrides.delete(file.path);
     removeAllDomMirrors(file.path);
 
     let actualPos = await injectDomMirror(this, view, config, frontmatter);
@@ -467,6 +451,15 @@ export default class MirrorUIPlugin extends Plugin {
       const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
+      }
+
+      // Backlinks may not have populated yet — retry once after delay
+      if (config.position === 'above-backlinks' || config.position === 'below-backlinks') {
+        setTimeout(async () => {
+          Logger.log(`Retrying DOM position ${config.position} for ${file.path}`);
+          this.positionOverrides.delete(file.path);
+          await this.setupDomPosition(view);
+        }, 500);
       }
     }
   }
