@@ -2,7 +2,7 @@
 
 Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md). Arquitetura atual em [architecture.md](architecture.md).
 
-## Proximo: v44
+## Proximo: v45
 
 - [ ] Prioridades a definir. Ver [backlog](backlog.md)
 
@@ -28,6 +28,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v44 | Config cache + race condition + below-backlinks | Fix config cache (override nao polui cache), race condition cold start (removeOtherDomMirrors), below-backlinks alinhado, retry cascade fix |
 | v43 | Position simplification + cold start | Unificar bottom/above-backlinks, dropdown deprecated, retry backlinks timing, cold start rendering fix |
 | v42 | Per-view setting overrides | ViewOverrides (hideProps, readableLineLength, showInlineTitle), CSS per-view, class nativa `is-readable-line-width`, Settings UI com dropdowns |
 | v41 | metadataCache unificado + cache | parseFrontmatter removido, scoped cache, per-source timeout, code block self-dependency |
