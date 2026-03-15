@@ -14,19 +14,25 @@ export function calcPanelStyle(side: 'left' | 'right'): { left?: string; right?:
 }
 
 /**
- * Basic margin panel ViewPlugin — injects a div into scrollDOM
- * positioned to the left or right of the editor content.
+ * Margin panel ViewPlugin — injects a div into scrollDOM
+ * positioned flush left or right against the scroll container edges.
  *
- * v32: Simplified version. No line numbers detection, no readable-line-width handling.
- * Uses contentDOM.offsetLeft for basic positioning.
+ * Uses ResizeObserver for responsive repositioning.
  */
 export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private panel: HTMLElement | null = null;
   private side: 'left' | 'right' | null = null;
   private lastCacheKey: string | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(private view: EditorView) {
     this.checkAndBuild();
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.panel && this.side) {
+        this.updatePosition(this.side);
+      }
+    });
+    this.resizeObserver.observe(this.view.scrollDOM);
   }
 
   update(update: ViewUpdate) {
@@ -134,6 +140,8 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   }
 
   destroy() {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.removePanel();
   }
 });
