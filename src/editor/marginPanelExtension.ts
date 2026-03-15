@@ -3,22 +3,36 @@ import { mirrorStateField, mirrorPluginFacet } from "./mirrorState";
 import { MARGIN_POSITIONS } from "./mirrorTypes";
 import { renderMirrorTemplate } from "../rendering/templateRenderer";
 
-const PANEL_WIDTH = 250;
+export const PANEL_WIDTH = 250;
+
+/** Pure positioning logic — returns CSS style props for the panel */
+export function calcPanelStyle(side: 'left' | 'right'): { left?: string; right?: string } {
+  if (side === 'left') {
+    return { left: '0px' };
+  }
+  return { right: '0px' };
+}
 
 /**
- * Basic margin panel ViewPlugin — injects a div into scrollDOM
- * positioned to the left or right of the editor content.
+ * Margin panel ViewPlugin — injects a div into scrollDOM
+ * positioned flush left or right against the scroll container edges.
  *
- * v32: Simplified version. No line numbers detection, no readable-line-width handling.
- * Uses contentDOM.offsetLeft for basic positioning.
+ * Uses ResizeObserver for responsive repositioning.
  */
 export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private panel: HTMLElement | null = null;
   private side: 'left' | 'right' | null = null;
   private lastCacheKey: string | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   constructor(private view: EditorView) {
     this.checkAndBuild();
+    this.resizeObserver = new ResizeObserver(() => {
+      if (this.panel && this.side) {
+        this.updatePosition(this.side);
+      }
+    });
+    this.resizeObserver.observe(this.view.scrollDOM);
   }
 
   update(update: ViewUpdate) {
@@ -92,19 +106,9 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private updatePosition(side: 'left' | 'right') {
     if (!this.panel) return;
 
-    const contentLeft = this.view.contentDOM.offsetLeft;
-
-    if (side === 'left') {
-      // Position to the left of content area
-      const leftPos = Math.max(0, contentLeft - PANEL_WIDTH - 20);
-      this.panel.style.left = `${leftPos}px`;
-      this.panel.style.right = '';
-    } else {
-      // Position to the right of content area
-      const contentRight = contentLeft + this.view.contentDOM.offsetWidth;
-      this.panel.style.left = `${contentRight + 20}px`;
-      this.panel.style.right = '';
-    }
+    const style = calcPanelStyle(side);
+    this.panel.style.left = style.left ?? '';
+    this.panel.style.right = style.right ?? '';
   }
 
   private async renderContent(mirrorState: any, config: any, cacheKey: string) {
@@ -136,6 +140,8 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   }
 
   destroy() {
+    this.resizeObserver?.disconnect();
+    this.resizeObserver = null;
     this.removePanel();
   }
 });
