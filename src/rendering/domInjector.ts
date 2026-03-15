@@ -8,7 +8,6 @@ import { Logger } from "../dev/logger";
 const SELECTOR_INLINE_TITLE = '.inline-title';
 const SELECTOR_METADATA_CONTAINER = '.metadata-container';
 const SELECTOR_EMBEDDED_BACKLINKS = '.embedded-backlinks';
-const SELECTOR_CM_SIZER = '.cm-sizer';
 
 // Track injected containers per view for cleanup
 const injectedContainers = new Map<string, HTMLElement>();
@@ -70,21 +69,16 @@ export function resolveTarget(
     }
     case 'above-backlinks': {
       const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
-      // Check for actual content children (e.g. .nav-header, .backlink-pane).
-      // backlinkInDocument is NOT reactive — element may be empty shell (just toggled ON,
-      // tab not reopened) or still populated (just toggled OFF, tab not closed).
+      // Two-layer check (v40): isDomTargetVisible gates on plugin ON/OFF,
+      // children.length gates on actual rendered content.
+      // children = [] when backlinkInDocument OFF or not yet populated (timing).
+      // Retry in setupDomPosition handles the timing case.
       if (backlinks && backlinks.children.length > 0) return { target: backlinks, method: 'before' };
       return null;
     }
     case 'below-backlinks': {
       const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
       if (backlinks && backlinks.children.length > 0) return { target: backlinks, method: 'after' };
-      // If element exists but empty (backlinkInDocument not yet rendered), fall back to CM6.
-      // Only use .cm-sizer when element doesn't exist at all (plugin OFF, already gated by isDomTargetVisible).
-      if (!backlinks) {
-        const sizer = viewContent.querySelector(SELECTOR_CM_SIZER) as HTMLElement;
-        if (sizer) return { target: sizer, method: 'appendChild' };
-      }
       return null;
     }
     default:
@@ -191,6 +185,17 @@ export function removeDomMirror(filePath: string, position: MirrorPosition): voi
 export function removeAllDomMirrors(filePath: string): void {
   for (const [key, container] of injectedContainers) {
     if (key.startsWith(`dom-${filePath}-`)) {
+      container.remove();
+      injectedContainers.delete(key);
+    }
+  }
+}
+
+/** Remove DOM mirrors for a file EXCEPT the given position (avoids race condition with async render) */
+export function removeOtherDomMirrors(filePath: string, keepPosition: MirrorPosition): void {
+  const keepKey = injectionKey(filePath, keepPosition);
+  for (const [key, container] of injectedContainers) {
+    if (key.startsWith(`dom-${filePath}-`) && key !== keepKey) {
       container.remove();
       injectedContainers.delete(key);
     }

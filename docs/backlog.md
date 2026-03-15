@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v43.
+Trabalho tecnico a ser feito. Atualizado na v44.
 
 ## Bugs
 
@@ -14,7 +14,7 @@ Trabalho tecnico a ser feito. Atualizado na v43.
 
 ## Position engine
 
-- **Simplificar menu de posicoes (parcial v43)** — `bottom` + `above-backlinks` unificados. `below-properties` + `top` ja unificados (v42). Falta: remover opcoes deprecated do dropdown completamente (breaking change — migrar data.json de usuarios)
+- **Simplificar menu de posicoes (parcial v43/v44)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado com mesmo fallback (v44). `below-properties` + `top` ja unificados (v42). Falta: remover opcoes deprecated do dropdown completamente (breaking change — migrar data.json de usuarios)
 - **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
 ## Considerado resolvido
 

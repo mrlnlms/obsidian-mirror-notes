@@ -2,7 +2,42 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v43 — unificar bottom/above-backlinks + cold start fix
+## Versao Atual: v44 — config cache fix, race condition fix, below-backlinks alinhado
+
+### O que mudou na v44
+
+**Contexto: 3 bugs interligados no position engine de backlinks**
+
+O fix do config cache expôs uma race condition latente no cold start, e a investigacao revelou que `below-backlinks` tinha dead code e logica inconsistente com `above-backlinks`.
+
+**1. Config cache poluido por positionOverrides (`mirrorConfig.ts`):**
+- Problema: `getApplicableConfig()` aplicava o override (ex: `above-backlinks` → `bottom`) ANTES de cachear. Na proxima chamada (retry, cold start), o cache retornava `bottom` direto, e `isDomPosition('bottom')` = false → `setupDomPosition` retornava early sem tentar DOM
+- Causa raiz: o override e estado runtime (muda quando backlinks populam), mas estava poluindo o cache que deveria guardar so a config base
+- Fix: cachear resultado ANTES de aplicar override. Override e aplicado dinamicamente a cada chamada, nao persiste no cache
+- Impacto: retries de backlinks timing nunca funcionaram antes deste fix — o cache sempre retornava a posicao fallback
+
+**2. Race condition no cold start (`main.ts` + `domInjector.ts`):**
+- Problema: `setupDomPosition` chamava `removeAllDomMirrors()` antes de `injectDomMirror()`. No cold start, multiplos event handlers (`file-open`, `active-leaf-change`, `onLayoutReady`) disparam em rapida sucessao, cada um removendo o container que o anterior esta renderizando (async, ~2s via MarkdownRenderer)
+- Resultado: container vazio na primeira abertura — o container com conteudo renderizado era removido por uma chamada subsequente que criava um container novo e vazio
+- Fix: nova funcao `removeOtherDomMirrors(filePath, keepPosition)` — so remove containers de OUTRAS posicoes. Container da posicao atual e reutilizado por `injectDomMirror` (ja existia check de `isConnected`)
+- Antes deste fix, o bug era mascarado pelo cache poluido (item 1) — o cache retornava `bottom`, `isDomPosition` dava false, e `setupDomPosition` retornava early sem destruir o container
+
+**3. `below-backlinks` alinhado com `above-backlinks` (`domInjector.ts`):**
+- Removido fallback `.cm-sizer` — dead code (plugin OFF → `isDomTargetVisible` retorna null antes do switch; plugin ON → `.embedded-backlinks` sempre existe)
+- Bug potencial: se existisse estado transitorio com plugin ON mas sem o elemento DOM, o mirror seria injetado via DOM dentro do `.cm-sizer`, `injectDomMirror` retornaria sucesso, nenhum retry seria agendado — mirror preso no lugar errado
+- Agora `below-backlinks` e identico a `above-backlinks`: `children.length > 0` → DOM, senao → CM6 `bottom` via fallback
+- Removida constante `SELECTOR_CM_SIZER` (nao usada em nenhum outro lugar)
+- Label do dropdown atualizado pra "Below backlinks (DOM, CM6 fallback)"
+
+**4. Retry cascade exponencial (`main.ts`):**
+- Problema: retries de backlinks (500/1500/3000ms) chamavam `setupDomPosition()` que, ao falhar, agendava MAIS retries — explosao exponencial (18K+ linhas de log)
+- Fix: parametro `isRetry` — retries nao agendam mais retries. 3 tentativas fixas (500ms, 1.5s, 3s) e para
+
+**5. Event logging (`main.ts`):**
+- Adicionados logs em `file-open`, `active-leaf-change`, `onLayoutReady` e cold start retry
+- Formato: `[event] nome: path` — permite rastrear fluxo de navegacao no debug.log
+
+**Arquivos modificados:** `src/rendering/domInjector.ts`, `src/editor/mirrorConfig.ts`, `main.ts`, `settings.ts`, `src/editor/mirrorTypes.ts`, `tests/domInjector.test.ts`
 
 ### O que mudou na v43
 

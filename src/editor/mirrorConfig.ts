@@ -177,14 +177,15 @@ export function getApplicableConfig(
     Logger.log(`No mirror applied to: ${file.path}, globalActive: ${globalMirrorActive}`);
   }
 
-  // Apply position override (DOM fallback → CM6)
+  // Cachear config base (sem override — override e estado runtime, nao deve poluir cache)
+  configCache.set(file.path, { config: result, frontmatterHash: fmHash });
+
+  // Apply position override (DOM fallback → CM6) — depois do cache
   if (result && plugin.positionOverrides.has(file.path)) {
     const override = plugin.positionOverrides.get(file.path)!;
     Logger.log(`Applying position override for ${file.path}: ${result.position} → ${override}`);
     result = { ...result, position: override };
   }
 
-  // Cachear resultado
-  configCache.set(file.path, { config: result, frontmatterHash: fmHash });
   return result;
 }

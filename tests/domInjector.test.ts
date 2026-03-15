@@ -184,17 +184,51 @@ describe('resolveTarget', () => {
     expect(result!.method).toBe('before');
   });
 
-  it('below-backlinks without .embedded-backlinks but with .cm-sizer → appendChild', () => {
-    const vc = createViewContent({ sizer: true });
+  it('below-backlinks with populated backlinks → after', () => {
+    const vc = createViewContent({ backlinks: true }); // has .backlink-pane child
     const result = resolveTarget(vc, 'below-backlinks');
     expect(result).not.toBeNull();
-    expect(result!.method).toBe('appendChild');
-    expect(result!.target.className).toBe('cm-sizer');
+    expect(result!.method).toBe('after');
+    expect(result!.target.className).toBe('embedded-backlinks');
   });
 
-  it('below-backlinks without any fallback → null', () => {
+  it('below-backlinks without .embedded-backlinks → null', () => {
     const vc = createViewContent({});
     expect(resolveTarget(vc, 'below-backlinks')).toBeNull();
+  });
+
+  it('below-backlinks with empty shell (children = 0) → null', () => {
+    const vc = document.createElement('div');
+    vc.className = 'view-content';
+    const emptyBacklinks = document.createElement('div');
+    emptyBacklinks.className = 'embedded-backlinks';
+    vc.appendChild(emptyBacklinks);
+
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: true, instance: { options: { backlinkInDocument: true } } } } },
+    } as any;
+    expect(resolveTarget(vc, 'below-backlinks', app)).toBeNull();
+  });
+
+  it('below-backlinks returns null when plugin OFF', () => {
+    const vc = createViewContent({ backlinks: true });
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: false, instance: null } } },
+    } as any;
+    expect(resolveTarget(vc, 'below-backlinks', app)).toBeNull();
+  });
+
+  it('below-backlinks DOM injects when element has children (real content)', () => {
+    const vc = createViewContent({ backlinks: true }); // has .backlink-pane child
+    const app = {
+      vault: { getConfig: () => undefined },
+      internalPlugins: { plugins: { backlink: { enabled: true, instance: { options: { backlinkInDocument: false } } } } },
+    } as any;
+    const result = resolveTarget(vc, 'below-backlinks', app);
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('after');
   });
 
   it('CM6 position (top) → null (not a DOM position)', () => {

@@ -11,7 +11,7 @@ import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
 import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
 import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
@@ -50,6 +50,7 @@ export default class MirrorUIPlugin extends Plugin {
     // Configurar ao abrir arquivos
     this.registerEvent(
       this.app.workspace.on('file-open', (file) => {
+        Logger.log(`[event] file-open: ${file?.path ?? '(null)'}`);
         if (file) {
           setTimeout(() => {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
@@ -65,6 +66,8 @@ export default class MirrorUIPlugin extends Plugin {
     // Configurar ao mudar de aba
     this.registerEvent(
       this.app.workspace.on('active-leaf-change', (leaf: WorkspaceLeaf | null) => {
+        const viewFile = (leaf?.view instanceof MarkdownView) ? (leaf.view as MarkdownView).file?.path : null;
+        Logger.log(`[event] active-leaf-change: ${viewFile ?? '(non-markdown or null)'}`);
         if (leaf?.view instanceof MarkdownView) {
           setTimeout(() => {
             this.setupEditor(leaf.view as MarkdownView);
@@ -120,16 +123,20 @@ export default class MirrorUIPlugin extends Plugin {
 
     // Configurar editores ja abertos e re-renderizar code blocks apos layout pronto
     this.app.workspace.onLayoutReady(() => {
+      const leaves: string[] = [];
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
+          leaves.push(leaf.view.file.path);
           this.setupEditor(leaf.view);
           this.setupDomPosition(leaf.view);
           rerenderPreview(leaf.view);
         }
       });
+      Logger.log(`[event] onLayoutReady: ${leaves.length} markdown leaves [${leaves.join(', ')}]`);
       // Cold start retry: MarkdownRenderer pode não popular o DOM na primeira tentativa.
       // Backlinks também podem não ter children ainda. Re-renderiza DOM mirrors após delay.
       setTimeout(() => {
+        Logger.log('[event] cold-start-retry (1s)');
         this.app.workspace.iterateAllLeaves(leaf => {
           if (leaf.view instanceof MarkdownView && leaf.view.file) {
             clearRenderCache();
@@ -409,7 +416,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
-  async setupDomPosition(view: MarkdownView) {
+  async setupDomPosition(view: MarkdownView, isRetry = false) {
     const file = view.file;
     if (!file) return;
 
@@ -425,7 +432,10 @@ export default class MirrorUIPlugin extends Plugin {
       return;
     }
 
-    removeAllDomMirrors(file.path);
+    // Only remove containers for OTHER positions (e.g. position changed in settings).
+    // Keep current position's container — injectDomMirror reuses it, avoiding race
+    // condition where removeAll destroys a container mid-async-render.
+    removeOtherDomMirrors(file.path, config.position);
 
     let actualPos = await injectDomMirror(this, view, config, frontmatter);
 
@@ -446,6 +456,7 @@ export default class MirrorUIPlugin extends Plugin {
     });
 
     if (actualPos !== config.position) {
+      // DOM target not found — fallback to CM6
       Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path}`);
       this.positionOverrides.set(file.path, actualPos);
       const cm = getEditorView(view);
@@ -453,13 +464,28 @@ export default class MirrorUIPlugin extends Plugin {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
       }
 
-      // Backlinks may not have populated yet — retry once after delay
-      if (config.position === 'above-backlinks' || config.position === 'below-backlinks') {
-        setTimeout(async () => {
-          Logger.log(`Retrying DOM position ${config.position} for ${file.path}`);
-          this.positionOverrides.delete(file.path);
-          await this.setupDomPosition(view);
-        }, 500);
+      // Backlinks may not have populated yet (children.length === 0 by timing).
+      // Retry with increasing delays to catch async population.
+      // isRetry guard prevents exponential cascade: retries don't schedule more retries.
+      if (!isRetry && (config.position === 'above-backlinks' || config.position === 'below-backlinks')) {
+        for (const delay of [500, 1500, 3000]) {
+          setTimeout(async () => {
+            // Only retry if override is still active (not yet resolved by an earlier retry)
+            if (this.positionOverrides.has(file.path)) {
+              Logger.log(`Retrying DOM position ${config.position} for ${file.path} (${delay}ms)`);
+              this.positionOverrides.delete(file.path);
+              await this.setupDomPosition(view, true);
+            }
+          }, delay);
+        }
+      }
+    } else {
+      // DOM injection succeeded — force CM6 to clear any stale widget
+      // (setupEditor runs sync before setupDomPosition and may have created
+      // a CM6 widget using a stale positionOverride from a previous fallback)
+      const cm = getEditorView(view);
+      if (cm) {
+        cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
       }
     }
   }

@@ -100,7 +100,7 @@ titulo: Override Custom
 | below-properties | CM6 top (preferencial) | Resultado visual identico, melhor performance |
 | sem properties | CM6 top | Mesmo caso |
 
-A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. Mesmo padrao para `above-backlinks`/`bottom`: `above-backlinks` (DOM) e a opcao primaria, `bottom` (CM6) e o fallback quando backlinks nao estao visiveis. Ambos `below-properties` e `bottom` estao deprecated no dropdown (v43).
+A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. Mesmo padrao para `above-backlinks`/`bottom`: `above-backlinks` (DOM) e a opcao primaria, `bottom` (CM6) e o fallback quando backlinks nao estao visiveis. `below-backlinks` segue o mesmo padrao: DOM quando backlinks tem conteudo, CM6 `bottom` quando nao tem (v44). Ambos `below-properties` e `bottom` estao deprecated no dropdown (v43).
 
 ### isDomTargetVisible (v39)
 
@@ -113,15 +113,17 @@ A implementacao DOM para `below-properties` permanece no codigo como fallback en
 ### positionOverrides (Map no plugin)
 
 - Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
-- `getApplicableConfig()` checa este map antes de retornar — aplica override se existir
-- Override e limpo ANTES de `getApplicableConfig` em `setupDomPosition()` (v43) — garante re-avaliacao fresh a cada chamada
-- Tambem limpo em `updateAllEditors()` (refresh global)
+- `getApplicableConfig()` aplica override DEPOIS do cache — override e estado runtime, nao deve poluir o cache (v44)
+- Override e limpo ANTES de `getApplicableConfig` em `setupDomPosition()` — garante re-avaliacao fresh a cada chamada
+- Tambem limpo em `refreshAllEditors()` (refresh global)
 
-### Cold start rendering (v43)
+### Cold start rendering (v43/v44)
 
 `MarkdownRenderer.renderMarkdown` no `onLayoutReady` pode retornar success sem popular o DOM visivelmente. Fix: retry de 1s apos `onLayoutReady` com `clearRenderCache()` + re-execucao de `setupDomPosition` pra todas as leaves.
 
-Backlinks timing: quando `resolveTarget('above-backlinks')` falha por `.embedded-backlinks` sem children (plugin ativo mas conteudo nao populou ainda), alem do fallback pra CM6, agenda retry de 500ms que limpa o override e re-tenta DOM.
+Race condition (v44): multiplos event handlers (`file-open`, `active-leaf-change`, `onLayoutReady`) disparam em rapida sucessao. `setupDomPosition` usa `removeOtherDomMirrors()` (nao `removeAll`) pra preservar o container da posicao atual durante render async. Container e reutilizado por `injectDomMirror` via check `isConnected`.
+
+Backlinks timing: quando `resolveTarget` falha por `.embedded-backlinks` sem children (plugin ativo mas conteudo nao populou ainda), alem do fallback pra CM6, agenda retry em 500ms/1.5s/3s. Guard `isRetry` previne cascata exponencial — retries nao agendam mais retries.
 
 ## Reactivity — eventos e registries
 
@@ -157,7 +159,7 @@ Todos os 3 caminhos (CM6, code block, DOM) usam `metadataCache.getFileCache()` c
 
 - **Hash cache** (`templateRenderer.ts`): `lastRenderedContent` por cacheKey. Previne `MarkdownRenderer.renderMarkdown()` se conteudo nao mudou
 - **DOM cache** (`mirrorWidget.ts`): `domCache` por cacheKey. Reusa container DOM existente
-- **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path + frontmatterHash`. Evita iterar mirrors a cada keystroke
+- **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path + frontmatterHash`. Evita iterar mirrors a cada keystroke. Cache guarda config BASE (sem positionOverride) — override e aplicado dinamicamente apos cache hit (v44)
 - **Scoped invalidation** (v41): `clearRenderCache(cacheKey)` + `domCache.delete(cacheKey)` — so o widget atualizado perde cache
 - **Per-source timeout** (v41): `crossNoteTimeouts = Map<string, Timeout>` — cada source tem debounce independente
 
@@ -192,7 +194,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (143 testes, 9 suites)
+npm test         # vitest (146 testes, 9 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

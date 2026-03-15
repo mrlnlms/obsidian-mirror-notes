@@ -2,7 +2,17 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v43 — unificar bottom/above-backlinks + cold start fix
+## Versao Atual: v44 — config cache fix, race condition fix, below-backlinks alinhado
+
+### v44: 3 bug fixes no position engine de backlinks
+
+- Fix config cache: override runtime (`positionOverrides`) nao polui mais o cache — retries de backlinks agora funcionam
+- Fix race condition cold start: `removeOtherDomMirrors()` substitui `removeAllDomMirrors()` em `setupDomPosition` — container nao e destruido durante render async
+- `below-backlinks` alinhado com `above-backlinks`: removido fallback `.cm-sizer` (dead code), mesmo two-layer check + CM6 fallback
+- Fix retry cascade: parametro `isRetry` previne agendamento exponencial de retries
+- Event logging: `[event] file-open`, `active-leaf-change`, `onLayoutReady`, cold start retry
+- Label `below-backlinks` atualizado pra "(DOM, CM6 fallback)"
+- 146 testes (+3 novos pra below-backlinks parity)
 
 ### v43: Position engine simplification + cold start rendering fix
 

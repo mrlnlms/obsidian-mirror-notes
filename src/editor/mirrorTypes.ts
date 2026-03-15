@@ -7,7 +7,7 @@ export type MirrorPosition =
   | 'above-properties'// DOM insertBefore(.metadata-container)
   | 'below-properties'// DOM insertAfter(.metadata-container)
   | 'above-backlinks' // DOM insertBefore(.embedded-backlinks)
-  | 'below-backlinks' // DOM appendChild on .cm-sizer / .mod-footer
+  | 'below-backlinks' // DOM insertAfter(.embedded-backlinks), CM6 bottom fallback
   | 'left'            // CM6 ViewPlugin (margin panel)
   | 'right';          // CM6 ViewPlugin (margin panel)
 
