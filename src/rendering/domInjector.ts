@@ -2,7 +2,7 @@ import { MarkdownView, App } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
 import { renderMirrorTemplate } from "./templateRenderer";
-import { Logger } from "../logger";
+import { Logger } from "../dev/logger";
 
 // Selectors for native Obsidian DOM elements
 const SELECTOR_INLINE_TITLE = '.inline-title';
@@ -106,6 +106,18 @@ export function getFallbackPosition(position: MirrorPosition): MirrorPosition {
     default:
       return 'top';
   }
+}
+
+/** When position is 'bottom', check if we can use DOM above-backlinks instead of CM6.
+ *  Returns 'above-backlinks' (DOM) if backlinks are visible and target exists,
+ *  otherwise 'bottom' (CM6). */
+export function resolveBottomPosition(app: App, viewContent: HTMLElement):
+  { position: 'above-backlinks'; type: 'dom' } | { position: 'bottom'; type: 'cm6' } {
+  if (isDomTargetVisible(app, 'above-backlinks')) {
+    const target = resolveTarget(viewContent, 'above-backlinks', app);
+    if (target) return { position: 'above-backlinks', type: 'dom' };
+  }
+  return { position: 'bottom', type: 'cm6' };
 }
 
 /** Check if a position is a DOM position */

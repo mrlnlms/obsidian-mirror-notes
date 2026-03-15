@@ -1,6 +1,6 @@
 import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
 import MirrorUIPlugin from "../../main";
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 
 export interface RenderContext {
   plugin: MirrorUIPlugin;

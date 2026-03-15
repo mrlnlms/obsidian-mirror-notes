@@ -1,10 +1,11 @@
+declare const __DEV__: boolean;
 import MirrorUIPlugin from "./main";
 import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView } from "obsidian";
 import { FileSuggest } from "./src/suggesters/file-suggest";
 import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
 import { clearConfigCache } from './src/editor/mirrorConfig';
 import { TIMING } from './src/editor/timingConfig';
-import { Logger } from './src/logger';
+import { Logger } from './src/dev/logger';
 import { addPathValidation } from './src/settings/pathValidator';
 import { buildFilterSection } from './src/settings/filterBuilder';
 import { createDefaultCustomMirror } from './src/settings/types';
@@ -20,8 +21,8 @@ function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
     dropdown.addOption("top", "Top / Below properties (CM6, DOM fallback)");
     dropdown.addOption("above-properties", "Above properties (DOM)");
     dropdown.addOption("below-properties", "[deprecated → use Top] Below properties (DOM)");
-    dropdown.addOption("bottom", "Bottom of note (CM6 widget)");
-    dropdown.addOption("above-backlinks", "Above backlinks (DOM)");
+    dropdown.addOption("bottom", "Bottom / Above backlinks (CM6, DOM fallback)");
+    dropdown.addOption("above-backlinks", "[deprecated → use Bottom] Above backlinks (DOM)");
     dropdown.addOption("below-backlinks", "Below backlinks (DOM)");
     dropdown.addOption("left", "Left margin (CM6 panel)");
     dropdown.addOption("right", "Right margin (CM6 panel)");
@@ -85,17 +86,19 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         const mirrorSettings_main = this.containerEl.createEl("div", {cls: "mirror-settings_main"});
         mirrorSettings_main.createEl("h1", {text:"Mirror Plugin Settings"})
 
-        new Setting(mirrorSettings_main)
-            .setName("Debug logging")
-            .setDesc("Write logs to debug.log for troubleshooting.")
-            .addToggle((cb) => {
-                cb.setValue(this.plugin.settings.debug_logging)
-                    .onChange((value) => {
-                        this.plugin.settings.debug_logging = value;
-                        this.plugin.saveSettings();
-                        Logger.setEnabled(value);
-                    });
-            });
+        if (__DEV__) {
+            new Setting(mirrorSettings_main)
+                .setName("Debug logging")
+                .setDesc("Write logs to debug.log for troubleshooting.")
+                .addToggle((cb) => {
+                    cb.setValue(this.plugin.settings.debug_logging)
+                        .onChange((value) => {
+                            this.plugin.settings.debug_logging = value;
+                            this.plugin.saveSettings();
+                            Logger.setEnabled(value);
+                        });
+                });
+        }
 
         const globalSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-global-settings"});
         const customSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-custom-settings"});

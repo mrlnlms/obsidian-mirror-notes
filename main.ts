@@ -2,7 +2,7 @@ import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, filePathFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
-import { Logger } from './src/logger';
+import { Logger } from './src/dev/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
@@ -11,7 +11,7 @@ import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
 import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, cleanupAllDomMirrors, resolveBottomPosition } from './src/rendering/domInjector';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
 
@@ -404,7 +404,38 @@ export default class MirrorUIPlugin extends Plugin {
 
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
     const config = getApplicableConfig(this, file, frontmatter);
-    if (!config || !isDomPosition(config.position)) {
+    if (!config) {
+      removeAllDomMirrors(file.path);
+      return;
+    }
+
+    // 'bottom' tries DOM above-backlinks first, falls back to CM6
+    if (config.position === 'bottom') {
+      const viewContent = view.containerEl.querySelector('.view-content') as HTMLElement;
+      if (viewContent) {
+        const resolved = resolveBottomPosition(this.app, viewContent);
+        if (resolved.type === 'dom') {
+          // Backlinks visible — inject DOM above-backlinks
+          const domConfig = { ...config, position: resolved.position as MirrorPosition };
+          this.positionOverrides.delete(file.path);
+          removeAllDomMirrors(file.path);
+          await injectDomMirror(this, view, domConfig, frontmatter);
+
+          const blockKey = `dom-${file.path}-${config.position}`;
+          this.templateDeps.register(config.templatePath, blockKey, async () => {
+            const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
+            await injectDomMirror(this, view, domConfig, fm);
+          });
+          Logger.log(`bottom resolved to DOM above-backlinks for ${file.path}`);
+          return;
+        }
+      }
+      // No backlinks — let CM6 handle bottom
+      removeAllDomMirrors(file.path);
+      return;
+    }
+
+    if (!isDomPosition(config.position)) {
       removeAllDomMirrors(file.path);
       return;
     }

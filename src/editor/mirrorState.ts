@@ -9,7 +9,7 @@ import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
 import { extractRawYaml, hashObject, generateWidgetId } from "./mirrorUtils";
 import { TFile } from "obsidian";
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 
 // =================================================================================
 // INTERFACES E TIPOS

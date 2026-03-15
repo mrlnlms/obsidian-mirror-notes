@@ -151,13 +151,9 @@ Create multiple mirrors with different configurations:
 
 ### Settings
 - **Position**: 9 positions across 3 engines (CM6, DOM, margin panels)
-- **Hide Properties**: Hide the frontmatter section (CSS-based, currently limited — see Known Issues)
+- **View Overrides**: Per-mirror control of hide properties, readable line width, and inline title
 - **Override**: Control mirror priority (custom vs global)
 - **Rename-Aware**: Template and filter paths auto-update when you rename or move files
-
-## Known Issues
-
-- **Hide Properties CSS**: The selector `.mirror-hide-properties .metadata-container` does not match the current Obsidian DOM structure. Frontmatter remains visible even when enabled.
 
 ## Development
 
@@ -193,7 +189,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-41 versions across 6 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+42 versions across 6 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -202,7 +198,7 @@ npm run dev      # watch mode
 | Era 3: CSS | Nov 2024 | v19 — Styles rewrite |
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
-| Era 6: Hardening | Mar 2026 | v34-v41 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache |
+| Era 6: Hardening | Mar 2026 | v34-v42 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache, per-view overrides |
 
 ## Support
 

@@ -29,7 +29,8 @@ src/editor/mirrorUtils.ts                  — extractRawYaml, hashObject, gener
 src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
 src/utils/obsidianInternals.ts             — Wrappers tipados pra APIs internas do Obsidian
 src/utils/settingsPaths.ts                 — updateSettingsPaths() — auto-update paths on rename
-src/logger.ts                              — Logger com toggle via settings
+src/dev/logger.ts                          — Logger dev-only (no-op em prod via __DEV__ flag)
+src/dev/clear-log.sh                       — Script pra limpar debug.log
 styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
 ```
 
@@ -181,10 +182,10 @@ Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescreve
 
 ```bash
 npm install
-npm run build    # tsc -noEmit + esbuild production
-npm run dev      # esbuild watch mode + copy to demo vault
+npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
+npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (138 testes, 9 suites)
+npm test         # vitest (143 testes, 9 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

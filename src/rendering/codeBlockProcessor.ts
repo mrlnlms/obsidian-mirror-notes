@@ -2,7 +2,7 @@ import { TFile, MarkdownRenderChild } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { parseBlockContent } from './blockParser';
 import { renderMirrorTemplate } from './templateRenderer';
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 
 export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
   plugin.registerMarkdownCodeBlockProcessor("mirror", async (source, el, ctx) => {

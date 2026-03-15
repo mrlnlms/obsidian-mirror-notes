@@ -1,14 +1,14 @@
 #!/bin/bash
 # Limpa o debug.log do plugin Mirror Notes
-# Uso: ./scripts/clear-log.sh [--tail N]
+# Uso: ./src/dev/clear-log.sh [--tail N]
 #   Sem args: limpa tudo
 #   --tail N: mostra ultimas N linhas antes de limpar
 
-PLUGIN_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-LOG="$PLUGIN_DIR/debug.log"
+PLUGIN_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
+LOG="$PLUGIN_DIR/src/dev/debug.log"
 
 if [ ! -f "$LOG" ]; then
-  echo "debug.log nao encontrado em $PLUGIN_DIR"
+  echo "debug.log nao encontrado em $PLUGIN_DIR/src/dev/"
   exit 1
 fi
 

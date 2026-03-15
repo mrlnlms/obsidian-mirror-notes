@@ -10,7 +10,7 @@ vi.mock('fs', () => ({
 }));
 
 // Import after mocking fs
-import { Logger } from '../src/logger';
+import { Logger } from '../src/dev/logger';
 
 describe('Logger', () => {
   let consoleSpy: {

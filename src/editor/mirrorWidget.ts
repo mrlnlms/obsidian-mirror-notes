@@ -1,7 +1,7 @@
 import { WidgetType, EditorView } from "@codemirror/view";
 import { MirrorState, ApplicableMirrorConfig } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 import { renderMirrorTemplate } from '../rendering/templateRenderer';
 
 // Caches especificos do CM6 widget

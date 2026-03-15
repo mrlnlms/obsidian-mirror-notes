@@ -46,6 +46,9 @@ const context = await esbuild.context({
 		"@lezer/highlight",
 		"@lezer/lr",
 		...builtins],
+	define: {
+		'__DEV__': String(!prod),
+	},
 	format: "cjs",
 	target: "es2018",
 	logLevel: "info",

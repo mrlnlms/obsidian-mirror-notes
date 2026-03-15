@@ -3,7 +3,7 @@ import { TFile } from "obsidian";
 import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
 import { hashObject } from "./mirrorUtils";
 import { CustomMirror, MirrorUIPluginSettings, DEFAULT_VIEW_OVERRIDES, ViewOverrides } from "../settings/types";
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 
 // =================================================================================
 // CACHE + INDEX

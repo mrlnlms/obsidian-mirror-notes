@@ -1,3 +1,5 @@
+declare const __DEV__: boolean;
+
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -16,14 +18,16 @@ class MirrorLogger {
 
   /** Called once from plugin onload() */
   init(vaultPath: string) {
+    if (!__DEV__) return;
     this.logFilePath = path.join(
       vaultPath,
-      '.obsidian', 'plugins', 'obsidian-mirror-notes', 'debug.log'
+      '.obsidian', 'plugins', 'obsidian-mirror-notes', 'src', 'dev', 'debug.log'
     );
   }
 
   /** Toggle from settings */
   setEnabled(value: boolean) {
+    if (!__DEV__) return;
     this._enabled = value;
     if (value) {
       this.write('LOG', '--- Debug logging enabled ---');
@@ -33,24 +37,26 @@ class MirrorLogger {
   }
 
   log(...args: any[]) {
-    if (!this._enabled) return;
+    if (!__DEV__ || !this._enabled) return;
     console.log('[MirrorNotes]', ...args);
     this.write('LOG', args);
   }
 
   warn(...args: any[]) {
-    if (!this._enabled) return;
+    if (!__DEV__ || !this._enabled) return;
     console.warn('[MirrorNotes]', ...args);
     this.write('WARN', args);
   }
 
   error(...args: any[]) {
     console.error('[MirrorNotes]', ...args);
+    if (!__DEV__) return;
     if (this._enabled) this.write('ERR', args);
   }
 
   /** Force flush and clean up — call from plugin onunload() */
   destroy() {
+    if (!__DEV__) return;
     this.flush();
     if (this.flushTimer) {
       clearTimeout(this.flushTimer);

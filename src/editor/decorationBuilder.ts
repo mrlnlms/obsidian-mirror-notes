@@ -3,7 +3,7 @@ import { Decoration, DecorationSet } from "@codemirror/view";
 import { MirrorState } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
 import { MirrorTemplateWidget } from "./mirrorWidget";
-import { Logger } from '../logger';
+import { Logger } from '../dev/logger';
 
 export function buildDecorations(state: EditorState, mirrorState: MirrorState, plugin: MirrorUIPlugin): DecorationSet {
   const { enabled, config, widgetId } = mirrorState;
