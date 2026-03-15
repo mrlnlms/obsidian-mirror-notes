@@ -995,6 +995,144 @@
         "readableLineLength": null,
         "showInlineTitle": null
       }
+    },
+    {
+      "id": "poc-mcm",
+      "name": "PoC: Multi-Column Markdown",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/poc/Teste MCM.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "poc-test-mcm.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
+    },
+    {
+      "id": "poc-obsidian-columns",
+      "name": "PoC: Obsidian Columns",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/poc/Teste Obsidian Columns.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "poc-test-obsidian-columns.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
+    },
+    {
+      "id": "poc-multi-column-layout",
+      "name": "PoC: Multi-Column Layout",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/poc/Teste Multi-Column Layout.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "poc-test-multi-column-layout.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
+    },
+    {
+      "id": "test-bottom-unified",
+      "name": "Test: Bottom unified (DOM + CM6 fallback)",
+      "openview": true,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/position-test.md",
+      "custom_settings_live_preview_pos": "above-backlinks",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "test-bottom-unified.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
+    },
+    {
+      "id": "test-below-backlinks",
+      "name": "Test: Below backlinks",
+      "openview": true,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/position-test.md",
+      "custom_settings_live_preview_pos": "below-backlinks",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "test-below-backlinks.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
+    },
+    {
+      "id": "test-above-backlinks-compat",
+      "name": "Test: Above backlinks (compat)",
+      "openview": true,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/position-test.md",
+      "custom_settings_live_preview_pos": "above-backlinks",
+      "enable_custom_preview_mode": false,
+      "custom_settings_preview_note": "",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_settings_hide_props": false,
+      "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "test-above-backlinks-compat.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     }
   ]
 }
