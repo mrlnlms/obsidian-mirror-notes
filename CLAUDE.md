@@ -78,7 +78,7 @@ Cada doc tem um proposito unico. NAO duplicar informacao entre eles. Na duvida, 
 
 ### Atualizacao (saida — depois de implementar)
 
-- Padrao novo descoberto → adicionar DIRETAMENTE ao skill relevante (cm6, core, settings, design, development)
+- Padrao novo descoberto → adicionar DIRETAMENTE ao skill relevante (cm6, core, settings, design)
 - Anti-pattern descoberto → adicionar na secao "Common Pitfalls" do skill relevante
 - NAO usar learnings.md como intermediario pra skills
 - learnings.md e responsabilidade do usuario (registro pessoal)

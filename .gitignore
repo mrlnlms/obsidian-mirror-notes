@@ -31,7 +31,8 @@ docs/learnings.md
 docs/notes.md
 docs/archive/
 docs/research/
+docs/superpowers/
 
 # Debug log
-debug.log
+**/debug.log
 *.log.old
