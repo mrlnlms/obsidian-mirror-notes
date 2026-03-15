@@ -86,19 +86,22 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         const mirrorSettings_main = this.containerEl.createEl("div", {cls: "mirror-settings_main"});
         mirrorSettings_main.createEl("h1", {text:"Mirror Plugin Settings"})
 
-        if (__DEV__) {
-            new Setting(mirrorSettings_main)
-                .setName("Debug logging")
-                .setDesc("Write logs to debug.log for troubleshooting.")
-                .addToggle((cb) => {
-                    cb.setValue(this.plugin.settings.debug_logging)
-                        .onChange((value) => {
-                            this.plugin.settings.debug_logging = value;
-                            this.plugin.saveSettings();
-                            Logger.setEnabled(value);
-                        });
-                });
-        }
+        // DEV-ONLY TOGGLE: descomentar o if (__DEV__) pra esconder este toggle
+        // da interface em builds de producao. Enquanto estiver comentado, o toggle
+        // aparece sempre — mas o logger e no-op em prod (metodos retornam early).
+        // if (__DEV__) {
+        new Setting(mirrorSettings_main)
+            .setName("Debug logging")
+            .setDesc("Write logs to debug.log for troubleshooting.")
+            .addToggle((cb) => {
+                cb.setValue(this.plugin.settings.debug_logging)
+                    .onChange((value) => {
+                        this.plugin.settings.debug_logging = value;
+                        this.plugin.saveSettings();
+                        Logger.setEnabled(value);
+                    });
+            });
+        // }
 
         const globalSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-global-settings"});
         const customSettings = mirrorSettings_main.createEl("div", {cls: "mirror-settings-custom-settings"});
