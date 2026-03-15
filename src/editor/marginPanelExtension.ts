@@ -3,7 +3,15 @@ import { mirrorStateField, mirrorPluginFacet } from "./mirrorState";
 import { MARGIN_POSITIONS } from "./mirrorTypes";
 import { renderMirrorTemplate } from "../rendering/templateRenderer";
 
-const PANEL_WIDTH = 250;
+export const PANEL_WIDTH = 250;
+
+/** Pure positioning logic — returns CSS style props for the panel */
+export function calcPanelStyle(side: 'left' | 'right'): { left?: string; right?: string } {
+  if (side === 'left') {
+    return { left: '0px' };
+  }
+  return { right: '0px' };
+}
 
 /**
  * Basic margin panel ViewPlugin — injects a div into scrollDOM
@@ -92,19 +100,9 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private updatePosition(side: 'left' | 'right') {
     if (!this.panel) return;
 
-    const contentLeft = this.view.contentDOM.offsetLeft;
-
-    if (side === 'left') {
-      // Position to the left of content area
-      const leftPos = Math.max(0, contentLeft - PANEL_WIDTH - 20);
-      this.panel.style.left = `${leftPos}px`;
-      this.panel.style.right = '';
-    } else {
-      // Position to the right of content area
-      const contentRight = contentLeft + this.view.contentDOM.offsetWidth;
-      this.panel.style.left = `${contentRight + 20}px`;
-      this.panel.style.right = '';
-    }
+    const style = calcPanelStyle(side);
+    this.panel.style.left = style.left ?? '';
+    this.panel.style.right = style.right ?? '';
   }
 
   private async renderContent(mirrorState: any, config: any, cacheKey: string) {
