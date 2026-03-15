@@ -33,6 +33,9 @@ docs/archive/
 docs/research/
 docs/superpowers/
 
+# Worktrees
+.worktrees/
+
 # Debug log
 **/debug.log
 *.log.old
