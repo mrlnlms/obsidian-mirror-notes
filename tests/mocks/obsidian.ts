@@ -14,8 +14,16 @@ export class TAbstractFile {
 }
 
 export class Component {
+  private unloadCallbacks: Array<() => void> = [];
   addChild() {}
   removeChild() {}
+  register(cb: () => void) {
+    this.unloadCallbacks.push(cb);
+  }
+  unload() {
+    for (const cb of this.unloadCallbacks) cb();
+    this.unloadCallbacks = [];
+  }
 }
 
 export class MarkdownRenderChild extends Component {
@@ -65,6 +73,14 @@ if (typeof HTMLElement !== 'undefined' && !HTMLElement.prototype.createEl) {
     this.appendChild(el);
     return el;
   };
+}
+
+if (typeof globalThis.ResizeObserver === 'undefined') {
+  globalThis.ResizeObserver = class ResizeObserver {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  } as any;
 }
 
 export class PluginSettingTab {}

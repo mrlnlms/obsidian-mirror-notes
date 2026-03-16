@@ -68,7 +68,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     }
 
     const side = config.position as 'left' | 'right';
-    const cacheKey = `margin-${side}-${config.templatePath}`;
+    const cacheKey = `margin-${mirrorState.filePath}-${side}-${config.templatePath}`;
 
     // Reuse existing panel if same config
     if (this.panel && this.panel.isConnected && this.side === side && this.lastCacheKey === cacheKey) {
@@ -117,14 +117,14 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     const plugin = this.view.state.facet(mirrorPluginFacet);
     if (!plugin) return;
 
-    const activeFile = plugin.app.workspace.getActiveFile();
-    if (!activeFile) return;
+    const sourcePath = mirrorState.filePath;
+    if (!sourcePath) return;
 
     await renderMirrorTemplate({
       plugin,
       templatePath: config.templatePath,
       variables: mirrorState.frontmatter || {},
-      sourcePath: activeFile.path,
+      sourcePath,
       container: this.panel,
       cacheKey
     });
