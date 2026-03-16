@@ -1,25 +1,37 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico a ser feito. Atualizado na v44.
+Trabalho tecnico pendente. Atualizado na v45.
 
 ## Bugs
 
 (nenhum bug aberto)
 
-## Features
+## Proximo: Logica AND/OR nos filtros
 
-- **Logica AND/OR nas condicionais** — hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje. Afeta `mirrorConfig.ts` (matching) e `settings.ts` (UI pra combinar condicoes)
-- **Suporte a multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, o segundo e descartado com warning. Config de teste "Edge: Conflito" (pos-top.md claimado por 2 mirrors) preservada como referencia. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM
-- **Reading View DOM injection pra top/bottom** — CM6 widgets so existem em Live Preview. Pra top/bottom em Reading View: DOM injection em `.mod-header.mod-ui` / `.mod-footer`
+Hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje.
 
-## Position engine
+- Afeta: `mirrorConfig.ts` (matching logic) e `settings.ts` (UI pra combinar condicoes)
+- Escopo pequeno, primeiro item a ser atacado
 
-- **Simplificar menu de posicoes (parcial v43/v44)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado com mesmo fallback (v44). `below-properties` + `top` ja unificados (v42). Falta: remover opcoes deprecated do dropdown completamente (breaking change — migrar data.json de usuarios)
-- **Margin panel avancado** — 3 problemas conhecidos: (1) left margin sobrepoe conteudo — precisa calcular largura disponivel (`contentDOM.offsetLeft`, readable-line-width); (2) right margin nao responde a resize — precisa ResizeObserver; (3) margins com readable line length OFF — sem margem disponivel, precisa fallback (ocultar? mover?). Tambem: tratamento de line numbers (`cm-gutters.offsetWidth`), min-height (VN usa 528px footer, 100px above-backlinks)
-## Considerado resolvido
+## Epico: Margin Panel
 
-- **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
-- **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
+O margin panel (`marginPanelExtension.ts`) renderiza mirrors nas posicoes `left` e `right` como ViewPlugin CM6. Posicionamento flush (left:0/right:0) e ResizeObserver ja implementados (v45). Plano de trabalho em `docs/superpowers/plans/`.
+
+Itens pendentes:
+
+- **Largura do painel** — hoje e 250px fixo (`PANEL_WIDTH`). Testar diferentes estrategias: proporcional ao espaco disponivel, configuravel por mirror, fit-content com max-width, ou combinacao
+- **Sobreposicao / threshold** — quando nao tem espaco (janela estreita, readable line length OFF), o painel sobrepoe conteudo. Definir threshold minimo pra renderizar e fallback (ocultar? mover pra top/bottom?). Evitar valores magicos hardcoded
+- **Gutters / line numbers** — calculo de posicao nao considera `cm-gutters.offsetWidth`. Relevante quando line numbers estao ativados
+- **Min-height** — painel cresce com conteudo, sem min-height. Avaliar se precisa de altura minima (VN usa 528px footer, 100px above-backlinks como referencia)
+- **Menu de posicoes (consolidacao final)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado (v44), `below-properties` + `top` unificados (v42). Falta remover opcoes deprecated do dropdown (breaking change — migrar data.json). So no final do epico, porque o margin panel pode adicionar opcoes intermediarias pra teste. Inclui revisao de UX writing das labels e feedbacks na tela
+
+## Revisao de Settings UI
+
+Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
+
+- **Renomear mirrors** — hoje nao tem como renomear um mirror criado, so deletar e recriar
+- **Usabilidade com muitos mirrors** — com dezenas de mirrors a lista fica dificil de navegar. Busca existe (v31) mas layout/hierarquia visual precisam de revisao
+- **Layout geral** — revisar organizacao visual, agrupamento, e hierarquia da pagina
 
 ## Integracao com outros plugins
 
@@ -31,6 +43,11 @@ Trabalho tecnico a ser feito. Atualizado na v44.
 | Templater | `<% tp.* %>` | Nao aplicavel | One-shot: processa na criacao da nota, nao reativo |
 | Core Templates | — | Nao aplicavel | Mesmo caso do Templater: insercao estatica |
 | `{{var}}` (nativo) | `{{nomeDoCampo}}` | Funciona | Syntax propria do Mirror Notes |
+
+## Considerado resolvido
+
+- **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
+- **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
 
 ## Resolvidos
 
@@ -105,3 +122,5 @@ Trabalho tecnico a ser feito. Atualizado na v44.
 - [x] Cold start rendering — MarkdownRenderer retornava success sem popular DOM. Retry 1s no onLayoutReady com clearRenderCache (v43)
 - [x] positionOverrides stale — override persistia entre sessoes, impedindo re-avaliacao DOM. Delete movido pra antes de getApplicableConfig (v43)
 - [x] Backlinks timing retry — resolveTarget falha por children.length === 0 no startup. Retry 500ms apos fallback (v43)
+- [x] Margin panel posicionamento flush — left:0/right:0 em vez de calculo com contentDOM.offsetLeft + gap 20px (v45)
+- [x] Margin panel ResizeObserver — responsive a resize de janela, sidebar, split panes (v45)

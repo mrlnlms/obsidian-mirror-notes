@@ -1,26 +1,35 @@
 # Mirror Notes — Roadmap
 
-Horizonte de produto e itens para lancamento. Trabalho tecnico corrente esta no [backlog.md](backlog.md). Arquitetura atual em [architecture.md](architecture.md).
+Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [backlog.md](backlog.md). Arquitetura atual em [architecture.md](architecture.md).
 
-## Proximo: v45
+## Ordem de execucao
 
-- [ ] Prioridades a definir. Ver [backlog](backlog.md)
+### 1. Logica AND/OR nos filtros
+
+Menor escopo, primeiro a ser atacado. Hoje filtros sao OR-only — nao tem como combinar condicoes. Detalhes no [backlog](backlog.md).
+
+### 2. Margin Panel (epico)
+
+Segundo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementados (v45). Faltam: largura configuravel, threshold de sobreposicao, gutters, min-height. Menu de posicoes so se consolida no final do epico (pode precisar de opcoes intermediarias pra teste). Plano de trabalho em `docs/superpowers/plans/`.
+
+### 3. Revisao de Settings UI
+
+Apos margin panel. Renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina.
+
+### 4. Reading View DOM injection
+
+Top/bottom via `.mod-header.mod-ui` / `.mod-footer`. CM6 widgets so existem em Live Preview — esta feature fecha o gap. Entra apos AND/OR e margin panel.
 
 ## Pre-lancamento (must-have)
 
-- [ ] **Sistema de templates pre-configurados (starter configs)** — usuario instala e ja tem exemplos funcionando. So faz sentido quando o plugin estiver pronto pra lancar
-- [ ] **Margin panel avancado** — line numbers, readable-line-width, resize observer (base existe em marginPanelExtension.ts). 3 bugs conhecidos no [backlog](backlog.md)
-- [ ] **Reading View DOM injection** — top/bottom via `.mod-header.mod-ui` / `.mod-footer` (CM6 so funciona em Live Preview)
+- [ ] **Curadoria do demo vault** — revisar notas e exemplos em `demo/samples/`, selecionar os melhores, organizar pra publicacao. Hoje o vault acumula tudo que foi portado via `copy-to-demo` durante o dev — precisa de uma passada final
+- [ ] **Starter configs** — templates pre-configurados pra novos usuarios. So faz sentido quando o plugin estiver pronto pra lancar
+- [ ] **Import/Export de configuracoes** — validacao de schema, paths quebrados, conflitos com mirrors existentes. Menor prioridade entre os must-have
 
-## Should-have
+## Ideias (viabilidade a definir)
 
-- [ ] **Import/Export de configuracoes** — validacao de schema, tratamento de paths quebrados, conflitos com mirrors existentes
-- [ ] **Logica AND/OR nas condicionais** — hoje todos os filtros sao OR. VirtualNotes tem rules com condicoes compostas. Ver [backlog](backlog.md)
-
-## Nice-to-have
-
-- [ ] **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc.
-- [ ] **Multiplos mirrors na mesma nota** — requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM
+- **Multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, segundo descartado com warning. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM. Config de teste "Edge: Conflito" preservada como referencia
+- **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc. Nao sei se vale a pena ou e viavel
 
 ## Versoes concluidas
 
@@ -28,6 +37,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v45 | Margin panel positioning | Posicionamento flush (left:0/right:0), ResizeObserver responsivo |
 | v44 | Config cache + race condition + below-backlinks | Fix config cache (override nao polui cache), race condition cold start (removeOtherDomMirrors), below-backlinks alinhado, retry cascade fix |
 | v43 | Position simplification + cold start | Unificar bottom/above-backlinks, dropdown deprecated, retry backlinks timing, cold start rendering fix |
 | v42 | Per-view setting overrides | ViewOverrides (hideProps, readableLineLength, showInlineTitle), CSS per-view, class nativa `is-readable-line-width`, Settings UI com dropdowns |
