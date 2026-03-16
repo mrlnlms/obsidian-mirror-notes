@@ -50,7 +50,14 @@ export function updateSettingsPaths(
     const newName = newPath.split('/').pop();
     for (const cond of mirror.conditions) {
       if (cond.type === 'file' && cond.fileName) {
-        if (oldName && newName && oldName !== newName && cond.fileName === oldName) {
+        // Full path match (suggester provides path)
+        const rPath = replacePath(cond.fileName);
+        if (rPath !== null) {
+          cond.fileName = rPath;
+          mirrorAffected = true;
+        }
+        // Filename-only match (legacy / manual input)
+        else if (oldName && newName && oldName !== newName && cond.fileName === oldName) {
           cond.fileName = newName;
           mirrorAffected = true;
         }

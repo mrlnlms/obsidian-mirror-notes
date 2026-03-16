@@ -176,6 +176,20 @@ describe('getApplicableConfig', () => {
     expect(config!.templatePath).toBe('templates/test.md');
   });
 
+  it('matches by full path condition', () => {
+    const mirror = createCustomMirror({
+      conditions: [{ type: 'file', negated: false, fileName: 'projects/nota.md' }],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+
+    const fileMatch = makeTFile('projects/nota.md');
+    expect(getApplicableConfig(plugin, fileMatch, {})).not.toBeNull();
+
+    clearConfigCache();
+    const fileNoMatch = makeTFile('archive/nota.md');
+    expect(getApplicableConfig(plugin, fileNoMatch, {})).toBeNull();
+  });
+
   // ---- Folder match ----
   it('matches by folder condition', () => {
     const mirror = createCustomMirror({

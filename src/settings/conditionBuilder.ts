@@ -157,7 +157,7 @@ function buildConditionRow(
 
     // Path validation for file/folder conditions
     if (condition.type === 'file' && condition.fileName) {
-        addPathValidation(app, container, condition.fileName, 'filename');
+        addPathValidation(app, container, condition.fileName, 'file');
     } else if (condition.type === 'folder' && condition.folderPath) {
         addPathValidation(app, container, condition.folderPath, 'folder');
     }

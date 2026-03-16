@@ -28,7 +28,7 @@ export function evaluateCondition(
   let result = false;
   switch (condition.type) {
     case 'file':
-      result = file.name === condition.fileName;
+      result = file.path === condition.fileName || file.name === condition.fileName;
       break;
     case 'folder':
       result = !!condition.folderPath && file.path.startsWith(condition.folderPath);
