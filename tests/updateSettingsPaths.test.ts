@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { updateSettingsPaths } from '../src/utils/settingsPaths';
-import { DEFAULT_SETTINGS, MirrorUIPluginSettings, CustomMirror } from '../settings';
+import { DEFAULT_SETTINGS, MirrorUIPluginSettings, CustomMirror, DEFAULT_VIEW_OVERRIDES } from '../settings';
 
 function makeSettings(overrides?: Partial<MirrorUIPluginSettings>): MirrorUIPluginSettings {
   return { ...DEFAULT_SETTINGS, ...overrides };
@@ -19,10 +19,11 @@ function makeMirror(overrides?: Partial<CustomMirror>): CustomMirror {
     custom_settings_preview_pos: 'top',
     custom_settings_overide: false,
     custom_settings_hide_props: false,
+    custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
+    custom_show_container_border: true,
     custom_auto_update_paths: true,
-    filterFiles: [],
-    filterFolders: [],
-    filterProps: [],
+    conditions: [],
+    conditionLogic: 'any',
     ...overrides,
   };
 }
@@ -65,10 +66,10 @@ describe('updateSettingsPaths', () => {
     expect(mirror.custom_settings_live_preview_note).toBe('new.md');
   });
 
-  it('updates folder paths with prefix match', () => {
+  it('updates folder condition path with prefix match', () => {
     const mirror = makeMirror({
       custom_settings_live_preview_note: 'projects/template.md',
-      filterFolders: [{ folder: 'projects/', template: '' }],
+      conditions: [{ type: 'folder', negated: false, folderPath: 'projects/' }],
     });
     const settings = makeSettings({ customMirrors: [mirror] });
 
@@ -76,19 +77,19 @@ describe('updateSettingsPaths', () => {
 
     expect(result.changed).toBe(true);
     expect(mirror.custom_settings_live_preview_note).toBe('work/template.md');
-    expect(mirror.filterFolders[0].folder).toBe('work/');
+    expect(mirror.conditions[0].folderPath).toBe('work/');
   });
 
-  it('updates filterFiles filename on rename', () => {
+  it('updates file condition filename on rename', () => {
     const mirror = makeMirror({
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const settings = makeSettings({ customMirrors: [mirror] });
 
     const result = updateSettingsPaths(settings, 'projects/nota.md', 'projects/renamed.md');
 
     expect(result.changed).toBe(true);
-    expect(mirror.filterFiles[0].folder).toBe('renamed.md');
+    expect(mirror.conditions[0].fileName).toBe('renamed.md');
   });
 
   it('skips mirror with custom_auto_update_paths: false', () => {
@@ -159,18 +160,28 @@ describe('updateSettingsPaths', () => {
     expect(mirror.custom_settings_live_preview_note).toBe('renamed.md');
   });
 
-  it('does not update filterFiles when filename stays the same (folder move)', () => {
+  it('does not update file condition when filename stays the same (folder move)', () => {
     const mirror = makeMirror({
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const settings = makeSettings({ customMirrors: [mirror] });
 
-    // Moving file to different folder, same filename
     const result = updateSettingsPaths(settings, 'projects/nota.md', 'archive/nota.md');
 
-    // filterFiles stores filename only — 'nota.md' didn't change
-    expect(mirror.filterFiles[0].folder).toBe('nota.md');
-    // No mirror change from filterFiles (may still change from template paths)
+    expect(mirror.conditions[0].fileName).toBe('nota.md');
+    expect(result.mirrorIndices).toEqual([]);
+  });
+
+  it('does not touch property conditions on rename', () => {
+    const mirror = makeMirror({
+      conditions: [{ type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' }],
+    });
+    const settings = makeSettings({ customMirrors: [mirror] });
+
+    const result = updateSettingsPaths(settings, 'old.md', 'new.md');
+
+    expect(mirror.conditions[0].propertyName).toBe('type');
+    expect(mirror.conditions[0].propertyValue).toBe('project');
     expect(result.mirrorIndices).toEqual([]);
   });
 });

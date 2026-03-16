@@ -2,7 +2,24 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v44 — config cache fix, race condition fix, below-backlinks alinhado
+## Versao Atual: v46 — AND/OR compound filter logic
+
+### v46: Conditions unificadas com AND/OR e negacao
+
+- Data model: 3 arrays separados (`filterFiles/filterFolders/filterProps`) → `conditions: Condition[]` + `conditionLogic: 'any' | 'all'`
+- Cada condition tem tipo (file/folder/property), negacao (is/not), e campos semanticos
+- `evaluateCondition()` e `evaluateConditions()` — funcoes puras exportadas e testadas
+- `mirrorIndex` eliminado — scan linear + configCache existente (incompativel com AND)
+- Settings UI: secao "Conditions" unificada com dropdown any/all, rows tipadas, is/not
+- `filterBuilder.ts` → `conditionBuilder.ts` (reescrito)
+- `settingsPaths.ts` adaptado pra iterar conditions com campos semanticos
+- 166 testes (+20 novos: evaluateCondition unit, AND/OR/negation integration)
+
+### v45: Margin panel positioning
+
+- Posicionamento flush left:0/right:0 (remove calculo com contentDOM.offsetLeft + gap)
+- ResizeObserver responsivo a resize de janela, sidebar, split panes
+- `calcPanelStyle()` extraida como funcao pura testavel
 
 ### v44: 3 bug fixes no position engine de backlinks
 

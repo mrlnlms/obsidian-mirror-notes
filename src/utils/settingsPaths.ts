@@ -45,19 +45,23 @@ export function updateSettingsPaths(
     const c2 = replacePath(mirror.custom_settings_preview_note);
     if (c2 !== null) { mirror.custom_settings_preview_note = c2; mirrorAffected = true; }
 
-    // filterFiles — compara filename, nao path completo
+    // conditions — atualizar paths por tipo
     const oldName = oldPath.split('/').pop();
     const newName = newPath.split('/').pop();
-    if (oldName && newName && oldName !== newName) {
-      for (const f of mirror.filterFiles) {
-        if (f.folder === oldName) { f.folder = newName; mirrorAffected = true; }
+    for (const cond of mirror.conditions) {
+      if (cond.type === 'file' && cond.fileName) {
+        if (oldName && newName && oldName !== newName && cond.fileName === oldName) {
+          cond.fileName = newName;
+          mirrorAffected = true;
+        }
       }
-    }
-
-    // filterFolders — compara prefixo de path
-    for (const f of mirror.filterFolders) {
-      const r = replacePath(f.folder);
-      if (r !== null) { f.folder = r; mirrorAffected = true; }
+      if (cond.type === 'folder' && cond.folderPath) {
+        const r = replacePath(cond.folderPath);
+        if (r !== null) {
+          cond.folderPath = r;
+          mirrorAffected = true;
+        }
+      }
     }
 
     if (mirrorAffected) {

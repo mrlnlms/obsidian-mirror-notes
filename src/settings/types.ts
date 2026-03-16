@@ -3,6 +3,18 @@ export interface FolderTemplate {
     template: string;
 }
 
+export type ConditionType = 'file' | 'folder' | 'property';
+export type ConditionLogic = 'any' | 'all';
+
+export interface Condition {
+    type: ConditionType;
+    negated: boolean;
+    fileName?: string;       // type=file
+    folderPath?: string;     // type=folder
+    propertyName?: string;   // type=property
+    propertyValue?: string;  // type=property
+}
+
 /** Tri-state: true = force on, false = force off, null = inherit from Obsidian */
 export type OverrideValue = boolean | null;
 
@@ -51,9 +63,8 @@ export interface CustomMirror {
     custom_view_overrides: ViewOverrides;
     custom_show_container_border: boolean;
     custom_auto_update_paths: boolean;
-    filterFiles: Array<FolderTemplate>;
-    filterFolders: Array<FolderTemplate>;
-    filterProps: Array<FolderTemplate>;
+    conditions: Condition[];
+    conditionLogic: ConditionLogic;
 }
 
 export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
@@ -90,8 +101,7 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
         custom_show_container_border: true,
         custom_auto_update_paths: true,
-        filterFiles: [],
-        filterFolders: [],
-        filterProps: [],
+        conditions: [],
+        conditionLogic: 'any',
     };
 }

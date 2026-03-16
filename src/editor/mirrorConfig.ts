@@ -2,7 +2,7 @@ import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
 import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
 import { hashObject } from "./mirrorUtils";
-import { CustomMirror, MirrorUIPluginSettings, DEFAULT_VIEW_OVERRIDES, ViewOverrides } from "../settings/types";
+import { Condition, ConditionLogic, CustomMirror, MirrorUIPluginSettings, DEFAULT_VIEW_OVERRIDES, ViewOverrides } from "../settings/types";
 import { Logger } from '../dev/logger';
 
 // =================================================================================
@@ -12,47 +12,51 @@ import { Logger } from '../dev/logger';
 // Cache de config por arquivo (ativado v27)
 const configCache = new Map<string, { config: ApplicableMirrorConfig | null, frontmatterHash: string }>();
 
-// Index de mirrors por file/folder (lazy build, invalidado com cache)
-interface MirrorIndex {
-  byFile: Map<string, CustomMirror>;        // filename → primeiro mirror ativo
-  byFolder: string[];                        // folders ordenados por tamanho desc
-  folderToMirror: Map<string, CustomMirror>; // folder path → mirror
-}
-
-let mirrorIndex: MirrorIndex | null = null;
-
-function buildMirrorIndex(settings: MirrorUIPluginSettings): MirrorIndex {
-  const byFile = new Map<string, CustomMirror>();
-  const folderToMirror = new Map<string, CustomMirror>();
-
-  for (const mirror of settings.customMirrors) {
-    if (!mirror.enable_custom_live_preview_mode || !mirror.custom_settings_live_preview_note) continue;
-
-    for (const f of mirror.filterFiles) {
-      if (f.folder && !byFile.has(f.folder)) {
-        byFile.set(f.folder, mirror);
-      } else if (f.folder && byFile.has(f.folder)) {
-        Logger.warn(`Mirror conflict: "${mirror.name}" discarded for file "${f.folder}" (already claimed by "${byFile.get(f.folder)!.name}")`);
-      }
-    }
-    for (const f of mirror.filterFolders) {
-      if (f.folder && !folderToMirror.has(f.folder)) {
-        folderToMirror.set(f.folder, mirror);
-      } else if (f.folder && folderToMirror.has(f.folder)) {
-        Logger.warn(`Mirror conflict: "${mirror.name}" discarded for folder "${f.folder}" (already claimed by "${folderToMirror.get(f.folder)!.name}")`);
-      }
-    }
-  }
-
-  // Ordenar folders por tamanho desc — "projects/sub/" matcha antes de "projects/"
-  const byFolder = Array.from(folderToMirror.keys()).sort((a, b) => b.length - a.length);
-
-  return { byFile, byFolder, folderToMirror };
-}
-
 export function clearConfigCache(): void {
   configCache.clear();
-  mirrorIndex = null;
+}
+
+// =================================================================================
+// CONDITION EVALUATION
+// =================================================================================
+
+export function evaluateCondition(
+  condition: Condition,
+  file: TFile,
+  frontmatter: any
+): boolean {
+  let result = false;
+  switch (condition.type) {
+    case 'file':
+      result = file.name === condition.fileName;
+      break;
+    case 'folder':
+      result = !!condition.folderPath && file.path.startsWith(condition.folderPath);
+      break;
+    case 'property': {
+      if (!condition.propertyName) break;
+      const val = frontmatter?.[condition.propertyName];
+      if (val === undefined) break;
+      if (!condition.propertyValue) { result = true; break; }
+      if (val === condition.propertyValue) { result = true; break; }
+      if (typeof val === 'boolean') { result = String(val) === condition.propertyValue; break; }
+      if (Array.isArray(val)) { result = val.some((item: any) => String(item) === condition.propertyValue); break; }
+      result = String(val) === condition.propertyValue;
+      break;
+    }
+  }
+  return condition.negated ? !result : result;
+}
+
+export function evaluateConditions(
+  conditions: Condition[],
+  logic: ConditionLogic,
+  file: TFile,
+  frontmatter: any
+): boolean {
+  if (conditions.length === 0) return false;
+  const check = (c: Condition) => evaluateCondition(c, file, frontmatter);
+  return logic === 'all' ? conditions.every(check) : conditions.some(check);
 }
 
 // =================================================================================
@@ -93,51 +97,15 @@ export function getApplicableConfig(
 
   const settings = plugin.settings;
 
-  // Rebuild index se necessario (lazy)
-  if (!mirrorIndex) {
-    mirrorIndex = buildMirrorIndex(settings);
-  }
-
-  // 1. Encontrar custom mirror aplicavel via index
+  // 1. Encontrar custom mirror aplicavel via conditions
   let matchedMirror: CustomMirror | null = null;
 
-  // File match: O(1)
-  const fileMirror = mirrorIndex.byFile.get(file.name);
-  if (fileMirror) {
-    matchedMirror = fileMirror;
-  }
-
-  // Folder match: O(depth) — folders ordenados por especificidade
-  if (!matchedMirror) {
-    for (const folder of mirrorIndex.byFolder) {
-      if (file.path.startsWith(folder)) {
-        matchedMirror = mirrorIndex.folderToMirror.get(folder)!;
-        break;
-      }
-    }
-  }
-
-  // Props match: itera mirrors com filterProps (precisa do frontmatter, nao indexavel)
-  if (!matchedMirror) {
-    for (const mirror of settings.customMirrors) {
-      if (!mirror.enable_custom_live_preview_mode || !mirror.custom_settings_live_preview_note) continue;
-      const hasPropMatch = mirror.filterProps.some(p => {
-        if (!p.folder) return false;
-        const val = frontmatter[p.folder];
-        if (val === undefined) return false;
-        // Exact match (string, number)
-        if (val === p.template) return true;
-        // Boolean: frontmatter `true`/`false` vs settings string "true"/"false"
-        if (typeof val === 'boolean') return String(val) === p.template;
-        // Array: check if any element matches (e.g. tags: [a, b] matches "a")
-        if (Array.isArray(val)) return val.some(item => String(item) === p.template);
-        // Coerce to string for other types
-        return String(val) === p.template;
-      });
-      if (hasPropMatch) {
-        matchedMirror = mirror;
-        break;
-      }
+  for (const mirror of settings.customMirrors) {
+    if (!mirror.enable_custom_live_preview_mode || !mirror.custom_settings_live_preview_note) continue;
+    if (mirror.conditions.length === 0) continue;
+    if (evaluateConditions(mirror.conditions, mirror.conditionLogic, file, frontmatter)) {
+      matchedMirror = mirror;
+      break;
     }
   }
 

@@ -31,21 +31,15 @@
       "custom_settings_overide": true,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "conditions": [
+      "filterFiles": [],
+      "filterFolders": [],
+      "filterProps": [
         {
-          "type": "property",
-          "negated": false,
-          "propertyName": "type",
-          "propertyValue": "project"
+          "folder": "type",
+          "template": "project"
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "custom_show_container_border": false
     },
     {
       "id": "test-above-title",
@@ -60,20 +54,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-above-title.md"
+          "folder": "pos-above-title.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-top",
@@ -88,20 +76,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-top.md"
+          "folder": "pos-top.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-above-properties",
@@ -116,20 +98,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-above-properties.md"
+          "folder": "pos-above-properties.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-below-properties",
@@ -144,20 +120,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-below-properties.md"
+          "folder": "pos-below-properties.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-bottom",
@@ -172,20 +142,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-bottom.md"
+          "folder": "pos-bottom.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-above-backlinks",
@@ -200,20 +164,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-above-backlinks.md"
+          "folder": "pos-above-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-below-backlinks",
@@ -228,20 +186,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-below-backlinks.md"
+          "folder": "pos-below-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-left-margin",
@@ -256,20 +208,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-left-margin.md"
+          "folder": "pos-left-margin.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-right-margin",
@@ -284,20 +230,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-right-margin.md"
+          "folder": "pos-right-margin.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-fallback-props",
@@ -312,20 +252,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "fallback-props-hidden.md"
+          "folder": "fallback-props-hidden.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-fallback-backlinks",
@@ -340,20 +274,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "fallback-no-backlinks.md"
+          "folder": "fallback-no-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-filter-array",
@@ -368,21 +296,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [],
+      "filterFolders": [],
+      "filterProps": [
         {
-          "type": "property",
-          "negated": false,
-          "propertyName": "tags",
-          "propertyValue": "mirror-test"
+          "folder": "tags",
+          "template": "mirror-test"
         }
-      ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      ]
     },
     {
       "id": "test-filter-boolean",
@@ -397,21 +318,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [],
+      "filterFolders": [],
+      "filterProps": [
         {
-          "type": "property",
-          "negated": false,
-          "propertyName": "completed",
-          "propertyValue": "true"
+          "folder": "completed",
+          "template": "true"
         }
-      ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      ]
     },
     {
       "id": "edge-no-frontmatter",
@@ -426,20 +340,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "edge-no-frontmatter.md"
+          "folder": "edge-no-frontmatter.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "edge-dual-mirror",
@@ -454,20 +362,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "pos-top.md"
+          "folder": "pos-top.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-bottom-no-bl",
@@ -482,20 +384,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-bottom-sem-mencoes.md"
+          "folder": "eq-bottom-sem-mencoes.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-above-bl-no-bl",
@@ -510,20 +406,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-above-backlinks-sem-mencoes.md"
+          "folder": "eq-above-backlinks-sem-mencoes.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-below-bl-no-bl",
@@ -538,20 +428,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-below-backlinks-sem-mencoes.md"
+          "folder": "eq-below-backlinks-sem-mencoes.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-inline-title-on",
@@ -566,20 +450,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-above-title-inline-on.md"
+          "folder": "eq-above-title-inline-on.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-reactivity-settings",
@@ -594,20 +472,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "teste-reactivity-settings.md"
+          "folder": "teste-reactivity-settings.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-inline-title-sem-yaml",
@@ -622,20 +494,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-above-title-sem-yaml.md"
+          "folder": "eq-above-title-sem-yaml.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "eq-inline-title-off",
@@ -650,20 +516,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "eq-above-title-inline-off.md"
+          "folder": "eq-above-title-inline-off.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "stress-cm6-top",
@@ -678,20 +538,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "stress-test-cm6-top.md"
+          "folder": "stress-test-cm6-top.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": false
     },
     {
       "id": "vis-above-title",
@@ -706,20 +561,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-above-title.md"
+          "folder": "vis-above-title.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "vis-above-props",
@@ -734,20 +583,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-above-props.md"
+          "folder": "vis-above-props.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "vis-below-props",
@@ -762,20 +605,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-below-props.md"
+          "folder": "vis-below-props.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "vis-cm6-top",
@@ -790,20 +627,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-cm6-top.md"
+          "folder": "vis-cm6-top.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "stress-dom-below-props",
@@ -818,20 +649,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "stress-test-dom-below-props.md"
+          "folder": "stress-test-dom-below-props.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": false
     },
     {
       "id": "vis-above-backlinks",
@@ -846,20 +672,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-above-backlinks.md"
+          "folder": "vis-above-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "v41-folder-test",
@@ -874,20 +694,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [],
+      "filterFolders": [
         {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-filters/"
+          "folder": "samples/03-filters/",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "v41-categories-filter",
@@ -902,21 +717,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [],
+      "filterFolders": [],
+      "filterProps": [
         {
-          "type": "property",
-          "negated": false,
-          "propertyName": "categories",
-          "propertyValue": "project"
+          "folder": "categories",
+          "template": "project"
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "custom_show_container_border": true
     },
     {
       "id": "vis-below-backlinks",
@@ -931,20 +740,14 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "vis-below-backlinks.md"
+          "folder": "vis-below-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "custom_show_container_border": false
+      "filterFolders": [],
+      "filterProps": []
     },
     {
       "id": "test-hide-props",
@@ -959,20 +762,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "nota-teste.md"
+          "folder": "nota-teste.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "vo-controle",
@@ -987,20 +785,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "controle.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": null,
         "showInlineTitle": null
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "controle.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-no-readable",
@@ -1015,20 +813,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "no-readable-line.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": false,
         "showInlineTitle": null
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "no-readable-line.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-force-readable",
@@ -1043,20 +841,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "force-readable-line.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": true,
         "showInlineTitle": null
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "force-readable-line.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-hide-title",
@@ -1071,20 +869,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "hide-title.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": null,
         "showInlineTitle": false
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "hide-title.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-force-title",
@@ -1099,20 +897,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "force-title.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": null,
         "showInlineTitle": true
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "force-title.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-all-overrides",
@@ -1127,20 +925,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "all-overrides.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": true,
         "readableLineLength": false,
         "showInlineTitle": false
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "all-overrides.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-side-a",
@@ -1155,20 +953,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "side-by-side-A.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": true,
         "readableLineLength": false,
         "showInlineTitle": null
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "side-by-side-A.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "vo-side-b",
@@ -1183,20 +981,20 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
+      "filterFiles": [
+        {
+          "folder": "side-by-side-B.md",
+          "template": ""
+        }
+      ],
+      "filterFolders": [],
+      "filterProps": [],
       "custom_show_container_border": true,
       "custom_view_overrides": {
         "hideProps": false,
         "readableLineLength": null,
         "showInlineTitle": null
-      },
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "side-by-side-B.md"
-        }
-      ],
-      "conditionLogic": "any"
+      }
     },
     {
       "id": "poc-mcm",
@@ -1211,20 +1009,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "poc-test-mcm.md"
+          "folder": "poc-test-mcm.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "poc-obsidian-columns",
@@ -1239,20 +1032,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "poc-test-obsidian-columns.md"
+          "folder": "poc-test-obsidian-columns.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "poc-multi-column-layout",
@@ -1267,20 +1055,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "poc-test-multi-column-layout.md"
+          "folder": "poc-test-multi-column-layout.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "test-bottom-unified",
@@ -1295,20 +1078,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "test-bottom-unified.md"
+          "folder": "test-bottom-unified.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "test-below-backlinks",
@@ -1323,20 +1101,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "test-below-backlinks.md"
+          "folder": "test-below-backlinks.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     },
     {
       "id": "test-above-backlinks-compat",
@@ -1351,357 +1124,15 @@
       "custom_settings_overide": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
-      "custom_show_container_border": true,
-      "conditions": [
+      "filterFiles": [
         {
-          "type": "file",
-          "negated": false,
-          "fileName": "test-above-backlinks-compat.md"
+          "folder": "test-above-backlinks-compat.md",
+          "template": ""
         }
       ],
-      "conditionLogic": "any",
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      }
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-01",
-      "name": "Cond 01: File Match",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-01-file-match.md",
-      "conditions": [
-        {
-          "type": "file",
-          "negated": false,
-          "fileName": "test-01-file-match.md"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-02",
-      "name": "Cond 02: Folder Match",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-02-folder-match.md",
-      "conditions": [
-        {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-conditions/test-02/"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-03",
-      "name": "Cond 03: Prop String",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-03-prop-string.md",
-      "conditions": [
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "type",
-          "propertyValue": "project"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-04",
-      "name": "Cond 04: Prop Boolean",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-04-prop-boolean.md",
-      "conditions": [
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "published",
-          "propertyValue": "true"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-05",
-      "name": "Cond 05: Prop Number",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-05-prop-number.md",
-      "conditions": [
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "priority",
-          "propertyValue": "5"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-06",
-      "name": "Cond 06: Prop Array",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-06-prop-array.md",
-      "conditions": [
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "tags",
-          "propertyValue": "important"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-07",
-      "name": "Cond 07: Prop Exists",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-07-prop-exists.md",
-      "conditions": [
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "custom_field",
-          "propertyValue": ""
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-08",
-      "name": "Cond 08: Negated Prop",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-08-negated.md",
-      "conditions": [
-        {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-conditions/test-08/"
-        },
-        {
-          "type": "property",
-          "negated": true,
-          "propertyName": "status",
-          "propertyValue": "draft"
-        }
-      ],
-      "conditionLogic": "all"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-09",
-      "name": "Cond 09: OR Logic",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-09-or-logic.md",
-      "conditions": [
-        {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-conditions/test-09/"
-        },
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "type",
-          "propertyValue": "special"
-        }
-      ],
-      "conditionLogic": "any"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-10",
-      "name": "Cond 10: AND Logic",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-10-and-logic.md",
-      "conditions": [
-        {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-conditions/test-10/"
-        },
-        {
-          "type": "property",
-          "negated": false,
-          "propertyName": "category",
-          "propertyValue": "research"
-        }
-      ],
-      "conditionLogic": "all"
-    },
-    {
-      "openview": false,
-      "enable_custom_live_preview_mode": true,
-      "custom_settings_live_preview_pos": "top",
-      "enable_custom_preview_mode": false,
-      "custom_settings_preview_note": "",
-      "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
-      "custom_settings_hide_props": false,
-      "custom_auto_update_paths": true,
-      "custom_show_container_border": false,
-      "custom_view_overrides": {
-        "hideProps": false,
-        "readableLineLength": null,
-        "showInlineTitle": null
-      },
-      "id": "cond-11",
-      "name": "Cond 11: AND + Negation",
-      "custom_settings_live_preview_note": "samples/templates/conditions/cond-11-and-negation.md",
-      "conditions": [
-        {
-          "type": "folder",
-          "negated": false,
-          "folderPath": "samples/03-conditions/test-11/"
-        },
-        {
-          "type": "property",
-          "negated": true,
-          "propertyName": "status",
-          "propertyValue": "draft"
-        }
-      ],
-      "conditionLogic": "all"
+      "filterFolders": [],
+      "filterProps": [],
+      "custom_show_container_border": true
     }
   ]
 }

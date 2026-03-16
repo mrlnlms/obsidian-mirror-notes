@@ -4,13 +4,11 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ## Ordem de execucao
 
-### 1. Logica AND/OR nos filtros
-
-Menor escopo, primeiro a ser atacado. Hoje filtros sao OR-only — nao tem como combinar condicoes. Detalhes no [backlog](backlog.md).
+### 1. ~~Logica AND/OR nos filtros~~ ✓ (v46)
 
 ### 2. Margin Panel (epico)
 
-Segundo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementados (v45). Faltam: largura configuravel, threshold de sobreposicao, gutters, min-height. Menu de posicoes so se consolida no final do epico (pode precisar de opcoes intermediarias pra teste). Plano de trabalho em `docs/superpowers/plans/`.
+Proximo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementados (v45). Faltam: largura configuravel, threshold de sobreposicao, gutters, min-height. Menu de posicoes so se consolida no final do epico (pode precisar de opcoes intermediarias pra teste). Plano de trabalho em `docs/superpowers/plans/`.
 
 ### 3. Revisao de Settings UI
 
@@ -28,7 +26,7 @@ Top/bottom via `.mod-header.mod-ui` / `.mod-footer`. CM6 widgets so existem em L
 
 ## Ideias (viabilidade a definir)
 
-- **Multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, segundo descartado com warning. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM. Config de teste "Edge: Conflito" preservada como referencia
+- **Multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, segundo descartado com warning. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM. Config de teste "Edge: Conflito" preservada como referencia. **Nota:** com conditions AND/OR, a ordem dos mirrors no settings determina quem ganha — pra testar mirrors especificos (ex: AND logic) precisa desabilitar os anteriores que matcham a mesma nota. Multiplos mirrors resolveria isso nativamente
 - **Dashboard de uso** — metricas de mirrors ativos, templates usados, etc. Nao sei se vale a pena ou e viavel
 
 ## Versoes concluidas
@@ -37,6 +35,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v46 | AND/OR compound filters | Conditions unificadas, evaluateConditions any/all, negacao is/not, mirrorIndex eliminado, conditionBuilder UI |
 | v45 | Margin panel positioning | Posicionamento flush (left:0/right:0), ResizeObserver responsivo |
 | v44 | Config cache + race condition + below-backlinks | Fix config cache (override nao polui cache), race condition cold start (removeOtherDomMirrors), below-backlinks alinhado, retry cascade fix |
 | v43 | Position simplification + cold start | Unificar bottom/above-backlinks, dropdown deprecated, retry backlinks timing, cold start rendering fix |

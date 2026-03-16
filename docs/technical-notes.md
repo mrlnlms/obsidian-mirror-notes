@@ -2,7 +2,35 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v44 — config cache fix, race condition fix, below-backlinks alinhado
+## Versao Atual: v46 — AND/OR compound filter logic
+
+### O que mudou na v46
+
+**Contexto:** filtros eram OR-only (3 arrays separados). Benchmark com Virtual Notes revelou gap — nao tinha como exigir "folder X E property Y". Primeiro item do backlog.
+
+**1. Data model unificado (`types.ts`):**
+- Nova interface `Condition` com `type: 'file' | 'folder' | 'property'`, `negated: boolean`, e campos semanticos (`fileName`, `folderPath`, `propertyName`, `propertyValue`)
+- `CustomMirror` troca `filterFiles/filterFolders/filterProps` por `conditions: Condition[]` + `conditionLogic: 'any' | 'all'`
+- `propertyValue` vazio = match any value (property existe)
+
+**2. Matching engine (`mirrorConfig.ts`):**
+- `mirrorIndex` eliminado (Maps pre-computados de file/folder). Incompativel com AND — teria que ser reescrito
+- `evaluateCondition()` e `evaluateConditions()` — funcoes puras, exportadas pra teste
+- AND: `conditions.every()`, OR: `conditions.some()`, negacao: `condition.negated ? !result : result`
+- `configCache` preservado intacto — so avalia no cache miss
+- Trade-off: cold start perde O(1) file lookup, mas com <20 mirrors o scan e <1ms
+
+**3. Settings UI (`conditionBuilder.ts`):**
+- `filterBuilder.ts` deletado, substituido por `conditionBuilder.ts`
+- Secao unificada "Conditions" com dropdown "Match any / Match all"
+- Cada row: dropdown is/not → dropdown tipo → inputs contextuais (suggesters preservados)
+- 3 chamadas a `buildFilterSection` → 1 chamada a `buildConditionsSection`
+
+**4. Rename-aware (`settingsPaths.ts`):**
+- Itera `conditions[]` com campos semanticos em vez de arrays genericos
+- Guard `oldName !== newName` preservado pra folder moves
+
+**Arquivos tocados:** `types.ts`, `mirrorConfig.ts`, `conditionBuilder.ts` (novo), `settings.ts`, `settingsPaths.ts`, `pluginFactory.ts`, `mirrorConfig.test.ts`, `updateSettingsPaths.test.ts`
 
 ### O que mudou na v44
 

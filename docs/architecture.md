@@ -3,13 +3,13 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v42)
+## File Map (v46)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, viewOverrides)
 settings.ts                                — MirrorUISettingsTab (UI, delega pra builders)
-src/settings/types.ts                      — Interfaces, defaults, CustomMirror, ViewOverrides, createDefaultCustomMirror()
-src/settings/filterBuilder.ts              — buildFilterSection() — builder reutilizavel (files/folders/props)
+src/settings/types.ts                      — Interfaces, defaults, CustomMirror, Condition, ViewOverrides, createDefaultCustomMirror()
+src/settings/conditionBuilder.ts           — buildConditionsSection() — conditions unificadas com AND/OR e negacao
 src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
 src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
 src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
@@ -23,7 +23,7 @@ src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + h
 src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
 src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)
 src/editor/timingConfig.ts                 — TIMING object (constantes centralizadas de debounce/delay)
-src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + clearConfigCache()
+src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + evaluateCondition/evaluateConditions
 src/editor/mirrorTypes.ts                  — Interfaces compartilhadas (MirrorPosition, ApplicableMirrorConfig, etc)
 src/editor/mirrorUtils.ts                  — extractRawYaml, hashObject, generateWidgetId
 src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
@@ -81,7 +81,7 @@ titulo: Override Custom
 | Margin ViewPlugin | left, right | ViewPlugin no `scrollDOM`, position absolute | Lateral do editor |
 
 **Flow:**
-1. `getApplicableConfig()` retorna config com position original do settings
+1. `getApplicableConfig()` itera mirrors, avalia `evaluateConditions()` com AND/OR + negacao
 2. Se position e CM6 (top/bottom): StateField → buildDecorations
 3. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
 4. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
@@ -124,6 +124,30 @@ A implementacao DOM para `below-properties` permanece no codigo como fallback en
 Race condition (v44): multiplos event handlers (`file-open`, `active-leaf-change`, `onLayoutReady`) disparam em rapida sucessao. `setupDomPosition` usa `removeOtherDomMirrors()` (nao `removeAll`) pra preservar o container da posicao atual durante render async. Container e reutilizado por `injectDomMirror` via check `isConnected`.
 
 Backlinks timing: quando `resolveTarget` falha por `.embedded-backlinks` sem children (plugin ativo mas conteudo nao populou ainda), alem do fallback pra CM6, agenda retry em 500ms/1.5s/3s. Guard `isRetry` previne cascata exponencial — retries nao agendam mais retries.
+
+## Condition Matching (v46)
+
+Cada mirror tem `conditions: Condition[]` e `conditionLogic: 'any' | 'all'`.
+
+```typescript
+interface Condition {
+  type: 'file' | 'folder' | 'property';
+  negated: boolean;
+  fileName?: string;       // type=file
+  folderPath?: string;     // type=folder
+  propertyName?: string;   // type=property
+  propertyValue?: string;  // type=property (vazio = match any value)
+}
+```
+
+**Matching:** `evaluateConditions()` — scan linear em todos os mirrors. Primeiro match ganha.
+- `conditionLogic: 'any'` → `.some()` (OR)
+- `conditionLogic: 'all'` → `.every()` (AND)
+- `negated: true` → inverte resultado da condition individual
+
+**Cache:** `configCache` (por `file.path + frontmatterHash`) preservado — so avalia no cache miss.
+
+**Historico:** Antes da v46, o matching usava 3 arrays separados (`filterFiles`, `filterFolders`, `filterProps`) com logica OR-only e um `mirrorIndex` (Map pre-computado). O index foi eliminado porque era incompativel com AND/OR — o cache existente ja cobre o caso de performance.
 
 ## Reactivity — eventos e registries
 
@@ -194,7 +218,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (146 testes, 9 suites)
+npm test         # vitest (166 testes, 10 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

@@ -1,5 +1,5 @@
 import { vi } from 'vitest';
-import { DEFAULT_SETTINGS, CustomMirror } from '../../settings';
+import { DEFAULT_SETTINGS, CustomMirror, DEFAULT_VIEW_OVERRIDES } from '../../settings';
 import MirrorUIPlugin from '../../main';
 import { TFile } from 'obsidian';
 
@@ -52,10 +52,11 @@ export function createCustomMirror(overrides?: Partial<CustomMirror>): CustomMir
     custom_settings_preview_pos: 'top',
     custom_settings_overide: false,
     custom_settings_hide_props: false,
+    custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
+    custom_show_container_border: true,
     custom_auto_update_paths: true,
-    filterFiles: [],
-    filterFolders: [],
-    filterProps: [],
+    conditions: [],
+    conditionLogic: 'any',
     ...overrides,
   };
 }

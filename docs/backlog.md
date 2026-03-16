@@ -1,17 +1,10 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v45.
+Trabalho tecnico pendente. Atualizado na v46.
 
 ## Bugs
 
 (nenhum bug aberto)
-
-## Proximo: Logica AND/OR nos filtros
-
-Hoje todos os filtros sao OR (qualquer match ativa o mirror). Nao tem como exigir "folder X **E** property Y". VirtualNotes tem rules com condicoes compostas. Impacta uso real — ex: "mirror X so pra notas em projects/ que tenham type: active" nao e possivel hoje.
-
-- Afeta: `mirrorConfig.ts` (matching logic) e `settings.ts` (UI pra combinar condicoes)
-- Escopo pequeno, primeiro item a ser atacado
 
 ## Epico: Margin Panel
 
@@ -124,3 +117,4 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 - [x] Backlinks timing retry — resolveTarget falha por children.length === 0 no startup. Retry 500ms apos fallback (v43)
 - [x] Margin panel posicionamento flush — left:0/right:0 em vez de calculo com contentDOM.offsetLeft + gap 20px (v45)
 - [x] Margin panel ResizeObserver — responsive a resize de janela, sidebar, split panes (v45)
+- [x] Logica AND/OR nos filtros — conditions unificadas, evaluateConditions com any/all, negacao per-condition, mirrorIndex eliminado, conditionBuilder UI (v46)

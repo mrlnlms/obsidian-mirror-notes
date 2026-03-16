@@ -7,13 +7,13 @@ import { clearConfigCache } from './src/editor/mirrorConfig';
 import { TIMING } from './src/editor/timingConfig';
 import { Logger } from './src/dev/logger';
 import { addPathValidation } from './src/settings/pathValidator';
-import { buildFilterSection } from './src/settings/filterBuilder';
+import { buildConditionsSection } from './src/settings/conditionBuilder';
 import { createDefaultCustomMirror } from './src/settings/types';
 import { getEditorView, addSearchClass } from './src/utils/obsidianInternals';
 
 // Re-export types for backwards compatibility (consumers import from './settings')
-export type { FolderTemplate, MirrorUIPluginSettings, CustomMirror } from './src/settings/types';
-export { DEFAULT_SETTINGS } from './src/settings/types';
+export type { FolderTemplate, MirrorUIPluginSettings, CustomMirror, Condition, ConditionType, ConditionLogic } from './src/settings/types';
+export { DEFAULT_SETTINGS, DEFAULT_VIEW_OVERRIDES } from './src/settings/types';
 
 /** Position dropdown options with visual labels */
 function addPositionOptions(dropdown: DropdownComponent): DropdownComponent {
@@ -448,47 +448,13 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 },
             });
 
-            // Filter sections via builder
-            const onSave = () => this.plugin.saveSettings();
-            const onRedisplay = () => this.display();
-
-            buildFilterSection({
+            // Conditions section (unified filters with AND/OR logic)
+            buildConditionsSection({
                 app: this.app,
                 card,
                 customMirror: customMirrors[index],
-                mirrorIndex: index,
-                filterType: 'filterFiles',
-                title: "Filter by Filename",
-                description: "If there are diferent files with the same filename, both are will be considered in the filter. Ex. ./note.md and ./folder/note.md.",
-                addButtonTooltip: "Add New Filename",
-                onSave,
-                onRedisplay,
-            });
-
-            buildFilterSection({
-                app: this.app,
-                card,
-                customMirror: customMirrors[index],
-                mirrorIndex: index,
-                filterType: 'filterFolders',
-                title: "Filter by Folder path",
-                description: "Arquivos globais estao sendo pegos assim por folder path.",
-                addButtonTooltip: "Add New Folder",
-                onSave,
-                onRedisplay,
-            });
-
-            buildFilterSection({
-                app: this.app,
-                card,
-                customMirror: customMirrors[index],
-                mirrorIndex: index,
-                filterType: 'filterProps',
-                title: "Filter by Properties",
-                description: "Arquivos globais estao sendo pegos assim por folder path.",
-                addButtonTooltip: "Add New Property",
-                onSave,
-                onRedisplay,
+                onSave: () => this.plugin.saveSettings(),
+                onRedisplay: () => this.display(),
             });
 
             // --- View Overrides section ---

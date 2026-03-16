@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { getApplicableConfig, clearConfigCache } from '../src/editor/mirrorConfig';
+import { getApplicableConfig, clearConfigCache, evaluateCondition, evaluateConditions } from '../src/editor/mirrorConfig';
 import { createFakePlugin, createCustomMirror } from './mocks/pluginFactory';
 import { TFile } from 'obsidian';
+import { Condition } from '../src/settings/types';
 
 // Silence Logger
 vi.mock('../src/logger', () => ({
@@ -14,6 +15,137 @@ function makeTFile(path: string): TFile {
   f.name = path.split('/').pop() || '';
   return f;
 }
+
+// =================================================================================
+// evaluateCondition (unit tests)
+// =================================================================================
+
+describe('evaluateCondition', () => {
+  const file = makeTFile('projects/nota.md');
+
+  it('matches file by name', () => {
+    const cond: Condition = { type: 'file', negated: false, fileName: 'nota.md' };
+    expect(evaluateCondition(cond, file, {})).toBe(true);
+  });
+
+  it('does not match wrong filename', () => {
+    const cond: Condition = { type: 'file', negated: false, fileName: 'other.md' };
+    expect(evaluateCondition(cond, file, {})).toBe(false);
+  });
+
+  it('matches folder by prefix', () => {
+    const cond: Condition = { type: 'folder', negated: false, folderPath: 'projects/' };
+    expect(evaluateCondition(cond, file, {})).toBe(true);
+  });
+
+  it('does not match wrong folder', () => {
+    const cond: Condition = { type: 'folder', negated: false, folderPath: 'archive/' };
+    expect(evaluateCondition(cond, file, {})).toBe(false);
+  });
+
+  it('matches property string value', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' };
+    expect(evaluateCondition(cond, file, { type: 'project' })).toBe(true);
+  });
+
+  it('matches property with boolean true', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'published', propertyValue: 'true' };
+    expect(evaluateCondition(cond, file, { published: true })).toBe(true);
+  });
+
+  it('matches property with boolean false', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'archived', propertyValue: 'false' };
+    expect(evaluateCondition(cond, file, { archived: false })).toBe(true);
+  });
+
+  it('matches property with number', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'priority', propertyValue: '5' };
+    expect(evaluateCondition(cond, file, { priority: 5 })).toBe(true);
+  });
+
+  it('matches property with array (e.g. tags)', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'tags', propertyValue: 'project' };
+    expect(evaluateCondition(cond, file, { tags: ['a', 'project'] })).toBe(true);
+  });
+
+  it('does not match array under wrong key', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'categories', propertyValue: 'project' };
+    expect(evaluateCondition(cond, file, { tags: ['project'] })).toBe(false);
+  });
+
+  it('matches property existence when propertyValue is empty', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'status', propertyValue: '' };
+    expect(evaluateCondition(cond, file, { status: 'anything' })).toBe(true);
+  });
+
+  it('does not match property existence when property missing', () => {
+    const cond: Condition = { type: 'property', negated: false, propertyName: 'status', propertyValue: '' };
+    expect(evaluateCondition(cond, file, {})).toBe(false);
+  });
+
+  // ---- Negation ----
+  it('negation inverts file match', () => {
+    const cond: Condition = { type: 'file', negated: true, fileName: 'nota.md' };
+    expect(evaluateCondition(cond, file, {})).toBe(false);
+  });
+
+  it('negation inverts file non-match', () => {
+    const cond: Condition = { type: 'file', negated: true, fileName: 'other.md' };
+    expect(evaluateCondition(cond, file, {})).toBe(true);
+  });
+
+  it('negation inverts property match', () => {
+    const cond: Condition = { type: 'property', negated: true, propertyName: 'status', propertyValue: 'draft' };
+    expect(evaluateCondition(cond, file, { status: 'draft' })).toBe(false);
+    expect(evaluateCondition(cond, file, { status: 'active' })).toBe(true);
+  });
+});
+
+// =================================================================================
+// evaluateConditions (AND/OR logic)
+// =================================================================================
+
+describe('evaluateConditions', () => {
+  const file = makeTFile('projects/nota.md');
+  const fm = { type: 'project', status: 'active' };
+
+  const folderCond: Condition = { type: 'folder', negated: false, folderPath: 'projects/' };
+  const propCond: Condition = { type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' };
+  const wrongPropCond: Condition = { type: 'property', negated: false, propertyName: 'type', propertyValue: 'article' };
+
+  it('empty conditions returns false', () => {
+    expect(evaluateConditions([], 'any', file, fm)).toBe(false);
+    expect(evaluateConditions([], 'all', file, fm)).toBe(false);
+  });
+
+  it('OR logic: any matching condition is enough', () => {
+    expect(evaluateConditions([folderCond, wrongPropCond], 'any', file, fm)).toBe(true);
+  });
+
+  it('OR logic: no match returns false', () => {
+    expect(evaluateConditions([wrongPropCond], 'any', file, fm)).toBe(false);
+  });
+
+  it('AND logic: all conditions must match', () => {
+    expect(evaluateConditions([folderCond, propCond], 'all', file, fm)).toBe(true);
+  });
+
+  it('AND logic: one failing condition returns false', () => {
+    expect(evaluateConditions([folderCond, wrongPropCond], 'all', file, fm)).toBe(false);
+  });
+
+  it('AND + negation: folder IS projects/ AND status IS NOT draft', () => {
+    const notDraft: Condition = { type: 'property', negated: true, propertyName: 'status', propertyValue: 'draft' };
+    expect(evaluateConditions([folderCond, notDraft], 'all', file, fm)).toBe(true);
+
+    const draftFm = { type: 'project', status: 'draft' };
+    expect(evaluateConditions([folderCond, notDraft], 'all', file, draftFm)).toBe(false);
+  });
+});
+
+// =================================================================================
+// getApplicableConfig (integration)
+// =================================================================================
 
 describe('getApplicableConfig', () => {
   beforeEach(() => {
@@ -32,9 +164,9 @@ describe('getApplicableConfig', () => {
   });
 
   // ---- File match ----
-  it('matches by filename (filterFiles)', () => {
+  it('matches by filename condition', () => {
     const mirror = createCustomMirror({
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
     const file = makeTFile('projects/nota.md');
@@ -45,9 +177,9 @@ describe('getApplicableConfig', () => {
   });
 
   // ---- Folder match ----
-  it('matches by folder (filterFolders)', () => {
+  it('matches by folder condition', () => {
     const mirror = createCustomMirror({
-      filterFolders: [{ folder: 'projects/', template: '' }],
+      conditions: [{ type: 'folder', negated: false, folderPath: 'projects/' }],
     });
     const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
     const file = makeTFile('projects/nota.md');
@@ -56,32 +188,30 @@ describe('getApplicableConfig', () => {
     expect(config).not.toBeNull();
   });
 
-  it('deeper folder wins over shallower (specificity)', () => {
-    const mirrorShallow = createCustomMirror({
-      id: 'shallow',
-      custom_settings_live_preview_note: 'templates/shallow.md',
-      filterFolders: [{ folder: 'projects/', template: '' }],
+  it('first matching mirror wins (order matters)', () => {
+    const mirrorA = createCustomMirror({
+      id: 'a',
+      custom_settings_live_preview_note: 'templates/a.md',
+      conditions: [{ type: 'folder', negated: false, folderPath: 'projects/' }],
     });
-    const mirrorDeep = createCustomMirror({
-      id: 'deep',
-      custom_settings_live_preview_note: 'templates/deep.md',
-      filterFolders: [{ folder: 'projects/sub/', template: '' }],
+    const mirrorB = createCustomMirror({
+      id: 'b',
+      custom_settings_live_preview_note: 'templates/b.md',
+      conditions: [{ type: 'folder', negated: false, folderPath: 'projects/sub/' }],
     });
     const plugin = createFakePlugin({
-      settings: { ...createFakePlugin().settings, customMirrors: [mirrorShallow, mirrorDeep] },
+      settings: { ...createFakePlugin().settings, customMirrors: [mirrorA, mirrorB] },
     });
     const file = makeTFile('projects/sub/nota.md');
 
     const config = getApplicableConfig(plugin, file, {});
-    expect(config!.templatePath).toBe('templates/deep.md');
+    expect(config!.templatePath).toBe('templates/a.md');
   });
 
   // ---- Props match ----
-  it('matches by property string value', () => {
+  it('matches by property condition', () => {
     const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'type', template: 'project' }],
+      conditions: [{ type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' }],
     });
     const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
     const file = makeTFile('nota.md');
@@ -92,9 +222,7 @@ describe('getApplicableConfig', () => {
 
   it('matches property with array value (e.g. tags)', () => {
     const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'tags', template: 'project' }],
+      conditions: [{ type: 'property', negated: false, propertyName: 'tags', propertyValue: 'project' }],
     });
     const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
     const file = makeTFile('nota.md');
@@ -105,9 +233,7 @@ describe('getApplicableConfig', () => {
 
   it('matches property with boolean value', () => {
     const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'completed', template: 'true' }],
+      conditions: [{ type: 'property', negated: false, propertyName: 'completed', propertyValue: 'true' }],
     });
     const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
     const file = makeTFile('nota.md');
@@ -116,25 +242,45 @@ describe('getApplicableConfig', () => {
     expect(config).not.toBeNull();
   });
 
-  // ---- Priority: file > folder > props ----
-  it('file match wins over folder match', () => {
-    const mirrorFile = createCustomMirror({
-      id: 'file',
-      custom_settings_live_preview_note: 'templates/file.md',
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+  // ---- AND/OR integration ----
+  it('AND logic: folder + property both required', () => {
+    const mirror = createCustomMirror({
+      conditionLogic: 'all',
+      conditions: [
+        { type: 'folder', negated: false, folderPath: 'projects/' },
+        { type: 'property', negated: false, propertyName: 'type', propertyValue: 'active' },
+      ],
     });
-    const mirrorFolder = createCustomMirror({
-      id: 'folder',
-      custom_settings_live_preview_note: 'templates/folder.md',
-      filterFolders: [{ folder: 'projects/', template: '' }],
-    });
-    const plugin = createFakePlugin({
-      settings: { ...createFakePlugin().settings, customMirrors: [mirrorFile, mirrorFolder] },
-    });
-    const file = makeTFile('projects/nota.md');
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
 
-    const config = getApplicableConfig(plugin, file, {});
-    expect(config!.templatePath).toBe('templates/file.md');
+    // Both match
+    expect(getApplicableConfig(plugin, makeTFile('projects/nota.md'), { type: 'active' })).not.toBeNull();
+
+    // Only folder matches
+    clearConfigCache();
+    expect(getApplicableConfig(plugin, makeTFile('projects/nota.md'), { type: 'inactive' })).toBeNull();
+
+    // Only property matches
+    clearConfigCache();
+    expect(getApplicableConfig(plugin, makeTFile('archive/nota.md'), { type: 'active' })).toBeNull();
+  });
+
+  it('OR logic: either condition is enough', () => {
+    const mirror = createCustomMirror({
+      conditionLogic: 'any',
+      conditions: [
+        { type: 'folder', negated: false, folderPath: 'projects/' },
+        { type: 'property', negated: false, propertyName: 'type', propertyValue: 'active' },
+      ],
+    });
+    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
+
+    // Only folder matches
+    expect(getApplicableConfig(plugin, makeTFile('projects/nota.md'), {})).not.toBeNull();
+
+    // Only property matches
+    clearConfigCache();
+    expect(getApplicableConfig(plugin, makeTFile('archive/nota.md'), { type: 'active' })).not.toBeNull();
   });
 
   // ---- Global mirror ----
@@ -160,7 +306,7 @@ describe('getApplicableConfig', () => {
   it('global override active + custom without override → global wins', () => {
     const mirror = createCustomMirror({
       custom_settings_overide: false,
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const plugin = createFakePlugin({
       settings: {
@@ -182,7 +328,7 @@ describe('getApplicableConfig', () => {
     const mirror = createCustomMirror({
       custom_settings_overide: true,
       custom_settings_live_preview_note: 'templates/custom.md',
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const plugin = createFakePlugin({
       settings: {
@@ -204,7 +350,7 @@ describe('getApplicableConfig', () => {
   it('applies position override from positionOverrides map', () => {
     const mirror = createCustomMirror({
       custom_settings_live_preview_pos: 'above-title',
-      filterFiles: [{ folder: 'nota.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const overrides = new Map([['nota.md', 'top' as const]]);
     const plugin = createFakePlugin({
@@ -221,7 +367,7 @@ describe('getApplicableConfig', () => {
   it('returns cached config when frontmatter hash unchanged', () => {
     const mirror = createCustomMirror({
       custom_settings_live_preview_note: 'templates/original.md',
-      filterFiles: [{ folder: 'cached.md', template: '' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'cached.md' }],
     });
     const plugin = createFakePlugin({
       settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
@@ -229,120 +375,33 @@ describe('getApplicableConfig', () => {
     const file = makeTFile('cached.md');
     const fm = { title: 'Test' };
 
-    // First call — populates cache
     const config1 = getApplicableConfig(plugin, file, fm);
     expect(config1!.templatePath).toBe('templates/original.md');
 
-    // Mutate settings between calls (should NOT affect result due to cache)
     plugin.settings.customMirrors[0].custom_settings_live_preview_note = 'templates/changed.md';
 
-    // Second call — same frontmatter hash → cache hit
     const config2 = getApplicableConfig(plugin, file, fm);
     expect(config2!.templatePath).toBe('templates/original.md');
   });
 
-  // ---- Priority: folder > props ----
-  it('folder match wins over props match', () => {
-    const mirrorFolder = createCustomMirror({
-      id: 'folder-mirror',
-      custom_settings_live_preview_note: 'templates/folder.md',
-      filterFolders: [{ folder: 'projects/', template: '' }],
-    });
-    const mirrorProps = createCustomMirror({
-      id: 'props-mirror',
-      custom_settings_live_preview_note: 'templates/props.md',
-      filterProps: [{ folder: 'type', template: 'project' }],
+  // ---- Disabled mirror ----
+  it('disabled mirror is skipped even with matching conditions', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: false,
+      conditions: [{ type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' }],
     });
     const plugin = createFakePlugin({
-      settings: { ...createFakePlugin().settings, customMirrors: [mirrorFolder, mirrorProps] },
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
     });
-    const file = makeTFile('projects/nota.md');
+    const file = makeTFile('nota.md');
 
     const config = getApplicableConfig(plugin, file, { type: 'project' });
-    expect(config!.templatePath).toBe('templates/folder.md');
-  });
-
-  // ---- metadataCache native types (post-parseFrontmatter removal) ----
-  // Antes, parseFrontmatter retornava tudo como string ("true", "5", tags errados).
-  // Agora metadataCache fornece tipos nativos. Estes testes validam que filterProps
-  // funciona corretamente com os tipos reais que o Obsidian retorna.
-
-  it('matches filterProps with native boolean true from metadataCache', () => {
-    const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'published', template: 'true' }],
-    });
-    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
-    const file = makeTFile('nota.md');
-
-    // metadataCache retorna boolean nativo, nao string
-    const config = getApplicableConfig(plugin, file, { published: true });
-    expect(config).not.toBeNull();
-  });
-
-  it('matches filterProps with native boolean false from metadataCache', () => {
-    const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'archived', template: 'false' }],
-    });
-    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
-    const file = makeTFile('nota.md');
-
-    const config = getApplicableConfig(plugin, file, { archived: false });
-    expect(config).not.toBeNull();
-  });
-
-  it('matches filterProps with native number from metadataCache', () => {
-    const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'priority', template: '5' }],
-    });
-    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
-    const file = makeTFile('nota.md');
-
-    // metadataCache retorna number nativo, nao string "5"
-    const config = getApplicableConfig(plugin, file, { priority: 5 });
-    expect(config).not.toBeNull();
-  });
-
-  it('matches filterProps with array under correct key from metadataCache', () => {
-    const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'categories', template: 'project' }],
-    });
-    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
-    const file = makeTFile('nota.md');
-
-    // metadataCache retorna array na chave correta (categories, nao tags)
-    // parseFrontmatter antigo colocava tudo em result.tags — bug eliminado
-    const config = getApplicableConfig(plugin, file, { categories: ['project', 'active'] });
-    expect(config).not.toBeNull();
-  });
-
-  it('does not match filterProps when array value is under wrong key', () => {
-    const mirror = createCustomMirror({
-      filterFiles: [],
-      filterFolders: [],
-      filterProps: [{ folder: 'categories', template: 'project' }],
-    });
-    const plugin = createFakePlugin({ settings: { ...createFakePlugin().settings, customMirrors: [mirror] } });
-    const file = makeTFile('nota.md');
-
-    // Frontmatter tem "project" mas em tags, nao em categories
-    const config = getApplicableConfig(plugin, file, { tags: ['project'] });
     expect(config).toBeNull();
   });
 
-  // ---- Disabled mirror ignored ----
-  it('disabled mirror is skipped even with matching filterProps', () => {
-    const mirror = createCustomMirror({
-      enable_custom_live_preview_mode: false,
-      filterProps: [{ folder: 'type', template: 'project' }],
-    });
+  // ---- Empty conditions ----
+  it('mirror with empty conditions does not match', () => {
+    const mirror = createCustomMirror({ conditions: [] });
     const plugin = createFakePlugin({
       settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
     });
