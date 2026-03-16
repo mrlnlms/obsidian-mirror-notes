@@ -182,6 +182,91 @@
         { "type": "property", "negated": true, "propertyName": "status", "propertyValue": "draft" }
       ],
       "conditionLogic": "all"
+    },
+    {
+      "id": "rv-top", "name": "RV-Top (Reading View)",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/rv-top.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "folder", "negated": false, "folderPath": "samples/02-positions/" },
+        { "type": "property", "negated": false, "propertyName": "position", "propertyValue": "top" },
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
+      ],
+      "conditionLogic": "all"
+    },
+    {
+      "id": "rv-bottom", "name": "RV-Bottom (Reading View)",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/rv-bottom.md",
+      "custom_settings_live_preview_pos": "bottom",
+      "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "folder", "negated": false, "folderPath": "samples/02-positions/" },
+        { "type": "property", "negated": false, "propertyName": "position", "propertyValue": "bottom" },
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
+      ],
+      "conditionLogic": "all"
+    },
+    {
+      "id": "rv-above-title", "name": "RV-Above Title",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
+      "custom_settings_live_preview_pos": "above-title",
+      "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "folder", "negated": false, "folderPath": "samples/02-positions/" },
+        { "type": "property", "negated": false, "propertyName": "position", "propertyValue": "above-title" },
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
+      ],
+      "conditionLogic": "all"
+    },
+    {
+      "id": "rv-above-props", "name": "RV-Above Properties",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
+      "custom_settings_live_preview_pos": "above-properties",
+      "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "folder", "negated": false, "folderPath": "samples/02-positions/" },
+        { "type": "property", "negated": false, "propertyName": "position", "propertyValue": "above-properties" },
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
+      ],
+      "conditionLogic": "all"
+    },
+    {
+      "id": "rv-below-props", "name": "RV-Below Properties",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
+      "custom_settings_live_preview_pos": "below-properties",
+      "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "folder", "negated": false, "folderPath": "samples/02-positions/" },
+        { "type": "property", "negated": false, "propertyName": "position", "propertyValue": "below-properties" },
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
+      ],
+      "conditionLogic": "all"
     }
   ]
 }
