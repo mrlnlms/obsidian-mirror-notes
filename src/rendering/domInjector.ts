@@ -8,6 +8,11 @@ import { Logger } from "../dev/logger";
 const SELECTOR_INLINE_TITLE = '.inline-title';
 const SELECTOR_METADATA_CONTAINER = '.metadata-container';
 const SELECTOR_EMBEDDED_BACKLINKS = '.embedded-backlinks';
+// Reading View selectors (inside .markdown-preview-sizer)
+const SELECTOR_RV_SIZER = '.markdown-preview-sizer';
+const SELECTOR_RV_FRONTMATTER = '.el-pre.mod-frontmatter';
+const SELECTOR_RV_MOD_HEADER = '.mod-header';
+const SELECTOR_RV_MOD_FOOTER = '.mod-footer';
 
 // Track injected containers per view for cleanup
 const injectedContainers = new Map<string, HTMLElement>();
@@ -80,6 +85,27 @@ export function resolveTarget(
       const backlinks = viewContent.querySelector(SELECTOR_EMBEDDED_BACKLINKS) as HTMLElement;
       if (backlinks && backlinks.children.length > 0) return { target: backlinks, method: 'after' };
       return null;
+    }
+    case 'top': {
+      // Reading View only — in Live Preview, CM6 widget handles this.
+      // .markdown-preview-sizer only exists inside .markdown-reading-view.
+      const sizer = viewContent.querySelector(SELECTOR_RV_SIZER);
+      if (!sizer) return null;
+      // Insert after frontmatter block if visible, otherwise after mod-header
+      const frontmatter = sizer.querySelector(SELECTOR_RV_FRONTMATTER) as HTMLElement;
+      if (frontmatter) return { target: frontmatter, method: 'after' };
+      const header = sizer.querySelector(SELECTOR_RV_MOD_HEADER) as HTMLElement;
+      if (header) return { target: header, method: 'after' };
+      return null;
+    }
+    case 'bottom': {
+      // Reading View only — insert before .mod-footer (always last child of sizer).
+      const sizer = viewContent.querySelector(SELECTOR_RV_SIZER);
+      if (!sizer) return null;
+      const footer = sizer.querySelector(SELECTOR_RV_MOD_FOOTER) as HTMLElement;
+      if (footer) return { target: footer, method: 'before' };
+      // Fallback: append to sizer
+      return { target: sizer as HTMLElement, method: 'appendChild' };
     }
     default:
       return null;

@@ -2,7 +2,48 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v46 — AND/OR compound filter logic
+## Versao Atual: v47 — Reading View DOM injection
+
+### O que mudou na v47
+
+**Contexto:** mirrors com posicao `top`/`bottom` usavam CM6 widgets — invisíveis em Reading View. Proximo item do roadmap.
+
+**Problema:** CM6 (StateField, Decorations, ViewPlugin) so existe em Live Preview. Em Reading View, Obsidian destroi o editor CM6 e renderiza via `.markdown-reading-view` → `.markdown-preview-sizer`. Mirrors top/bottom simplesmente nao apareciam.
+
+**Investigacao empirica:** log diagnostico temporario revelou a arvore DOM do Reading View:
+- `.markdown-preview-sizer` contem: `[0] .markdown-preview-pusher`, `[1] .mod-header.mod-ui`, `[2] .el-pre.mod-frontmatter.mod-ui`, `[3..N] conteudo`, `[N] .mod-footer.mod-ui`
+- `.mod-header` e `.mod-footer` estao DENTRO do sizer (nao como irmaos do `.markdown-reading-view`)
+- `view.getMode()` retorna `'source'` (LP/Source) e `'preview'` (RV)
+- Ambos containers (`.markdown-source-view` e `.markdown-reading-view`) coexistem no DOM, Obsidian alterna via CSS
+
+**Solucao (3 mudancas):**
+
+1. **`domInjector.ts` — novos cases em `resolveTarget()`:**
+   - `top`: busca `.markdown-preview-sizer` → `insertAfter` no `.el-pre.mod-frontmatter` (fallback: `.mod-header`)
+   - `bottom`: busca `.markdown-preview-sizer` → `insertBefore` no `.mod-footer` (fallback: `appendChild` no sizer)
+   - Em Live Preview, `.markdown-preview-sizer` nao existe → retorna null → comportamento inalterado
+
+2. **`main.ts` — gate expandido em `setupDomPosition()`:**
+   - `shouldInjectDom = isDomPosition(pos) || (isReadingView && CM6_POSITIONS.includes(pos))`
+   - Em LP: `isReadingView = false` → identico ao comportamento anterior
+   - Em RV com top/bottom: prossegue com DOM injection
+
+3. **`main.ts` — evento `layout-change`:**
+   - Unico evento que dispara na mudanca de modo (Cmd+E). `file-open`/`active-leaf-change` NAO disparam
+   - Trailing debounce 50ms: `getMode()` oscila durante transicao do Obsidian (source↔preview bounce). Debounce espera estabilizar
+   - Guard `lastViewMode` Map: so processa quando modo realmente mudou
+   - Em RV, nao chama `setupEditor()` — CM6 dispatch em RV causava layout-change cascata
+
+**Arquivos tocados:** `main.ts` (gate + layout-change + lastViewMode), `src/rendering/domInjector.ts` (resolveTarget + selectors), `src/editor/mirrorTypes.ts` (import CM6_POSITIONS), `tests/domInjector.test.ts` (+5 testes RV)
+
+**Trade-offs:**
+- 50ms debounce no mode switch e imperceptivel mas previne cascata de re-renders
+- CM6 widgets continuam sendo criados em RV (StateField registrado), mas ficam ocultos (`.markdown-source-view` display:none). Nao causa problema — e assim que Obsidian funciona
+- `applyViewOverrides` nao funciona em RV (depende do StateField). Fora de escopo — anotar no backlog
+
+---
+
+## v46 — AND/OR compound filter logic
 
 ### O que mudou na v46
 

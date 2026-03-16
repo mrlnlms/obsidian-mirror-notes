@@ -14,9 +14,7 @@ Proximo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementado
 
 Apos margin panel. Renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina.
 
-### 4. Reading View DOM injection
-
-Top/bottom via `.mod-header.mod-ui` / `.mod-footer`. CM6 widgets so existem em Live Preview — esta feature fecha o gap. Entra apos AND/OR e margin panel.
+### 4. ~~Reading View DOM injection~~ ✓ (v47)
 
 ## Pre-lancamento (must-have)
 
@@ -40,6 +38,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v47 | Reading View DOM injection | top/bottom em RV via DOM injection, layout-change event, debounce 50ms, lastViewMode guard |
 | v46 | AND/OR compound filters | Conditions unificadas, evaluateConditions any/all, negacao is/not, mirrorIndex eliminado, conditionBuilder UI |
 | v45 | Margin panel positioning | Posicionamento flush (left:0/right:0), ResizeObserver responsivo |
 | v44 | Config cache + race condition + below-backlinks | Fix config cache (override nao polui cache), race condition cold start (removeOtherDomMirrors), below-backlinks alinhado, retry cascade fix |

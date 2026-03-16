@@ -2,7 +2,15 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v46 — AND/OR compound filter logic
+## Versao Atual: v47 — Reading View DOM injection
+
+### v47: Mirrors top/bottom renderizam em Reading View
+
+- Mirrors com posicao `top`/`bottom` agora renderizam via DOM injection em Reading View (antes: so CM6 em Live Preview)
+- Targets DOM: `.el-pre.mod-frontmatter` (top), `.mod-footer` (bottom) dentro de `.markdown-preview-sizer`
+- Evento `layout-change` detecta mode switch LP ↔ RV com debounce 50ms e guard `lastViewMode`
+- Cleanup automatico: DOM mirrors removidos ao voltar pra Live Preview, CM6 widgets reassumem
+- 176 testes (+5 novos: resolveTarget Reading View, top/bottom com/sem frontmatter/footer)
 
 ### v46: Conditions unificadas com AND/OR e negacao
 

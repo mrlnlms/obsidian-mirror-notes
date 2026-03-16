@@ -9,7 +9,7 @@ import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegist
 import { TemplateDependencyRegistry } from './src/rendering/templateDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
-import { MirrorPosition } from './src/editor/mirrorTypes';
+import { MirrorPosition, CM6_POSITIONS } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
 import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
 import { clearRenderCache } from './src/rendering/templateRenderer';
@@ -30,6 +30,8 @@ export default class MirrorUIPlugin extends Plugin {
   private knownTemplatePaths = new Set<string>();
   /** Cached Obsidian config values — only refresh editors when these actually change */
   private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false };
+  /** Track last known view mode per file — only react to actual mode changes */
+  private lastViewMode = new Map<string, string>();
 
   async onload() {
     await this.loadSettings();
@@ -55,6 +57,8 @@ export default class MirrorUIPlugin extends Plugin {
           setTimeout(() => {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
+              // @ts-ignore — getMode not in official typings
+              this.lastViewMode.set(file.path, view.getMode?.() ?? 'unknown');
               this.setupEditor(view);
               this.setupDomPosition(view);
             }
@@ -112,6 +116,32 @@ export default class MirrorUIPlugin extends Plugin {
           Logger.log(`[config-change] backlink=${enabled}`);
           this.refreshAllEditors();
         }
+      })
+    );
+
+    // Detectar mode switch (LP ↔ RV) — layout-change e o unico evento que dispara.
+    // Trailing debounce 50ms: getMode() pode oscilar durante a transicao do Obsidian.
+    // Esperar estabilizar evita renders cascateados sem delay perceptivel.
+    let layoutDebounce: NodeJS.Timeout | null = null;
+    this.registerEvent(
+      this.app.workspace.on('layout-change', () => {
+        if (layoutDebounce) clearTimeout(layoutDebounce);
+        layoutDebounce = setTimeout(() => {
+          layoutDebounce = null;
+          const view = this.app.workspace.getActiveViewOfType(MarkdownView);
+          if (!view || !view.file) return;
+          // @ts-ignore — getMode not in official typings
+          const currentMode = view.getMode?.() ?? 'unknown';
+          const lastMode = this.lastViewMode.get(view.file.path);
+          if (currentMode === lastMode) return;
+          this.lastViewMode.set(view.file.path, currentMode);
+          Logger.log(`[mode-switch] ${lastMode} -> ${currentMode} for ${view.file.path}`);
+          // Em RV nao chamar setupEditor — CM6 dispatch pode causar layout-change cascata
+          if (currentMode !== 'preview') {
+            this.setupEditor(view);
+          }
+          this.setupDomPosition(view);
+        }, 50);
       })
     );
 
@@ -427,7 +457,12 @@ export default class MirrorUIPlugin extends Plugin {
 
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
     const config = getApplicableConfig(this, file, frontmatter);
-    if (!config || !isDomPosition(config.position)) {
+    // @ts-ignore — getMode not in official typings
+    const isReadingView = view.getMode?.() === 'preview';
+    // In Reading View, CM6 doesn't render — top/bottom need DOM injection too
+    const shouldInjectDom = isDomPosition(config?.position ?? 'top') ||
+                            (isReadingView && CM6_POSITIONS.includes(config?.position ?? ''));
+    if (!config || !shouldInjectDom) {
       removeAllDomMirrors(file.path);
       return;
     }
@@ -584,6 +619,7 @@ export default class MirrorUIPlugin extends Plugin {
 
     this.activeEditors.clear();
     this.positionOverrides.clear();
+    this.lastViewMode.clear();
     this.sourceDeps.clear();
     this.templateDeps.clear();
 

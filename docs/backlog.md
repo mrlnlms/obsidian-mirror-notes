@@ -1,10 +1,14 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v46.
+Trabalho tecnico pendente. Atualizado na v47.
 
 ## Bugs
 
 (nenhum bug aberto)
+
+## Reading View gaps
+
+- **viewOverrides em Reading View** — `applyViewOverrides` depende do CM6 StateField, nao funciona em RV. Se mirror config tem `hideProps: true`, nao aplica em RV. Solucao: ler config de `getApplicableConfig` em vez do StateField
 
 ## Epico: Margin Panel
 
@@ -118,3 +122,4 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 - [x] Margin panel posicionamento flush — left:0/right:0 em vez de calculo com contentDOM.offsetLeft + gap 20px (v45)
 - [x] Margin panel ResizeObserver — responsive a resize de janela, sidebar, split panes (v45)
 - [x] Logica AND/OR nos filtros — conditions unificadas, evaluateConditions com any/all, negacao per-condition, mirrorIndex eliminado, conditionBuilder UI (v46)
+- [x] Reading View DOM injection — top/bottom renderizam via DOM em Reading View, layout-change event com debounce 50ms, lastViewMode guard (v47)

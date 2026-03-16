@@ -24,6 +24,8 @@ function createViewContent(options: {
   properties?: boolean;
   backlinks?: boolean;
   sizer?: boolean;
+  /** Reading View structure: .markdown-preview-sizer with mod-header, frontmatter, content, mod-footer */
+  readingView?: boolean;
 }): HTMLElement {
   const div = document.createElement('div');
   div.className = 'view-content';
@@ -53,6 +55,36 @@ function createViewContent(options: {
     el.className = 'cm-sizer';
     el.textContent = 'sizer';
     div.appendChild(el);
+  }
+  if (options.readingView) {
+    const readingView = document.createElement('div');
+    readingView.className = 'markdown-reading-view';
+    const previewView = document.createElement('div');
+    previewView.className = 'markdown-preview-view markdown-rendered';
+    const sizer = document.createElement('div');
+    sizer.className = 'markdown-preview-sizer markdown-preview-section';
+    // Reading View DOM: pusher → mod-header → frontmatter → content → mod-footer
+    const pusher = document.createElement('div');
+    pusher.className = 'markdown-preview-pusher';
+    sizer.appendChild(pusher);
+    const modHeader = document.createElement('div');
+    modHeader.className = 'mod-header mod-ui';
+    modHeader.textContent = 'Title + Properties header';
+    sizer.appendChild(modHeader);
+    const frontmatter = document.createElement('div');
+    frontmatter.className = 'el-pre mod-frontmatter mod-ui';
+    frontmatter.textContent = 'test: reading-view';
+    sizer.appendChild(frontmatter);
+    const content = document.createElement('div');
+    content.className = 'el-h1';
+    content.textContent = 'Heading';
+    sizer.appendChild(content);
+    const modFooter = document.createElement('div');
+    modFooter.className = 'mod-footer mod-ui';
+    sizer.appendChild(modFooter);
+    previewView.appendChild(sizer);
+    readingView.appendChild(previewView);
+    div.appendChild(readingView);
   }
   return div;
 }
@@ -231,9 +263,53 @@ describe('resolveTarget', () => {
     expect(result!.method).toBe('after');
   });
 
-  it('CM6 position (top) → null (not a DOM position)', () => {
+  it('top → null when no Reading View sizer (Live Preview)', () => {
     const vc = createViewContent({ title: true, properties: true });
     expect(resolveTarget(vc, 'top')).toBeNull();
+  });
+
+  it('bottom → null when no Reading View sizer (Live Preview)', () => {
+    const vc = createViewContent({ title: true, properties: true });
+    expect(resolveTarget(vc, 'bottom')).toBeNull();
+  });
+
+  // --- Reading View positions ---
+
+  it('top in Reading View → after frontmatter', () => {
+    const vc = createViewContent({ readingView: true });
+    const result = resolveTarget(vc, 'top');
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('after');
+    expect(result!.target.className).toContain('mod-frontmatter');
+  });
+
+  it('top in Reading View without frontmatter → after mod-header', () => {
+    const vc = createViewContent({ readingView: true });
+    // Remove frontmatter element
+    const fm = vc.querySelector('.el-pre.mod-frontmatter');
+    fm?.remove();
+    const result = resolveTarget(vc, 'top');
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('after');
+    expect(result!.target.className).toContain('mod-header');
+  });
+
+  it('bottom in Reading View → before mod-footer', () => {
+    const vc = createViewContent({ readingView: true });
+    const result = resolveTarget(vc, 'bottom');
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('before');
+    expect(result!.target.className).toContain('mod-footer');
+  });
+
+  it('bottom in Reading View without mod-footer → appendChild to sizer', () => {
+    const vc = createViewContent({ readingView: true });
+    const footer = vc.querySelector('.mod-footer');
+    footer?.remove();
+    const result = resolveTarget(vc, 'bottom');
+    expect(result).not.toBeNull();
+    expect(result!.method).toBe('appendChild');
+    expect(result!.target.className).toContain('markdown-preview-sizer');
   });
 
   it('above-backlinks returns null when plugin OFF', () => {

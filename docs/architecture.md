@@ -76,16 +76,17 @@ titulo: Override Custom
 
 | Engine | Posicoes | Tecnica | Onde opera |
 |--------|----------|---------|------------|
-| CM6 StateField | top, bottom | `Decoration.widget({ side: 0/1 })` | Dentro do `.cm-content` |
-| DOM Injector | above-title, above/below-properties, above/below-backlinks | `insertBefore`/`insertAfter` no DOM | Fora do `.cm-editor` |
+| CM6 StateField | top, bottom (Live Preview) | `Decoration.widget({ side: 0/1 })` | Dentro do `.cm-content` |
+| DOM Injector | above-title, above/below-properties, above/below-backlinks; top/bottom em Reading View | `insertBefore`/`insertAfter` no DOM | Fora do `.cm-editor` (LP) e dentro do `.markdown-preview-sizer` (RV) |
 | Margin ViewPlugin | left, right | ViewPlugin no `scrollDOM`, position absolute | Lateral do editor |
 
 **Flow:**
 1. `getApplicableConfig()` itera mirrors, avalia `evaluateConditions()` com AND/OR + negacao
-2. Se position e CM6 (top/bottom): StateField → buildDecorations
-3. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
-4. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
-5. Se position e margin: `mirrorMarginPanelPlugin` (ViewPlugin) detecta no `update()` e injeta
+2. Se position e CM6 (top/bottom) em Live Preview: StateField → buildDecorations
+3. Se position e CM6 (top/bottom) em Reading View: `setupDomPosition()` → DOM injection nos targets RV (`.el-pre.mod-frontmatter` / `.mod-footer`)
+4. Se position e DOM: `setupDomPosition()` → `injectDomMirror()` → resolve target
+5. Se DOM target nao existe (ex: properties ocultas): fallback → CM6 position via `positionOverrides`
+6. Se position e margin: `mirrorMarginPanelPlugin` (ViewPlugin) detecta no `update()` e injeta
 
 **Fallback chain:**
 - above-title → above-properties → CM6 top
@@ -101,6 +102,18 @@ titulo: Override Custom
 | sem properties | CM6 top | Mesmo caso |
 
 A implementacao DOM para `below-properties` permanece no codigo como fallback encapsulado, mas o caminho preferencial e CM6 `top`. Mesmo padrao para `above-backlinks`/`bottom`: `above-backlinks` (DOM) e a opcao primaria, `bottom` (CM6) e o fallback quando backlinks nao estao visiveis. `below-backlinks` segue o mesmo padrao: DOM quando backlinks tem conteudo, CM6 `bottom` quando nao tem (v44). Ambos `below-properties` e `bottom` estao deprecated no dropdown (v43).
+
+### Reading View DOM injection (v47)
+
+CM6 widgets so existem em Live Preview. Em Reading View, `top`/`bottom` usam DOM injection nos targets do `.markdown-preview-sizer`:
+- `top` → `insertAfter` no `.el-pre.mod-frontmatter` (ou `.mod-header` se frontmatter ausente)
+- `bottom` → `insertBefore` no `.mod-footer` (ou `appendChild` no sizer se footer ausente)
+
+Deteccao de modo: `view.getMode()` retorna `'source'` (LP) ou `'preview'` (RV). Em `setupDomPosition`, o gate expande: `isDomPosition(pos) || (isReadingView && CM6_POSITIONS.includes(pos))`.
+
+Evento `layout-change` detecta mode switch (LP ↔ RV) — `file-open`/`active-leaf-change` nao disparam pra mudanca de modo na mesma aba. Trailing debounce 50ms porque `getMode()` pode oscilar durante a transicao do Obsidian. Guard `lastViewMode` Map previne re-processamento quando modo nao mudou.
+
+Cleanup automatico: RV → LP = `setupDomPosition` vê que `top`/`bottom` nao sao DOM positions em LP → `removeAllDomMirrors`. LP → RV = CM6 widgets ficam ocultos (`.markdown-source-view` hidden), DOM injection ativa.
 
 ### isDomTargetVisible (v39)
 
