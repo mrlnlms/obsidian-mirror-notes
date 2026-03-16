@@ -8,7 +8,8 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Multiple Mirror Configurations**: Create custom mirrors for different types of notes
 - **Flexible Filtering**: Filter by file name, folder path, or YAML properties
 - **Template Variables**: Use `{{variable}}` syntax to inject frontmatter values into templates
-- **Position Control**: 9 positions — top, bottom, above/below title, above/below properties, above/below backlinks, left/right margins
+- **Position Control**: 9 positions across 3 engines — top/bottom (CM6), above/below title/properties/backlinks (DOM), left/right margins (panels)
+- **Per-View Setting Overrides**: Control hide properties, readable line width, and inline title per mirror — overrides Obsidian's global settings for matched notes
 - **Hide Properties Option**: Optionally hide the frontmatter section in notes with mirrors
 - **Inline Mirror Blocks**: Embed templates anywhere with ` ```mirror``` ` code blocks — works in Live Preview and Reading View
 - **Cross-Note Reactivity**: Mirror blocks with `source:` update automatically when the source note's frontmatter changes — even across split views
@@ -17,6 +18,7 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Insert Command**: Right-click menu and command palette entry with file autocomplete
 - **Live Preview Support**: Works seamlessly in Obsidian's Live Preview mode
 - **Performance Optimized**: Intelligent caching, scoped invalidation, and debouncing for smooth editing
+- **Rename-Aware Settings**: Template and filter paths auto-update when you rename or move files in the vault
 
 ## Installation
 
@@ -153,7 +155,7 @@ Create multiple mirrors with different configurations:
 - **Position**: 9 positions across 3 engines (CM6, DOM, margin panels)
 - **View Overrides**: Per-mirror control of hide properties, readable line width, and inline title
 - **Override**: Control mirror priority (custom vs global)
-- **Rename-Aware**: Template and filter paths auto-update when you rename or move files
+- **Search & Filter**: Built-in search to manage large mirror lists
 
 ## Development
 
@@ -189,7 +191,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-42 versions across 6 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+45 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -199,6 +201,27 @@ npm run dev      # watch mode
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
 | Era 6: Hardening | Mar 2026 | v34-v42 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache, per-view overrides |
+| Era 7: Position Refinement | Mar 2026 | v43-v45 — Position simplification, cold start fixes, config cache hardening, margin panel flush positioning + ResizeObserver |
+
+## Known Limitations
+
+- **Settings mirrors only work in Live Preview** — CM6 widgets don't exist in Reading View. Reading View support for top/bottom positions is planned
+- **One mirror per note** — the first matching mirror wins. Multiple mirrors on the same note is not yet supported
+- **Filters are OR-only** — all filter conditions use OR logic. AND/OR compound conditions (e.g., "folder X AND property Y") are planned
+- **Margin panels** — fixed 250px width, no overlap threshold for narrow windows. Panel width control and responsive behavior are in progress
+
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for the full roadmap.
+
+**Pre-launch (must-have):**
+- Starter configs — pre-configured templates for new users
+- Reading View DOM injection for top/bottom positions
+- Margin panel refinements (width control, overlap threshold, gutters support)
+
+**Should-have:**
+- Import/export mirror configurations
+- AND/OR compound filter logic
 
 ## Support
 
