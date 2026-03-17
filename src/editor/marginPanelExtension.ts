@@ -23,6 +23,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private panel: HTMLElement | null = null;
   private side: 'left' | 'right' | null = null;
   private lastCacheKey: string | null = null;
+  private lastWidgetId: string | null = null;
   private resizeObserver: ResizeObserver | null = null;
 
   constructor(private view: EditorView) {
@@ -44,9 +45,10 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
       return;
     }
 
-    // Rebuild only if position/config changed or geometry changed (not on every keystroke)
     const newSide = config.position as 'left' | 'right';
-    if (newSide !== this.side || update.geometryChanged) {
+    const widgetIdChanged = fieldState.mirrorState.widgetId !== this.lastWidgetId;
+    // Rebuild on side change, geometry change, or content change (frontmatter/template edit)
+    if (newSide !== this.side || update.geometryChanged || widgetIdChanged) {
       this.checkAndBuild();
     }
   }
@@ -68,11 +70,19 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     }
 
     const side = config.position as 'left' | 'right';
-    const cacheKey = `margin-${mirrorState.filePath}-${side}-${config.templatePath}`;
+    const cacheKey = `margin-${mirrorState.filePath}-${side}-${config.templatePath}-${mirrorState.widgetId}`;
+    this.lastWidgetId = mirrorState.widgetId;
 
-    // Reuse existing panel if same config
+    // Reuse existing panel if same config + same content (widgetId changes on frontmatter/template edits)
     if (this.panel && this.panel.isConnected && this.side === side && this.lastCacheKey === cacheKey) {
       this.updatePosition(side);
+      return;
+    }
+
+    // Content changed — re-render in existing panel if position didn't change
+    if (this.panel && this.panel.isConnected && this.side === side && this.lastCacheKey !== cacheKey) {
+      this.lastCacheKey = cacheKey;
+      this.renderContent(mirrorState, config, cacheKey);
       return;
     }
 
@@ -136,6 +146,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
       this.panel = null;
       this.side = null;
       this.lastCacheKey = null;
+      this.lastWidgetId = null;
     }
   }
 
