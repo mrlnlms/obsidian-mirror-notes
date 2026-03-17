@@ -3,25 +3,29 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v48)
+## File Map (v49)
 
 ```
-main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, viewOverrides)
+main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, orchestracao)
 settings.ts                                — MirrorUISettingsTab (UI, delega pra builders)
 src/settings/types.ts                      — Interfaces, defaults, CustomMirror, Condition, ViewOverrides, createDefaultCustomMirror()
 src/settings/conditionBuilder.ts           — buildConditionsSection() — conditions unificadas com AND/OR e negacao
 src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
+src/settings/settingsHelpers.ts            — rebuildKnownTemplatePaths() + checkDeletedTemplates()
 src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
 src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
 src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
 src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
 src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
+src/rendering/domPositionManager.ts        — setupDomPosition() + positionOverrideKey() — orchestracao DOM injection
+src/rendering/templateChangeHandler.ts     — handleTemplateChange() + clearTemplateChangeTimeout() — template reactivity
 src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
 src/rendering/templateDependencyRegistry.ts — TemplateDependencyRegistry (template change reactivity)
 src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + helpers extraidos
 src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
 src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)
+src/editor/viewOverrides.ts               — applyViewOverrides() — per-view CSS overrides (hideProps, readableLineLength, inlineTitle)
 src/editor/timingConfig.ts                 — TIMING object (constantes centralizadas de debounce/delay)
 src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + evaluateCondition/evaluateConditions
 src/editor/mirrorTypes.ts                  — Interfaces compartilhadas (MirrorPosition, ApplicableMirrorConfig, etc)
@@ -44,7 +48,7 @@ O plugin renderiza templates de duas formas independentes:
 2. `mirrorState.ts` — StateField usa `extractRawYaml` (hash detection) e `getApplicableConfig` (mirrorConfig)
 3. `decorationBuilder.ts` — `buildDecorations()` cria `MirrorTemplateWidget` com `Decoration.widget`
 4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
-5. `main.ts` — `applyViewOverrides()` aplica overrides per-view (hideProps, readableLineLength, showInlineTitle)
+5. `viewOverrides.ts` — `applyViewOverrides()` aplica overrides per-view (hideProps, readableLineLength, showInlineTitle)
 
 ### Dual-template (v49)
 
@@ -204,8 +208,8 @@ interface Condition {
 
 `TemplateDependencyRegistry` — mesma interface do SourceDependencyRegistry.
 - Code blocks e DOM mirrors registram callback de re-render por template
-- `handleTemplateChange()` debounce 500ms — invoca callbacks + `forceMirrorUpdateEffect` nos CM6 widgets
-- `knownTemplatePaths` (Set precomputado) como fast-path O(1)
+- `handleTemplateChange()` (em `templateChangeHandler.ts`) debounce 500ms — invoca callbacks + `forceMirrorUpdateEffect` nos CM6 widgets
+- `knownTemplatePaths` (Set precomputado, rebuilded por `settingsHelpers.ts`) como fast-path O(1)
 
 ### Fonte de verdade: metadataCache (v41)
 
@@ -250,7 +254,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (166 testes, 10 suites)
+npm test         # vitest (191 testes, 11 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

@@ -22,6 +22,27 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 
 **Arquivos tocados:** `mirrorConfig.ts`, `main.ts`, `types.ts`, `settings.ts`, `mirrorConfig.test.ts`
 
+### Refactor main.ts (pos-v49)
+
+**Contexto:** main.ts concentrava ~650 linhas com lifecycle, event handlers, render paths e coordenacao. Funcional mas alto acoplamento — qualquer mudanca em event handlers ou setupDomPosition impactava todos os render paths. 191 testes como rede de seguranca.
+
+**O que foi feito:** extrair 4 modulos autonomos, cada um recebendo `plugin: MirrorUIPlugin` como parametro (dependency injection, sem import circular):
+
+1. `src/editor/viewOverrides.ts` — `applyViewOverrides(plugin, view)` (CSS per-view overrides)
+2. `src/rendering/domPositionManager.ts` — `setupDomPosition(plugin, view, isRetry?)` + `positionOverrideKey()` (orchestracao DOM injection + fallback)
+3. `src/rendering/templateChangeHandler.ts` — `handleTemplateChange(plugin, filePath)` + `clearTemplateChangeTimeout()` (template reactivity com estado local de timeout)
+4. `src/settings/settingsHelpers.ts` — `rebuildKnownTemplatePaths(plugin)` + `checkDeletedTemplates(plugin, deletedPath)` (helpers de settings)
+
+**Cleanup adicional:**
+- `activeEditors` Map removido (dead code — nunca lido/escrito, so cleared no onunload)
+- `knownTemplatePaths` e `lastViewMode` tornados public (modulos extraidos precisam acessar)
+- `templateDependencyRegistry.ts` ganhou `unregisterByPrefix()` (usado por domPositionManager pra limpar callbacks stale ao navegar entre notas)
+- Imports nao usados removidos do main.ts
+
+**Resultado:** main.ts 650→444 linhas. So lifecycle (`onload`/`onunload`), event registrations, `setupEditor`, `refreshAllEditors`, `openSettingsToField` e `loadSettings`/`saveSettings`/`resetSettings`.
+
+**Arquivos tocados:** `main.ts`, `tests/updateHideProps.test.ts`, `src/rendering/templateDependencyRegistry.ts` + 4 novos modulos
+
 ---
 
 ## v48 — Per-view DOM injection isolation

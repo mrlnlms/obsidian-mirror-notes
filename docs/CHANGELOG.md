@@ -4,8 +4,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 
 ## Versao Atual: v49 — Dual-template (LP + RV)
 
-### v49: Preview Mode fields funcionais
+### v49: Preview Mode fields funcionais + refactor main.ts
 
+- Refactor: 4 modulos extraidos de main.ts (viewOverrides, domPositionManager, templateChangeHandler, settingsHelpers)
+- `activeEditors` dead code removido
+- `templateDependencyRegistry` ganhou `unregisterByPrefix()` (cleanup callbacks stale)
 - Campos "Preview Mode Template" na UI agora sao usados em Reading View (antes: dead code)
 - `getApplicableConfig` recebe `viewMode` — seleciona template/posicao por modo de visualizacao
 - `configFromMirror` dual: se mirror tem `enable_custom_preview_mode` + template, usa em RV; senao fallback pra LP
