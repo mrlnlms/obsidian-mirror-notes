@@ -75,7 +75,7 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 
 **Contexto:** mirrors com posicao `top`/`bottom` usavam CM6 widgets — invisíveis em Reading View. Proximo item do roadmap.
 
-**Problema:** CM6 (StateField, Decorations, ViewPlugin) so existe em Live Preview. Em Reading View, Obsidian destroi o editor CM6 e renderiza via `.markdown-reading-view` → `.markdown-preview-sizer`. Mirrors top/bottom simplesmente nao apareciam.
+**Problema:** CM6 widgets (Decorations) so sao visiveis em Live Preview. Em Reading View, Obsidian esconde `.markdown-source-view` via CSS (CM6 continua no DOM mas oculto) e mostra `.markdown-reading-view` → `.markdown-preview-sizer`. Mirrors top/bottom simplesmente nao apareciam.
 
 **Investigacao empirica:** log diagnostico temporario revelou a arvore DOM do Reading View:
 - `.markdown-preview-sizer` contem: `[0] .markdown-preview-pusher`, `[1] .mod-header.mod-ui`, `[2] .el-pre.mod-frontmatter.mod-ui`, `[3..N] conteudo`, `[N] .mod-footer.mod-ui`

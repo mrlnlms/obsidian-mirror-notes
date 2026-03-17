@@ -20,7 +20,7 @@ Apos margin panel. Renomear mirrors, usabilidade com dezenas de mirrors, layout 
 
 ## Ideias (viabilidade a definir)
 
-- **Multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, segundo descartado com warning. Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM. Config de teste "Edge: Conflito" preservada como referencia
+- **Multiplos mirrors na mesma nota** — hoje o primeiro mirror que matcha ganha, segundo descartado silenciosamente (first-match-wins, sem warning). Requer `Map<string, CustomMirror[]>` e rendering pipeline pra multiplos widgets/DOM. Config de teste "Edge: Conflito" preservada como referencia
   - **Aprendizados da v46 (AND/OR) que informam o design:**
     - *First-match-wins gera friccao*: properties exclusivas foram necessarias pra testar mirrors isolados (ex: `category: research` em vez de `type: project`). Multiplos mirrors eliminaria essa necessidade
     - *Negacao sem escopo e perigosa*: `status IS NOT draft` matchou o vault inteiro. Com multiplos mirrors, negacao ampla + outro mirror = sobreposicao visual indesejada. Precisa de regras de precedencia ou stacking order
