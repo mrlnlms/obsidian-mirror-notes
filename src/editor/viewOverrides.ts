@@ -1,20 +1,34 @@
 import { MarkdownView } from 'obsidian';
 import { mirrorStateField } from './mirrorState';
+import { getApplicableConfig } from './mirrorConfig';
 import { Logger } from '../dev/logger';
 import { getEditorView } from '../utils/obsidianInternals';
+import { getViewId } from '../rendering/domInjector';
 import type MirrorUIPlugin from '../../main';
+import type { ViewOverrides } from '../settings/types';
 
 export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
   if (!view || !view.file) return;
 
+  // Try CM6 StateField first (covers LP and LP+RV mirrors)
+  let overrides: ViewOverrides | null = null;
   const cm = getEditorView(view);
-  if (!cm) return;
+  if (cm) {
+    const fieldState = cm.state.field(mirrorStateField, false);
+    if (fieldState?.mirrorState?.enabled) {
+      overrides = fieldState.mirrorState.config?.viewOverrides ?? null;
+    }
+  }
 
-  const fieldState = cm.state.field(mirrorStateField, false);
-  if (!fieldState) return;
-
-  const { mirrorState } = fieldState;
-  const overrides = mirrorState.enabled ? mirrorState.config?.viewOverrides : null;
+  // Fallback: check RV config directly (covers preview-only mirrors where StateField has no config)
+  if (!overrides && view.file && plugin.app?.metadataCache) {
+    // @ts-ignore — getMode not in official typings
+    const viewMode: string = view.getMode?.() ?? 'source';
+    const viewId = getViewId(view.containerEl);
+    const frontmatter = plugin.app.metadataCache.getFileCache(view.file)?.frontmatter || {};
+    const rvConfig = getApplicableConfig(plugin, view.file, frontmatter, viewId, viewMode);
+    overrides = rvConfig?.viewOverrides ?? null;
+  }
 
   const viewContent = view.containerEl.querySelector('.view-content');
   if (!viewContent) return;
