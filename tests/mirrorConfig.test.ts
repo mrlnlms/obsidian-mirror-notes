@@ -494,11 +494,10 @@ describe('getApplicableConfig', () => {
     // In preview → uses preview template
     const rvConfig = getApplicableConfig(plugin, makeTFile('rv-only.md'), {}, undefined, 'preview');
     expect(rvConfig!.templatePath).toBe('templates/rv-only.md');
-    // In source → no LP template → falls back to empty string (no template)
+    // In source → RV-only mirror does not match (no LP template)
     clearConfigCache();
     const lpConfig = getApplicableConfig(plugin, makeTFile('rv-only.md'), {}, undefined, 'source');
-    // Mirror matches but LP template is empty → templatePath is empty
-    expect(lpConfig!.templatePath).toBe('');
+    expect(lpConfig).toBeNull();
   });
 
   it('cache separates LP and RV for same file', () => {

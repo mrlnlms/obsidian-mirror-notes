@@ -12,7 +12,7 @@ export class FileSuggest extends TextInputSuggest<TFile> {
       if (
         file instanceof TFile &&
         file.extension === "md" &&
-        file.path.toLowerCase().contains(lowerCaseInputStr)
+        file.path.toLowerCase().includes(lowerCaseInputStr)
       ) {
         files.push(file);
       }
@@ -41,7 +41,7 @@ export class FolderSuggest extends TextInputSuggest<TFolder> {
     abstractFiles.forEach((folder: TAbstractFile) => {
       if (
         folder instanceof TFolder &&
-        folder.path.toLowerCase().contains(lowerCaseInputStr)
+        folder.path.toLowerCase().includes(lowerCaseInputStr)
       ) {
         folders.push(folder);
       }
