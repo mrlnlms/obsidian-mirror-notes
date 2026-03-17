@@ -6,11 +6,11 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ### 1. Margin Panel (epico)
 
-Proximo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementados (v45). Faltam: largura configuravel, threshold de sobreposicao, gutters, min-height. Menu de posicoes so se consolida no final do epico (pode precisar de opcoes intermediarias pra teste). Plano de trabalho em `docs/superpowers/plans/`.
+Proximo bloco de trabalho. Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e consolidacao do menu de posicoes. Itens granulares no [backlog](backlog.md#epico-margin-panel).
 
 ### 2. Revisao de Settings UI
 
-Apos margin panel. Estrutura de codigo ja refatorada (v52: settings.ts split em 5 modulos). Pendente e UX/design: renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina. Inclui divida tecnica: typo `overide` (migration de dados), mixing PT/EN nos textos, opcoes deprecated no dropdown de posicoes.
+Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). Foco: UX/design — renomear mirrors, padronizar textos, limpar opcoes deprecated, migration do typo `overide`. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 
 ## Pre-lancamento (must-have)
 
