@@ -284,6 +284,23 @@
         { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "dual-template" }
       ],
       "conditionLogic": "all"
+    },
+    {
+      "id": "rv-only-overrides-test", "name": "RV-Only + hideProps Test",
+      "openview": false,
+      "enable_custom_live_preview_mode": false,
+      "custom_settings_live_preview_note": "",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "samples/templates/mirror/rv-only-hide-props.md",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_view_overrides": { "hideProps": true, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "rv-only-overrides" }
+      ],
+      "conditionLogic": "all"
     }
   ]
 }
