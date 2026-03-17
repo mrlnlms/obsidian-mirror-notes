@@ -32,7 +32,7 @@ export default class MirrorUIPlugin extends Plugin {
   knownTemplatePaths = new Set<string>();
   /** Cached Obsidian config values — only refresh editors when these actually change */
   private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false };
-  /** Track last known view mode per file — only react to actual mode changes */
+  /** Track last known view mode per view — keyed by viewId:filePath for per-pane isolation */
   lastViewMode = new Map<string, string>();
 
   async onload() {
@@ -60,7 +60,8 @@ export default class MirrorUIPlugin extends Plugin {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
               // @ts-ignore — getMode not in official typings
-              this.lastViewMode.set(file.path, view.getMode?.() ?? 'unknown');
+              const vid = getViewId(view.containerEl);
+              this.lastViewMode.set(`${vid}:${file.path}`, view.getMode?.() ?? 'unknown');
               this.setupEditor(view);
               setupDomPosition(this, view);
             }
@@ -134,9 +135,11 @@ export default class MirrorUIPlugin extends Plugin {
           if (!view || !view.file) return;
           // @ts-ignore — getMode not in official typings
           const currentMode = view.getMode?.() ?? 'unknown';
-          const lastMode = this.lastViewMode.get(view.file.path);
+          const vid = getViewId(view.containerEl);
+          const modeKey = `${vid}:${view.file.path}`;
+          const lastMode = this.lastViewMode.get(modeKey);
           if (currentMode === lastMode) return;
-          this.lastViewMode.set(view.file.path, currentMode);
+          this.lastViewMode.set(modeKey, currentMode);
           Logger.log(`[mode-switch] ${lastMode} -> ${currentMode} for ${view.file.path}`);
           // Em RV nao chamar setupEditor — CM6 dispatch pode causar layout-change cascata
           if (currentMode !== 'preview') {
