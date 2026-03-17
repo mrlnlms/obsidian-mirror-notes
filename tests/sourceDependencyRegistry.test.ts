@@ -34,9 +34,26 @@ describe('SourceDependencyRegistry', () => {
       registry.register('source.md', 'view.md', 'block-1', cb2);
 
       const callbacks = registry.getDependentCallbacks('source.md');
-      // blockKey added to Set twice but Set deduplicates
       expect(callbacks).toHaveLength(1);
       callbacks[0]();
+      expect(cb2).toHaveBeenCalled();
+    });
+
+    it('cleans up old source when blockKey moves to new source', () => {
+      const cb1 = vi.fn();
+      const cb2 = vi.fn();
+      // Block starts with source-a
+      registry.register('source-a.md', 'view.md', 'block-1', cb1);
+      expect(registry.getDependentCallbacks('source-a.md')).toHaveLength(1);
+
+      // Block changes to source-b (same blockKey, different source)
+      registry.register('source-b.md', 'view.md', 'block-1', cb2);
+
+      // Old source should be clean
+      expect(registry.getDependentCallbacks('source-a.md')).toHaveLength(0);
+      // New source has the block
+      expect(registry.getDependentCallbacks('source-b.md')).toHaveLength(1);
+      registry.getDependentCallbacks('source-b.md')[0]();
       expect(cb2).toHaveBeenCalled();
     });
   });

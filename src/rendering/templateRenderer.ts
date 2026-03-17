@@ -132,9 +132,10 @@ async function doRender(ctx: RenderContext): Promise<void> {
 export function clearRenderCache(cacheKey?: string): void {
   if (cacheKey) {
     lastRenderedContent.delete(cacheKey);
-    lastRenderChildren.delete(cacheKey);
   } else {
     lastRenderedContent.clear();
-    lastRenderChildren.clear();
   }
+  // lastRenderChildren is NOT cleared here — it tracks Component lifecycle,
+  // not content cache. Clearing it would lose the reference needed for
+  // removeChild(prev) on the next re-render, causing orphan accumulation.
 }

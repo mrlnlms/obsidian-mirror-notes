@@ -327,4 +327,53 @@ describe('renderMirrorTemplate', () => {
     addChildSpy.mockRestore();
     removeChildSpy.mockRestore();
   });
+
+  it('clearRenderCache does not break child cleanup on next re-render', async () => {
+    const { Component } = await import('obsidian');
+    const fakeComponent = new Component();
+    const addChildSpy = vi.spyOn(fakeComponent, 'addChild');
+    const removeChildSpy = vi.spyOn(fakeComponent, 'removeChild');
+
+    let version = 1;
+    const plugin = createFakePlugin({
+      app: {
+        ...createFakePlugin().app,
+        vault: {
+          getAbstractFileByPath: (path: string) => {
+            const f = new TFile();
+            f.path = path;
+            f.name = path.split('/').pop() || '';
+            return f;
+          },
+          cachedRead: async () => `Version ${version}`,
+        },
+      },
+    });
+
+    const ctx = {
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: {},
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-clear-no-orphan',
+      component: fakeComponent,
+    };
+
+    // First render
+    await renderMirrorTemplate(ctx);
+    expect(addChildSpy).toHaveBeenCalledTimes(1);
+
+    // Global cache clear (simulates cold-start retry)
+    clearRenderCache();
+
+    // Re-render after cache clear — should still clean up previous child
+    version = 2;
+    await renderMirrorTemplate(ctx);
+    expect(addChildSpy).toHaveBeenCalledTimes(2);
+    expect(removeChildSpy).toHaveBeenCalledTimes(1); // prev cleaned up despite cache clear
+
+    addChildSpy.mockRestore();
+    removeChildSpy.mockRestore();
+  });
 });

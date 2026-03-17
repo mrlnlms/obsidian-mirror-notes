@@ -9,6 +9,9 @@ export class SourceDependencyRegistry {
 
   /** Registra dependencia + callback de re-render. blockKey deve ser unico por bloco. */
   register(sourcePath: string, viewPath: string, blockKey: string, rerender: () => Promise<void>): void {
+    // Limpar registro anterior com mesmo blockKey (source pode ter mudado)
+    this.unregisterBlock(blockKey);
+
     let set = this.deps.get(sourcePath);
     if (!set) {
       set = new Set();
