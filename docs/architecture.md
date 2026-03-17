@@ -3,12 +3,16 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v50)
+## File Map (v52)
 
 ```
-main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, orchestracao)
-settings.ts                                — MirrorUISettingsTab (UI, delega pra builders)
+main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup) — 386 linhas
+settings.ts                                — MirrorUISettingsTab (classe shell, banner, routing) — 83 linhas
 src/settings/types.ts                      — Interfaces, defaults, CustomMirror, Condition, ViewOverrides, createDefaultCustomMirror()
+src/settings/globalSection.ts              — buildGlobalSection() — secao global mirror do settings
+src/settings/customCards.ts                — buildCustomMirrorsSection() — cards de custom mirrors + search/filter
+src/settings/settingsUI.ts                 — addModeToggle() + addPositionOptions() — componentes reutilizaveis
+src/settings/viewOverridesUI.ts            — addViewOverridesSection() — view overrides deduplicado (usado por global + custom)
 src/settings/conditionBuilder.ts           — buildConditionsSection() — conditions unificadas com AND/OR e negacao
 src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
 src/settings/settingsHelpers.ts            — rebuildKnownTemplatePaths() + checkDeletedTemplates()
@@ -31,8 +35,11 @@ src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCac
 src/editor/mirrorTypes.ts                  — Interfaces compartilhadas (MirrorPosition, ApplicableMirrorConfig, etc)
 src/editor/mirrorUtils.ts                  — extractRawYaml, hashObject, generateWidgetId
 src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
-src/utils/obsidianInternals.ts             — Wrappers tipados pra APIs internas do Obsidian
+src/utils/obsidianInternals.ts             — Wrappers tipados pra TODAS as APIs internas do Obsidian (14 wrappers)
+src/utils/obsidianConfigMonitor.ts         — snapshotObsidianConfig() + registerConfigWatcher() — detecta mudancas visuais do Obsidian
+src/utils/modeSwitchDetector.ts            — registerModeSwitchDetector() — layout-change com debounce pra mode switch LP/RV
 src/utils/settingsPaths.ts                 — updateSettingsPaths() — auto-update paths on rename
+src/utils/array.ts                         — arraymove() — utilitario compartilhado
 src/dev/logger.ts                          — Logger dev-only (no-op em prod via __DEV__ flag)
 src/dev/clear-log.sh                       — Script pra limpar debug.log
 styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
@@ -220,7 +227,8 @@ interface Condition {
 - `active-leaf-change` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
 - `metadataCache.changed` — branch 1: DOM injection + viewOverrides + force CM6 update. Branch 2: cross-note source deps. Branch 3: template deps
 - `vault.modify` — em `data.json`: re-update settings. Em outros: template deps
-- `vault.on('raw')` — detecta mudancas em `.obsidian/app.json` e `core-plugins.json` → `refreshAllEditors()`
+- `vault.on('raw')` — delegado a `obsidianConfigMonitor.ts`: detecta mudancas em `.obsidian/app.json` e `core-plugins.json` → `refreshAllEditors()`
+- `layout-change` — delegado a `modeSwitchDetector.ts`: trailing debounce 50ms, per-view mode tracking, triggers setupEditor + setupDomPosition + applyViewOverrides
 
 ### Cross-note reactivity (v30)
 
@@ -280,7 +288,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (207 testes, 11 suites)
+npm test         # vitest (215 testes, 12 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

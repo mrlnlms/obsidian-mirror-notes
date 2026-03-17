@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v50.
+Trabalho tecnico pendente. Atualizado na v52.
 
 ## Epico: Margin Panel
 
@@ -16,7 +16,7 @@ Itens pendentes:
 
 ## Revisao de Settings UI
 
-Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade e divida tecnica:
+Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts 545→83, split em 5 modulos). Pendente e UX/design:
 
 - **Renomear mirrors** — hoje nao tem como renomear um mirror criado, so deletar e recriar
 - **Usabilidade com muitos mirrors** — com dezenas de mirrors a lista fica dificil de navegar. Busca existe (v31) mas layout/hierarquia visual precisam de revisao
@@ -42,7 +42,10 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade e d
 - **`viewOverrides` em Reading View** — funciona sem codigo extra. CM6 existe em ambos os modos (Obsidian cria `.markdown-source-view` e `.markdown-reading-view` simultaneamente). `setupEditor` registra StateField, `applyViewOverrides` aplica CSS class no `.view-content` que cobre LP e RV. Validado empiricamente na v47 com `hideProps: true` — persiste entre mode switches e sobrevive cold start
 - **`configCache` indexado por `file.path` (nao per-view)** — por design. Config base (qual mirror matcha, template, posicao) e identica entre panes do mesmo arquivo. O unico dado per-view e `positionOverride`, aplicado DEPOIS do cache via `positionOverrides` Map (per-view desde v48). Cenario onde config base variasse por pane (ex: "pane A mostra mirror X, pane B mostra mirror Y pro mesmo arquivo") nao existe e nao tem UX viavel. Se surgir, refatorar cache pra `viewId + file.path`. Avaliado na v48, descartado como nao-problema
 - **`resolveViewOverrides` hideProps merge com `||`** — campo legacy (`custom_settings_hide_props` / `global_settings_hide_props`) removido. `viewOverrides.hideProps` e autoritativo. `resolveViewOverrides()` eliminada. Resolvido na v48 (cleanup)
-- **`main.ts` acoplamento operacional** — resolvido via refactor pos-v49. 4 modulos extraidos (viewOverrides, domPositionManager, templateChangeHandler, settingsHelpers). main.ts 650→444 linhas, so lifecycle e event registrations. activeEditors dead code removido
+- **`main.ts` acoplamento operacional** — resolvido em 2 ondas: v49 (4 modulos: viewOverrides, domPositionManager, templateChangeHandler, settingsHelpers, 650→444), v52 (+2 modulos: obsidianConfigMonitor, modeSwitchDetector, 449→386). Zero @ts-ignore restante no main.ts
+- **`settings.ts` monolitico (545 linhas)** — resolvido na v52. Split em 5 modulos: globalSection, customCards, settingsUI, viewOverridesUI, array. settings.ts reduzido pra 83 linhas (classe shell). View overrides deduplicado
+- **@ts-ignore espalhados pelo codebase** — resolvido na v52. 13 @ts-ignore centralizados em obsidianInternals.ts (14 wrappers tipados). Zero fora do centralizador (exceto super() do PluginSettingTab)
+- **`any` em modulos core** — resolvido na v52. mirrorState.ts (TFile, DecorationSet), mirrorTypes.ts (Record<string,any>), marginPanelExtension.ts (MirrorState, ApplicableMirrorConfig)
 - **`file-open` race com `getActiveViewOfType`** — teorico, nao e bug. O handler usa setTimeout + getActiveViewOfType, mas `active-leaf-change` dispara junto com a `leaf` correta e tem o mesmo delay, corrigindo imediatamente. `setupEditor`/`setupDomPosition` usam `view.file` (nao o `file` do evento), entao operam no arquivo correto da view. Janela de race e EDITOR_SETUP_DELAY (poucos ms). Avaliado na v49, descartado
 - **`filePathFacet`/`viewIdFacet` stale ao trocar arquivo na mesma pane** — nao e bug. Logs confirmam que Obsidian recria o EditorState ao navegar: `setupEditor: adding StateField` dispara em cada file-open, provando que o StateField anterior e destruido e re-adicionado com path correto. Verificado empiricamente via debug.log. Avaliado na v49, descartado
 - **templateDeps stale callbacks** — resolvido no refactor pos-v49. `domPositionManager.ts` chama `plugin.templateDeps.unregisterByPrefix(dom-${viewId}-)` no inicio de `setupDomPosition`, limpando callbacks do arquivo anterior antes de registrar novos

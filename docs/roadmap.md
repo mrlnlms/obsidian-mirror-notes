@@ -10,7 +10,7 @@ Proximo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementado
 
 ### 2. Revisao de Settings UI
 
-Apos margin panel. Renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina. Inclui divida tecnica: typo `overide` (migration de dados), mixing PT/EN nos textos, opcoes deprecated no dropdown de posicoes.
+Apos margin panel. Estrutura de codigo ja refatorada (v52: settings.ts split em 5 modulos). Pendente e UX/design: renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina. Inclui divida tecnica: typo `overide` (migration de dados), mixing PT/EN nos textos, opcoes deprecated no dropdown de posicoes.
 
 ## Pre-lancamento (must-have)
 
@@ -34,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v52 | Structural refactor (code review) | @ts-ignore centralizados (14 wrappers), tipagem core, main.ts 449→386, settings.ts 545→83 (5 modulos), view overrides dedup |
 | v51 | Codex audit fixes + minAppVersion | Per-template debounce, RenderChild cleanup, minAppVersion 0.15.0→1.0.0 |
 | v50 | MutationObserver auto-recovery | Observer detecta container destruido pelo Obsidian, re-injeta automaticamente, cooldown 100ms, isMutationRecovery bypass |
 | v49 | Dual-template LP + RV + refactor | Preview Mode fields funcionais, viewMode-aware config, cache mode-aware, legacy hideProps cleanup, refactor main.ts (4 modulos extraidos) |

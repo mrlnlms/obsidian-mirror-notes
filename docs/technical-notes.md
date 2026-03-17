@@ -2,7 +2,44 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v51 — Codex audit fixes + minAppVersion
+## Versao Atual: v52 — Structural refactor (code review triage)
+
+### O que mudou na v52
+
+**Contexto:** code review externo (Codex) identificou 4 areas de divida tecnica: main.ts grande demais, settings.ts monolitico, @ts-ignore espalhados, e `any` em modulos core. Triagem priorizou por ROI — refactor estrutural puro, zero mudanca de comportamento.
+
+**1. Centralizacao de @ts-ignore em `obsidianInternals.ts`**
+
+Antes: 13 `@ts-ignore` espalhados por 6 arquivos (viewOverrides.ts, domInjector.ts, domPositionManager.ts, suggest.ts, conditionBuilder.ts, main.ts). Depois: zero fora de `obsidianInternals.ts` (exceto `super()` do PluginSettingTab — nao faz sentido wrappear). 8 wrappers novos: `getVaultConfig`, `getViewMode`, `getBacklinkPlugin`, `pushKeymapScope`, `popKeymapScope`, `onVaultRaw` + refatoracao de 4 usos de `addSearchClass` no conditionBuilder.
+
+**2. Tipagem de `any` em modulos core**
+
+- `mirrorTypes.ts`: `frontmatter: any` → `Record<string, any>` (mais expressivo)
+- `mirrorState.ts`: `file: any` → `TFile | null`, `decorations: any` → `DecorationSet`, `as any` → `as TFile | null`
+- `marginPanelExtension.ts`: `mirrorState: any, config: any` → `MirrorState, ApplicableMirrorConfig`
+
+**3. Extracao de main.ts (449 → 386 linhas)**
+
+- `obsidianConfigMonitor.ts`: snapshot + raw listener (app.json, core-plugins.json). Encapsula diff de config e callback `onConfigChange`. Usa wrappers tipados.
+- `modeSwitchDetector.ts`: layout-change + trailing debounce 50ms + per-view mode tracking (`lastViewMode`). Chama setupEditor/setupDomPosition/applyViewOverrides conforme modo.
+
+**4. Split de settings.ts (545 → 83 linhas)**
+
+- `settingsUI.ts`: `addModeToggle()` + `addPositionOptions()` — componentes reutilizaveis (usados 4x entre global e custom)
+- `viewOverridesUI.ts`: `addViewOverridesSection()` — deduplicacao do bloco de view overrides que era identico no global e no custom (~45 linhas x2 → 1 funcao parametrizada)
+- `globalSection.ts`: `buildGlobalSection()` — secao inteira de global mirror
+- `customCards.ts`: `buildCustomMirrorsSection()` — custom mirrors + cards + filter
+- `array.ts`: `arraymove()` — utilitario compartilhado (antes duplicado em settings.ts e conditionBuilder.ts)
+
+Interface de extracao segue padrao do conditionBuilder: options object com `app`, `plugin`, `onSave`, `onRedisplay`.
+
+**Arquivos tocados:** main.ts, settings.ts, src/editor/viewOverrides.ts, src/editor/mirrorState.ts, src/editor/mirrorTypes.ts, src/editor/marginPanelExtension.ts, src/rendering/domInjector.ts, src/rendering/domPositionManager.ts, src/suggesters/suggest.ts, src/settings/conditionBuilder.ts + 8 arquivos novos
+
+**Testes:** 215 (sem mudanca — refactor puro, zero comportamento alterado)
+
+---
+
+## v51 — Codex audit fixes + minAppVersion
 
 ### O que mudou na v51
 
