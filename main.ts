@@ -14,11 +14,13 @@ import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
 import { cleanupAllDomMirrors, getViewId } from './src/rendering/domInjector';
 import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
-import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
+import { getEditorView, getVaultBasePath, getVaultConfig, getViewMode, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
 import { applyViewOverrides } from './src/editor/viewOverrides';
 import { setupDomPosition } from './src/rendering/domPositionManager';
 import { handleTemplateChange, clearTemplateChangeTimeout } from './src/rendering/templateChangeHandler';
 import { rebuildKnownTemplatePaths, checkDeletedTemplates } from './src/settings/settingsHelpers';
+import { snapshotObsidianConfig, registerConfigWatcher } from './src/utils/obsidianConfigMonitor';
+import { registerModeSwitchDetector } from './src/utils/modeSwitchDetector';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -30,8 +32,6 @@ export default class MirrorUIPlugin extends Plugin {
   private crossNoteTimeouts = new Map<string, NodeJS.Timeout>();
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   knownTemplatePaths = new Set<string>();
-  /** Cached Obsidian config values — only refresh editors when these actually change */
-  private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false };
   /** Track last known view mode per view — keyed by viewId:filePath for per-pane isolation */
   lastViewMode = new Map<string, string>();
 
@@ -59,9 +59,8 @@ export default class MirrorUIPlugin extends Plugin {
           setTimeout(() => {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
-              // @ts-ignore — getMode not in official typings
               const vid = getViewId(view.containerEl);
-              this.lastViewMode.set(`${vid}:${file.path}`, view.getMode?.() ?? 'unknown');
+              this.lastViewMode.set(`${vid}:${file.path}`, getViewMode(view));
               this.setupEditor(view);
               setupDomPosition(this, view);
             }
@@ -84,73 +83,12 @@ export default class MirrorUIPlugin extends Plugin {
       })
     );
 
-    // Re-processar mirrors quando settings visuais do Obsidian mudam (inline title, properties)
-    // css-change nao cobre config changes; monitorar app.json via vault raw event
-    // @ts-ignore — getConfig not in official typings
-    this.lastObsidianConfig.showInlineTitle = !!this.app.vault.getConfig("showInlineTitle");
-    // @ts-ignore
-    this.lastObsidianConfig.propertiesInDocument = this.app.vault.getConfig("propertiesInDocument") || 'visible';
-    // @ts-ignore — internalPlugins not in official typings
-    const blInit = (this.app as any).internalPlugins?.plugins?.['backlink'];
-    this.lastObsidianConfig.backlinkEnabled = !!blInit?.enabled;
-    this.registerEvent(
-      // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
-      this.app.vault.on('raw', (path: string) => {
-        if (path === '.obsidian/app.json') {
-          // @ts-ignore
-          const showTitle = !!this.app.vault.getConfig("showInlineTitle");
-          // @ts-ignore
-          const propsMode = this.app.vault.getConfig("propertiesInDocument") || 'visible';
-          if (showTitle === this.lastObsidianConfig.showInlineTitle &&
-              propsMode === this.lastObsidianConfig.propertiesInDocument) return;
-          this.lastObsidianConfig.showInlineTitle = showTitle;
-          this.lastObsidianConfig.propertiesInDocument = propsMode;
-          Logger.log(`[config-change] showInlineTitle=${showTitle}, propertiesInDocument=${propsMode}`);
-          this.refreshAllEditors();
-        }
-        if (path === '.obsidian/core-plugins.json') {
-          // Only react to plugin ON/OFF — backlinkInDocument is NOT reactive for open tabs
-          // (Obsidian only updates the DOM on tab close+reopen for that setting)
-          // @ts-ignore — internalPlugins not in official typings
-          const bl = (this.app as any).internalPlugins?.plugins?.['backlink'];
-          const enabled = !!bl?.enabled;
-          if (enabled === this.lastObsidianConfig.backlinkEnabled) return;
-          this.lastObsidianConfig.backlinkEnabled = enabled;
-          Logger.log(`[config-change] backlink=${enabled}`);
-          this.refreshAllEditors();
-        }
-      })
-    );
+    // Re-processar mirrors quando settings visuais do Obsidian mudam (inline title, properties, backlinks)
+    snapshotObsidianConfig(this.app);
+    registerConfigWatcher(this, () => this.refreshAllEditors());
 
-    // Detectar mode switch (LP ↔ RV) — layout-change e o unico evento que dispara.
-    // Trailing debounce 50ms: getMode() pode oscilar durante a transicao do Obsidian.
-    // Esperar estabilizar evita renders cascateados sem delay perceptivel.
-    let layoutDebounce: NodeJS.Timeout | null = null;
-    this.registerEvent(
-      this.app.workspace.on('layout-change', () => {
-        if (layoutDebounce) clearTimeout(layoutDebounce);
-        layoutDebounce = setTimeout(() => {
-          layoutDebounce = null;
-          const view = this.app.workspace.getActiveViewOfType(MarkdownView);
-          if (!view || !view.file) return;
-          // @ts-ignore — getMode not in official typings
-          const currentMode = view.getMode?.() ?? 'unknown';
-          const vid = getViewId(view.containerEl);
-          const modeKey = `${vid}:${view.file.path}`;
-          const lastMode = this.lastViewMode.get(modeKey);
-          if (currentMode === lastMode) return;
-          this.lastViewMode.set(modeKey, currentMode);
-          Logger.log(`[mode-switch] ${lastMode} -> ${currentMode} for ${view.file.path}`);
-          // Em RV nao chamar setupEditor — CM6 dispatch pode causar layout-change cascata
-          if (currentMode !== 'preview') {
-            this.setupEditor(view);
-          }
-          setupDomPosition(this, view);
-          // Re-evaluate overrides on mode switch — dual-template may change applicable config
-          applyViewOverrides(this, view);
-        }, 50);
-      })
-    );
+    // Detectar mode switch (LP ↔ RV) — layout-change com trailing debounce 50ms
+    registerModeSwitchDetector(this);
 
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
@@ -420,8 +358,7 @@ export default class MirrorUIPlugin extends Plugin {
       document.querySelectorAll(`.${cls}`).forEach(el => el.classList.remove(cls));
     }
     // Restore Obsidian's readable line width to match global setting
-    // @ts-ignore — getConfig not in official typings
-    const globalReadable = !!this.app.vault.getConfig("readableLineLength");
+    const globalReadable = !!getVaultConfig(this.app, "readableLineLength");
     document.querySelectorAll('.markdown-source-view').forEach(el => {
       el.classList.toggle('is-readable-line-width', globalReadable);
     });

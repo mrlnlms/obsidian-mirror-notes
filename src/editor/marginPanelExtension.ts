@@ -1,6 +1,6 @@
 import { ViewPlugin, ViewUpdate, EditorView } from "@codemirror/view";
 import { mirrorStateField, mirrorPluginFacet } from "./mirrorState";
-import { MARGIN_POSITIONS } from "./mirrorTypes";
+import { MirrorState, ApplicableMirrorConfig, MARGIN_POSITIONS } from "./mirrorTypes";
 import { renderMirrorTemplate } from "../rendering/templateRenderer";
 
 export const PANEL_WIDTH = 250;
@@ -126,7 +126,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     this.panel.style.right = style.right ?? '';
   }
 
-  private async renderContent(mirrorState: any, config: any, cacheKey: string) {
+  private async renderContent(mirrorState: MirrorState, config: ApplicableMirrorConfig, cacheKey: string) {
     if (!this.panel) return;
 
     const plugin = this.view.state.facet(mirrorPluginFacet);

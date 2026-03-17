@@ -1,5 +1,6 @@
 import { createPopper, type Instance as PopperInstance } from "@popperjs/core";
 import { App, type ISuggestOwner, Scope } from "obsidian";
+import { pushKeymapScope, popKeymapScope } from "../utils/obsidianInternals";
 
 const wrapAround = (value: number, size: number): number => {
   return ((value % size) + size) % size;
@@ -135,8 +136,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
   }
 
   open(container: HTMLElement, inputEl: HTMLElement): void {
-    // @ts-ignore — Obsidian internal API
-    this.app.keymap.pushScope(this.scope);
+    pushKeymapScope(this.app, this.scope);
 
     container.appendChild(this.suggestEl);
     this.popper = createPopper(inputEl, this.suggestEl, {
@@ -165,8 +165,7 @@ export abstract class TextInputSuggest<T> implements ISuggestOwner<T> {
   }
 
   close(): void {
-    // @ts-ignore — Obsidian internal API
-    this.app.keymap.popScope(this.scope);
+    popKeymapScope(this.app, this.scope);
 
     this.suggest.setSuggestions([]);
     this.popper.destroy();

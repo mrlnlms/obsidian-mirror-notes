@@ -34,7 +34,7 @@ export interface ApplicableMirrorConfig {
 export interface MirrorState {
   enabled: boolean;
   config: ApplicableMirrorConfig | null;
-  frontmatter: any;
+  frontmatter: Record<string, any>;
   widgetId: string;
   filePath: string; // Path do arquivo que contém este editor (não depende de getActiveFile)
   lastDocText?: string;

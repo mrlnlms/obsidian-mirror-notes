@@ -1,5 +1,5 @@
 import { StateField, StateEffect, EditorState, Transaction, Facet } from "@codemirror/state";
-import { EditorView } from "@codemirror/view";
+import { EditorView, DecorationSet } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
 import { MirrorFieldState, MirrorState } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
@@ -76,9 +76,9 @@ function detectFrontmatterChange(tr: Transaction, docText: string): boolean {
 function handleForcedUpdate(
   tr: Transaction,
   value: MirrorState,
-  decorations: any,
+  decorations: DecorationSet,
   plugin: MirrorUIPlugin,
-  file: any,
+  file: TFile | null,
   docText: string,
   newFrontmatter: Record<string, any>,
   newFrontmatterHash: string
@@ -152,7 +152,7 @@ function handleConfigChange(
   tr: Transaction,
   value: MirrorState,
   plugin: MirrorUIPlugin,
-  file: any,
+  file: TFile | null,
   docText: string,
   newFrontmatter: Record<string, any>,
   newFrontmatterHash: string
@@ -212,7 +212,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
   create(state: EditorState): MirrorFieldState {
     const plugin = state.facet(mirrorPluginFacet)!;
     const filePath = state.facet(filePathFacet);
-    const file = filePath ? plugin?.app.vault.getAbstractFileByPath(filePath) as any : null;
+    const file = filePath ? plugin?.app.vault.getAbstractFileByPath(filePath) as TFile | null : null;
     const frontmatterHash = hashObject(extractRawYaml(state.doc.toString()));
     const frontmatter = filePath ? getMetadataCacheFrontmatter(plugin, filePath) : {};
     const viewId = state.facet(viewIdFacet);
@@ -248,7 +248,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
 
     // Usar filePath armazenado no state — getActiveFile() retorna o painel ativo,
     // que pode ser outro arquivo (ex: template sendo editado em outro painel)
-    const file = plugin?.app.vault.getAbstractFileByPath(value.filePath) as any;
+    const file = plugin?.app.vault.getAbstractFileByPath(value.filePath) as TFile | null;
     const filePath = value.filePath || 'unknown';
     const docText = tr.state.doc.toString();
     const now = Date.now();

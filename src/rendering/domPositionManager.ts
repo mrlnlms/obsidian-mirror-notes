@@ -4,7 +4,7 @@ import { getApplicableConfig } from '../editor/mirrorConfig';
 import { CM6_POSITIONS } from '../editor/mirrorTypes';
 import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, getViewId, disconnectObserversByPrefix } from './domInjector';
 import { Logger } from '../dev/logger';
-import { getEditorView } from '../utils/obsidianInternals';
+import { getEditorView, getViewMode } from '../utils/obsidianInternals';
 import type MirrorUIPlugin from '../../main';
 
 /** Helper to build positionOverrides key (per-view isolation) */
@@ -53,8 +53,7 @@ export async function setupDomPosition(
   plugin.positionOverrides.delete(overrideKey);
 
   const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
-  // @ts-ignore — getMode not in official typings
-  const viewMode: string = view.getMode?.() ?? 'source';
+  const viewMode = getViewMode(view);
   const isReadingView = viewMode === 'preview';
   const config = getApplicableConfig(plugin, file, frontmatter, viewId, viewMode);
   // In Reading View, CM6 doesn't render — top/bottom need DOM injection too

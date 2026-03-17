@@ -3,6 +3,7 @@ import MirrorUIPlugin from "../../main";
 import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
 import { renderMirrorTemplate } from "./templateRenderer";
 import { Logger } from "../dev/logger";
+import { getVaultConfig, getBacklinkPlugin } from "../utils/obsidianInternals";
 
 // Selectors for native Obsidian DOM elements
 const SELECTOR_INLINE_TITLE = '.inline-title';
@@ -50,19 +51,16 @@ function injectionKey(viewId: string, filePath: string, position: MirrorPosition
 export function isDomTargetVisible(app: App, position: MirrorPosition): boolean {
   switch (position) {
     case 'above-title':
-      // @ts-ignore — getConfig not in official typings
-      return !!app.vault.getConfig("showInlineTitle");
+      return !!getVaultConfig(app, "showInlineTitle");
     case 'above-properties':
     case 'below-properties':
-      // @ts-ignore
-      return app.vault.getConfig("propertiesInDocument") !== "hidden";
+      return getVaultConfig(app, "propertiesInDocument") !== "hidden";
     case 'above-backlinks':
     case 'below-backlinks': {
       // Only check plugin ON/OFF. backlinkInDocument is NOT reactive for open tabs
       // (config changes immediately but DOM only updates on tab close+reopen).
       // Actual content presence is checked in resolveTarget via children.length.
-      // @ts-ignore — internalPlugins not in official typings
-      const bl = (app as any).internalPlugins?.plugins?.['backlink'];
+      const bl = getBacklinkPlugin(app);
       return !!bl?.enabled;
     }
     default:

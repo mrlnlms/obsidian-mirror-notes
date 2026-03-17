@@ -2,6 +2,7 @@ import { App, Setting } from "obsidian";
 import { Condition, ConditionType, CustomMirror } from "./types";
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "../suggesters/file-suggest";
 import { addPathValidation } from "./pathValidator";
+import { addSearchClass } from "../utils/obsidianInternals";
 
 interface ConditionBuilderOptions {
     app: App;
@@ -105,8 +106,7 @@ function buildConditionRow(
                       condition.fileName = value;
                       onSave();
                   });
-                // @ts-ignore
-                cb.containerEl.addClass("mirror-search-input");
+                addSearchClass(cb, "mirror-search-input");
             });
             break;
 
@@ -119,8 +119,7 @@ function buildConditionRow(
                       condition.folderPath = value;
                       onSave();
                   });
-                // @ts-ignore
-                cb.containerEl.addClass("mirror-search-input");
+                addSearchClass(cb, "mirror-search-input");
             });
             break;
 
@@ -133,8 +132,7 @@ function buildConditionRow(
                       condition.propertyName = value;
                       onSave();
                   });
-                // @ts-ignore
-                cb.containerEl.addClass("mirror-search-input");
+                addSearchClass(cb, "mirror-search-input");
             });
             s.addSearch(cb => {
                 new YamlPropertySuggest(app, cb.inputEl);
@@ -144,8 +142,7 @@ function buildConditionRow(
                       condition.propertyValue = value;
                       onSave();
                   });
-                // @ts-ignore
-                cb.containerEl.addClass("mirror-search-input");
+                addSearchClass(cb, "mirror-search-input");
             });
             break;
     }

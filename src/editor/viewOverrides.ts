@@ -2,7 +2,7 @@ import { MarkdownView } from 'obsidian';
 import { mirrorStateField } from './mirrorState';
 import { getApplicableConfig } from './mirrorConfig';
 import { Logger } from '../dev/logger';
-import { getEditorView } from '../utils/obsidianInternals';
+import { getEditorView, getViewMode, getVaultConfig } from '../utils/obsidianInternals';
 import { getViewId } from '../rendering/domInjector';
 import type MirrorUIPlugin from '../../main';
 import type { ViewOverrides } from '../settings/types';
@@ -22,8 +22,7 @@ export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
 
   // Fallback: check RV config directly (covers preview-only mirrors where StateField has no config)
   // Only in preview mode — in source mode, no StateField config means no LP mirror, don't apply RV overrides
-  // @ts-ignore — getMode not in official typings
-  const viewMode: string = view.getMode?.() ?? 'source';
+  const viewMode = getViewMode(view);
   if (!overrides && viewMode === 'preview' && view.file && plugin.app?.metadataCache) {
     const viewId = getViewId(view.containerEl);
     const frontmatter = plugin.app.metadataCache.getFileCache(view.file)?.frontmatter || {};
@@ -46,8 +45,7 @@ export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
       editorEl.classList.toggle('is-readable-line-width', rlOverride);
     } else {
       // inherit: restore Obsidian's global setting
-      // @ts-ignore — getConfig not in official typings
-      const globalReadable = !!plugin.app.vault.getConfig("readableLineLength");
+      const globalReadable = !!getVaultConfig(plugin.app, "readableLineLength");
       editorEl.classList.toggle('is-readable-line-width', globalReadable);
     }
   }

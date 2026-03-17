@@ -1,4 +1,4 @@
-import { App, MarkdownView } from "obsidian";
+import { App, EventRef, MarkdownView, Scope, Vault } from "obsidian";
 import { EditorView } from "@codemirror/view";
 
 /**
@@ -40,4 +40,40 @@ export function rerenderPreview(view: MarkdownView): void {
 export function addSearchClass(cb: any, className: string): void {
     // @ts-ignore — containerEl exists on SearchComponent at runtime
     cb.containerEl.addClass(className);
+}
+
+/** Get Obsidian vault config value (showInlineTitle, readableLineLength, etc.) */
+export function getVaultConfig(app: App, key: string): any {
+    // @ts-ignore — getConfig not in official typings
+    return app.vault.getConfig(key);
+}
+
+/** Get view mode: 'source' (Live Preview) or 'preview' (Reading View) */
+export function getViewMode(view: MarkdownView): string {
+    // @ts-ignore — getMode not in official typings
+    return view.getMode?.() ?? 'source';
+}
+
+/** Get backlink internal plugin reference */
+export function getBacklinkPlugin(app: App): { enabled: boolean } | null {
+    // @ts-ignore — internalPlugins not in official typings
+    return (app as any).internalPlugins?.plugins?.['backlink'] ?? null;
+}
+
+/** Push keymap scope (for suggest popups) */
+export function pushKeymapScope(app: App, scope: Scope): void {
+    // @ts-ignore — app.keymap not in official typings
+    app.keymap.pushScope(scope);
+}
+
+/** Pop keymap scope */
+export function popKeymapScope(app: App, scope: Scope): void {
+    // @ts-ignore — app.keymap not in official typings
+    app.keymap.popScope(scope);
+}
+
+/** Register a vault 'raw' event listener (fires for .obsidian/ config changes) */
+export function onVaultRaw(vault: Vault, callback: (path: string) => void): EventRef {
+    // @ts-ignore — 'raw' event not in typings but fires for all file changes including .obsidian/
+    return vault.on('raw', callback);
 }
