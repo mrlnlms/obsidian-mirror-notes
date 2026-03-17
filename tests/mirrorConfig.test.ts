@@ -463,20 +463,20 @@ describe('getApplicableConfig', () => {
     expect(config!.position).toBe('bottom');
   });
 
-  it('falls back to live_preview when preview mode not configured', () => {
+  it('LP-only mirror does not match in preview mode (no fallback)', () => {
     const mirror = createCustomMirror({
       enable_custom_live_preview_mode: true,
       custom_settings_live_preview_note: 'templates/lp.md',
       enable_custom_preview_mode: false,
       custom_settings_preview_note: '',
-      conditions: [{ type: 'file', negated: false, fileName: 'fallback.md' }],
+      conditions: [{ type: 'file', negated: false, fileName: 'lp-only.md' }],
     });
     const plugin = createFakePlugin({
       settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
     });
     clearConfigCache();
-    const config = getApplicableConfig(plugin, makeTFile('fallback.md'), {}, undefined, 'preview');
-    expect(config!.templatePath).toBe('templates/lp.md');
+    const config = getApplicableConfig(plugin, makeTFile('lp-only.md'), {}, undefined, 'preview');
+    expect(config).toBeNull();
   });
 
   it('mirror with only preview mode matches in preview but not source', () => {

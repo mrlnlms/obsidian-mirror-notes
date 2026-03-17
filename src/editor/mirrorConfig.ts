@@ -102,12 +102,10 @@ export function getApplicableConfig(
 
   const isPreviewMode = viewMode === 'preview';
   for (const mirror of settings.customMirrors) {
-    // Mirror precisa ter template pro modo atual (ou fallback LP pra RV)
+    // Mirror so matcha se tem template pro modo atual — sem fallback entre modos
     const hasLP = mirror.enable_custom_live_preview_mode && !!mirror.custom_settings_live_preview_note;
     const hasRV = mirror.enable_custom_preview_mode && !!mirror.custom_settings_preview_note;
-    if (!hasLP && !hasRV) continue;
-    // RV-only mirror nao matcha em source — evita templatePath vazio
-    if (!hasLP && !isPreviewMode) continue;
+    if (isPreviewMode ? !hasRV : !hasLP) continue;
     if (mirror.conditions.length === 0) continue;
     if (evaluateConditions(mirror.conditions, mirror.conditionLogic, file, frontmatter)) {
       matchedMirror = mirror;
@@ -115,11 +113,10 @@ export function getApplicableConfig(
     }
   }
 
-  // 2. Verificar se global mirror está ativo pro modo atual
+  // 2. Verificar se global mirror está ativo pro modo atual — sem fallback entre modos
   const globalHasLP = settings.enable_global_live_preview_mode && !!settings.global_settings_live_preview_note;
   const globalHasRV = settings.enable_global_preview_mode && !!settings.global_settings_preview_note;
-  // Global precisa ter template pro modo atual (LP fallback pra RV e ok, mas RV-only nao funciona em source)
-  const globalMirrorActive = settings.global_settings && (globalHasLP || (globalHasRV && isPreviewMode));
+  const globalMirrorActive = settings.global_settings && (isPreviewMode ? globalHasRV : globalHasLP);
 
   // 3. LÓGICA DE PRIORIDADE (sem iteracao duplicada — matchedMirror ja tem a referencia)
   let result: ApplicableMirrorConfig | null = null;
