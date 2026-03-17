@@ -56,6 +56,7 @@ vi.mock('../settings', async () => {
 
 // Import after all mocks
 import MirrorUIPlugin from '../main';
+import { applyViewOverrides } from '../src/editor/viewOverrides';
 
 function createViewWithState(mirrorState: any): MarkdownView {
   const viewContentDiv = document.createElement('div');
@@ -108,7 +109,7 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: true, viewOverrides: { hideProps: true, readableLineLength: null, showInlineTitle: null } },
     });
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const vc = view.containerEl.querySelector('.view-content')!;
     expect(vc.classList.contains('mirror-hide-properties')).toBe(true);
   });
@@ -120,7 +121,7 @@ describe('applyViewOverrides', () => {
     });
     view.containerEl.querySelector('.view-content')!.classList.add('mirror-hide-properties');
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const vc = view.containerEl.querySelector('.view-content')!;
     expect(vc.classList.contains('mirror-hide-properties')).toBe(false);
   });
@@ -132,7 +133,7 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: false, viewOverrides: { hideProps: false, readableLineLength: false, showInlineTitle: null } },
     });
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const editor = view.containerEl.querySelector('.markdown-source-view')!;
     expect(editor.classList.contains('is-readable-line-width')).toBe(false);
   });
@@ -145,7 +146,7 @@ describe('applyViewOverrides', () => {
     // Start without readable line
     view.containerEl.querySelector('.markdown-source-view')!.classList.remove('is-readable-line-width');
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const editor = view.containerEl.querySelector('.markdown-source-view')!;
     expect(editor.classList.contains('is-readable-line-width')).toBe(true);
   });
@@ -156,7 +157,7 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: false, viewOverrides: { hideProps: false, readableLineLength: null, showInlineTitle: null } },
     });
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const editor = view.containerEl.querySelector('.markdown-source-view')!;
     // inherit restores global — mock has no app.vault.getConfig, so it defaults to falsy
     expect(editor.classList.contains('is-readable-line-width')).toBeDefined();
@@ -169,7 +170,7 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: false, viewOverrides: { hideProps: false, readableLineLength: null, showInlineTitle: false } },
     });
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const vc = view.containerEl.querySelector('.view-content')!;
     expect(vc.classList.contains('mirror-hide-inline-title')).toBe(true);
     expect(vc.classList.contains('mirror-force-inline-title')).toBe(false);
@@ -181,7 +182,7 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: false, viewOverrides: { hideProps: false, readableLineLength: null, showInlineTitle: true } },
     });
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
     const vc = view.containerEl.querySelector('.view-content')!;
     expect(vc.classList.contains('mirror-force-inline-title')).toBe(true);
     expect(vc.classList.contains('mirror-hide-inline-title')).toBe(false);
@@ -196,7 +197,7 @@ describe('applyViewOverrides', () => {
     const vc = view.containerEl.querySelector('.view-content')!;
     vc.classList.add('mirror-hide-properties', 'mirror-hide-inline-title');
 
-    plugin.applyViewOverrides(view);
+    applyViewOverrides(plugin, view);
 
     expect(vc.classList.contains('mirror-hide-properties')).toBe(false);
     expect(vc.classList.contains('mirror-hide-inline-title')).toBe(false);
@@ -207,18 +208,18 @@ describe('applyViewOverrides', () => {
   it('returns without error when view has no file', () => {
     const view = createViewWithState({ enabled: true, config: null });
     (view as any).file = null;
-    expect(() => plugin.applyViewOverrides(view)).not.toThrow();
+    expect(() => applyViewOverrides(plugin, view)).not.toThrow();
   });
 
   it('returns without error when view has no cm', () => {
     const view = createViewWithState({ enabled: true, config: null });
     (view as any).editor = {};
-    expect(() => plugin.applyViewOverrides(view)).not.toThrow();
+    expect(() => applyViewOverrides(plugin, view)).not.toThrow();
   });
 
   it('returns without error when field state is undefined', () => {
     const view = createViewWithState(null);
-    expect(() => plugin.applyViewOverrides(view)).not.toThrow();
+    expect(() => applyViewOverrides(plugin, view)).not.toThrow();
   });
 
   it('returns without error when containerEl has no .view-content', () => {
@@ -227,6 +228,6 @@ describe('applyViewOverrides', () => {
       config: { templatePath: 'x.md', position: 'top', hideProps: true, viewOverrides: { hideProps: true, readableLineLength: null, showInlineTitle: null } },
     });
     (view as any).containerEl = document.createElement('div');
-    expect(() => plugin.applyViewOverrides(view)).not.toThrow();
+    expect(() => applyViewOverrides(plugin, view)).not.toThrow();
   });
 });

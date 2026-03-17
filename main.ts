@@ -8,13 +8,17 @@ import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
 import { SourceDependencyRegistry } from './src/rendering/sourceDependencyRegistry';
 import { TemplateDependencyRegistry } from './src/rendering/templateDependencyRegistry';
 import { TIMING } from './src/editor/timingConfig';
-import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
-import { MirrorPosition, CM6_POSITIONS } from './src/editor/mirrorTypes';
+import { clearConfigCache } from './src/editor/mirrorConfig';
+import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, cleanupAllDomMirrors, getViewId } from './src/rendering/domInjector';
+import { cleanupAllDomMirrors, getViewId } from './src/rendering/domInjector';
 import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
+import { applyViewOverrides } from './src/editor/viewOverrides';
+import { setupDomPosition } from './src/rendering/domPositionManager';
+import { handleTemplateChange, clearTemplateChangeTimeout } from './src/rendering/templateChangeHandler';
+import { rebuildKnownTemplatePaths, checkDeletedTemplates } from './src/settings/settingsHelpers';
 
 export default class MirrorUIPlugin extends Plugin {
   settings: MirrorUIPluginSettings;
@@ -22,16 +26,14 @@ export default class MirrorUIPlugin extends Plugin {
   templateDeps = new TemplateDependencyRegistry();
   /** Position overrides when DOM injection falls back to CM6 */
   positionOverrides = new Map<string, MirrorPosition>();
-  private activeEditors: Map<string, boolean> = new Map();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
   private crossNoteTimeouts = new Map<string, NodeJS.Timeout>();
-  private templateUpdateTimeout: NodeJS.Timeout | null = null;
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
-  private knownTemplatePaths = new Set<string>();
+  knownTemplatePaths = new Set<string>();
   /** Cached Obsidian config values — only refresh editors when these actually change */
   private lastObsidianConfig = { showInlineTitle: true, propertiesInDocument: 'visible', backlinkEnabled: false };
   /** Track last known view mode per file — only react to actual mode changes */
-  private lastViewMode = new Map<string, string>();
+  lastViewMode = new Map<string, string>();
 
   async onload() {
     await this.loadSettings();
@@ -60,7 +62,7 @@ export default class MirrorUIPlugin extends Plugin {
               // @ts-ignore — getMode not in official typings
               this.lastViewMode.set(file.path, view.getMode?.() ?? 'unknown');
               this.setupEditor(view);
-              this.setupDomPosition(view);
+              setupDomPosition(this, view);
             }
           }, TIMING.EDITOR_SETUP_DELAY);
         }
@@ -75,7 +77,7 @@ export default class MirrorUIPlugin extends Plugin {
         if (leaf?.view instanceof MarkdownView) {
           setTimeout(() => {
             this.setupEditor(leaf.view as MarkdownView);
-            this.setupDomPosition(leaf.view as MarkdownView);
+            setupDomPosition(this, leaf.view as MarkdownView);
           }, TIMING.EDITOR_SETUP_DELAY);
         }
       })
@@ -140,7 +142,7 @@ export default class MirrorUIPlugin extends Plugin {
           if (currentMode !== 'preview') {
             this.setupEditor(view);
           }
-          this.setupDomPosition(view);
+          setupDomPosition(this, view);
         }, 50);
       })
     );
@@ -158,7 +160,7 @@ export default class MirrorUIPlugin extends Plugin {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
           leaves.push(leaf.view.file.path);
           this.setupEditor(leaf.view);
-          this.setupDomPosition(leaf.view);
+          setupDomPosition(this, leaf.view);
           rerenderPreview(leaf.view);
         }
       });
@@ -170,7 +172,7 @@ export default class MirrorUIPlugin extends Plugin {
         this.app.workspace.iterateAllLeaves(leaf => {
           if (leaf.view instanceof MarkdownView && leaf.view.file) {
             clearRenderCache();
-            this.setupDomPosition(leaf.view);
+            setupDomPosition(this, leaf.view);
           }
         });
       }, 1000);
@@ -192,8 +194,8 @@ export default class MirrorUIPlugin extends Plugin {
 
           metadataUpdateTimeout = setTimeout(() => {
             // DOM injection + hideProps: sempre seguro (nao toca no CM6)
-            this.setupDomPosition(activeView);
-            this.applyViewOverrides(activeView);
+            setupDomPosition(this, activeView);
+            applyViewOverrides(this, activeView);
 
             // CM6 forced update: sempre dispatchar (Properties UI edita YAML sem gerar
             // CM6 transactions, entao o StateField nao auto-detecta. O proprio StateField
@@ -225,7 +227,7 @@ export default class MirrorUIPlugin extends Plugin {
         }
 
         // Branch 3: template mudou — re-render todos mirrors que usam esse template
-        this.handleTemplateChange(file.path);
+        handleTemplateChange(this, file.path);
       })
     );
 
@@ -247,8 +249,8 @@ export default class MirrorUIPlugin extends Plugin {
                   cm.dispatch({
                     effects: forceMirrorUpdateEffect.of()
                   });
-                  this.applyViewOverrides(leaf.view as MarkdownView);
-                  this.setupDomPosition(leaf.view as MarkdownView);
+                  applyViewOverrides(this, leaf.view as MarkdownView);
+                  setupDomPosition(this, leaf.view as MarkdownView);
                 }
               }
             });
@@ -258,7 +260,7 @@ export default class MirrorUIPlugin extends Plugin {
         }
 
         // Template content changed (vault.on('modify') cobre body changes que metadataCache pode nao disparar)
-        this.handleTemplateChange(file.path);
+        handleTemplateChange(this, file.path);
       })
     );
 
@@ -284,7 +286,7 @@ export default class MirrorUIPlugin extends Plugin {
     // Notificar quando template referenciado e deletado
     this.registerEvent(
       this.app.vault.on('delete', (file) => {
-        this.checkDeletedTemplates(file.path);
+        checkDeletedTemplates(this, file.path);
       })
     );
 
@@ -292,12 +294,12 @@ export default class MirrorUIPlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    this.rebuildKnownTemplatePaths();
+    rebuildKnownTemplatePaths(this);
   }
 
   async saveSettings() {
     await this.saveData(this.settings);
-    this.rebuildKnownTemplatePaths();
+    rebuildKnownTemplatePaths(this);
     this.refreshAllEditors();
   }
 
@@ -314,26 +316,15 @@ export default class MirrorUIPlugin extends Plugin {
     });
     // Pass 1: resolve DOM positions and set overrides (async)
     for (const view of views) {
-      await this.setupDomPosition(view);
+      await setupDomPosition(this, view);
     }
     // Pass 2: dispatch CM6 updates (reads overrides set in pass 1)
     for (const view of views) {
       const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-        this.applyViewOverrides(view);
+        applyViewOverrides(this, view);
       }
-    }
-  }
-
-  private rebuildKnownTemplatePaths() {
-    this.knownTemplatePaths.clear();
-    const s = this.settings;
-    if (s.global_settings_live_preview_note) this.knownTemplatePaths.add(s.global_settings_live_preview_note);
-    if (s.global_settings_preview_note) this.knownTemplatePaths.add(s.global_settings_preview_note);
-    for (const m of s.customMirrors) {
-      if (m.custom_settings_live_preview_note) this.knownTemplatePaths.add(m.custom_settings_live_preview_note);
-      if (m.custom_settings_preview_note) this.knownTemplatePaths.add(m.custom_settings_preview_note);
     }
   }
 
@@ -372,202 +363,6 @@ export default class MirrorUIPlugin extends Plugin {
     return updatePaths(this.settings, oldPath, newPath);
   }
 
-  private checkDeletedTemplates(deletedPath: string): void {
-    const s = this.settings;
-
-    const notify = (msg: string, mirrorIndex?: number) => {
-      const frag = document.createDocumentFragment();
-      frag.createEl('span', { text: msg + ' ' });
-      const link = frag.createEl('a', { text: 'Open settings', attr: { style: 'cursor: pointer; text-decoration: underline;' } });
-      link.addEventListener('click', () => {
-        this.openSettingsToField(deletedPath, mirrorIndex !== undefined ? [mirrorIndex] : undefined);
-      });
-      new Notice(frag, 10000);
-    };
-
-    if (s.global_settings_live_preview_note === deletedPath) {
-      notify(`Mirror Notes: global template "${deletedPath}" was deleted.`);
-    }
-    if (s.global_settings_preview_note === deletedPath) {
-      notify(`Mirror Notes: global preview template "${deletedPath}" was deleted.`);
-    }
-
-    for (let i = 0; i < s.customMirrors.length; i++) {
-      const mirror = s.customMirrors[i];
-      if (mirror.custom_settings_live_preview_note === deletedPath) {
-        notify(`Mirror Notes: template "${deletedPath}" used by "${mirror.name}" was deleted.`, i);
-      }
-      if (mirror.custom_settings_preview_note === deletedPath) {
-        notify(`Mirror Notes: preview template "${deletedPath}" used by "${mirror.name}" was deleted.`, i);
-      }
-    }
-  }
-
-  applyViewOverrides(view: MarkdownView) {
-    if (!view || !view.file) return;
-
-    const cm = getEditorView(view);
-    if (!cm) return;
-
-    const fieldState = cm.state.field(mirrorStateField, false);
-    if (!fieldState) return;
-
-    const { mirrorState } = fieldState;
-    const overrides = mirrorState.enabled ? mirrorState.config?.viewOverrides : null;
-
-    const viewContent = view.containerEl.querySelector('.view-content');
-    if (!viewContent) return;
-
-    // hideProps: boolean (true = hide, false = inherit)
-    const shouldHideProps = overrides?.hideProps ?? false;
-    viewContent.classList.toggle('mirror-hide-properties', shouldHideProps);
-
-    // readableLineLength: manipulate Obsidian's own is-readable-line-width class on the editor
-    const rlOverride = overrides?.readableLineLength ?? null;
-    const editorEl = viewContent.querySelector('.markdown-source-view');
-    if (editorEl) {
-      if (rlOverride !== null) {
-        editorEl.classList.toggle('is-readable-line-width', rlOverride);
-      } else {
-        // inherit: restore Obsidian's global setting
-        // @ts-ignore — getConfig not in official typings
-        const globalReadable = !!this.app.vault.getConfig("readableLineLength");
-        editorEl.classList.toggle('is-readable-line-width', globalReadable);
-      }
-    }
-
-    // showInlineTitle: true = force show, false = force hide, null = inherit
-    const titleOverride = overrides?.showInlineTitle ?? null;
-    viewContent.classList.toggle('mirror-force-inline-title', titleOverride === true);
-    viewContent.classList.toggle('mirror-hide-inline-title', titleOverride === false);
-
-    if (overrides && (overrides.hideProps || rlOverride !== null || titleOverride !== null)) {
-      Logger.log(`View overrides for ${view.file.path}: hideProps=${overrides.hideProps}, readableLine=${rlOverride}, inlineTitle=${titleOverride}`);
-    }
-  }
-
-  /** Helper to build positionOverrides key (per-view isolation) */
-  private positionOverrideKey(viewId: string, filePath: string): string {
-    return `${viewId}:${filePath}`;
-  }
-
-  async setupDomPosition(view: MarkdownView, isRetry = false) {
-    const file = view.file;
-    if (!file) return;
-
-    const viewId = getViewId(view.containerEl);
-    const overrideKey = this.positionOverrideKey(viewId, file.path);
-
-    // Always clear override first so getApplicableConfig reads the original position.
-    // Without this, a stale 'bottom' override from a previous fallback would persist
-    // and prevent above-backlinks from being re-evaluated as a DOM position.
-    this.positionOverrides.delete(overrideKey);
-
-    const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-    // @ts-ignore — getMode not in official typings
-    const viewMode: string = view.getMode?.() ?? 'source';
-    const isReadingView = viewMode === 'preview';
-    const config = getApplicableConfig(this, file, frontmatter, viewId, viewMode);
-    // In Reading View, CM6 doesn't render — top/bottom need DOM injection too
-    const configPos = config?.position;
-    const shouldInjectDom = (configPos && isDomPosition(configPos)) ||
-                            (isReadingView && configPos && (CM6_POSITIONS as readonly string[]).includes(configPos));
-    if (!config || !shouldInjectDom) {
-      removeAllDomMirrors(viewId, file.path);
-      return;
-    }
-
-    // Only remove containers for OTHER positions (e.g. position changed in settings).
-    // Keep current position's container — injectDomMirror reuses it, avoiding race
-    // condition where removeAll destroys a container mid-async-render.
-    removeOtherDomMirrors(viewId, file.path, config.position);
-
-    let actualPos = await injectDomMirror(this, view, config, frontmatter);
-
-    // Se fallback retornou outra posicao DOM, re-injetar nessa posicao
-    if (actualPos !== config.position && isDomPosition(actualPos)) {
-      const retryConfig = { ...config, position: actualPos };
-      actualPos = await injectDomMirror(this, view, retryConfig, frontmatter);
-    }
-
-    // Registrar dependencia de template (re-render quando template muda)
-    const blockKey = `dom-${viewId}-${file.path}-${config.position}`;
-    this.templateDeps.register(config.templatePath, blockKey, async () => {
-      const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-      let pos = await injectDomMirror(this, view, config, fm);
-      if (pos !== config.position && isDomPosition(pos)) {
-        pos = await injectDomMirror(this, view, { ...config, position: pos }, fm);
-      }
-    });
-
-    if (actualPos !== config.position) {
-      // DOM target not found — fallback to CM6
-      Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path} [${viewId}]`);
-      this.positionOverrides.set(overrideKey, actualPos);
-      const cm = getEditorView(view);
-      if (cm) {
-        cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-      }
-
-      // Backlinks may not have populated yet (children.length === 0 by timing).
-      // Retry with increasing delays to catch async population.
-      // isRetry guard prevents exponential cascade: retries don't schedule more retries.
-      if (!isRetry && (config.position === 'above-backlinks' || config.position === 'below-backlinks')) {
-        for (const delay of [500, 1500, 3000]) {
-          setTimeout(async () => {
-            // Only retry if override is still active (not yet resolved by an earlier retry)
-            if (this.positionOverrides.has(overrideKey)) {
-              Logger.log(`Retrying DOM position ${config.position} for ${file.path} [${viewId}] (${delay}ms)`);
-              this.positionOverrides.delete(overrideKey);
-              await this.setupDomPosition(view, true);
-            }
-          }, delay);
-        }
-      }
-    } else {
-      // DOM injection succeeded — force CM6 to clear any stale widget
-      // (setupEditor runs sync before setupDomPosition and may have created
-      // a CM6 widget using a stale positionOverride from a previous fallback)
-      const cm = getEditorView(view);
-      if (cm) {
-        cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-      }
-    }
-  }
-
-  /** Dispara re-render de todos mirrors que dependem de um template path */
-  private handleTemplateChange(filePath: string) {
-    const templateCbs = this.templateDeps.getDependentCallbacks(filePath);
-    // Fast path: se nenhum callback E nao e template dos settings → skip
-    if (templateCbs.length === 0 && !this.knownTemplatePaths.has(filePath)) return;
-
-    if (this.templateUpdateTimeout) {
-      clearTimeout(this.templateUpdateTimeout);
-    }
-
-    this.templateUpdateTimeout = setTimeout(() => {
-      // Callbacks registrados (code blocks + DOM mirrors)
-      if (templateCbs.length > 0) {
-        Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
-        for (const cb of templateCbs) {
-          cb();
-        }
-      }
-      // CM6 widgets (settings-based) — iterateAllLeaves DENTRO do debounce
-      this.app.workspace.iterateAllLeaves(leaf => {
-        if (leaf.view instanceof MarkdownView && leaf.view.file) {
-          const cm = getEditorView(leaf.view as MarkdownView);
-          if (!cm) return;
-          const fieldState = cm.state.field(mirrorStateField, false);
-          if (fieldState?.mirrorState?.config?.templatePath === filePath) {
-            cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-          }
-        }
-      });
-      this.templateUpdateTimeout = null;
-    }, TIMING.METADATA_CHANGE_DEBOUNCE);
-  }
-
   setupEditor(view: MarkdownView) {
     const file = view.file;
     if (!file) return;
@@ -602,7 +397,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
 
     setTimeout(() => {
-      this.applyViewOverrides(view);
+      applyViewOverrides(this, view);
     }, TIMING.HIDE_PROPS_DELAY);
   }
 
@@ -629,7 +424,6 @@ export default class MirrorUIPlugin extends Plugin {
     cleanupAllDomMirrors();
     cleanupMirrorCaches();
 
-    this.activeEditors.clear();
     this.positionOverrides.clear();
     this.lastViewMode.clear();
     this.sourceDeps.clear();
@@ -640,9 +434,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
     for (const t of this.crossNoteTimeouts.values()) clearTimeout(t);
     this.crossNoteTimeouts.clear();
-    if (this.templateUpdateTimeout) {
-      clearTimeout(this.templateUpdateTimeout);
-    }
+    clearTemplateChangeTimeout();
 
     Logger.log('Plugin unloaded successfully');
     Logger.destroy();

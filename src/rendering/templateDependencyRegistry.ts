@@ -21,6 +21,17 @@ export class TemplateDependencyRegistry {
     this.callbacks.set(blockKey, rerender);
   }
 
+  /** Remove todos os blocos cujo blockKey comeca com o prefixo (ex: "dom-v0-") */
+  unregisterByPrefix(prefix: string): void {
+    const keysToRemove: string[] = [];
+    for (const key of this.callbacks.keys()) {
+      if (key.startsWith(prefix)) keysToRemove.push(key);
+    }
+    for (const key of keysToRemove) {
+      this.unregisterBlock(key);
+    }
+  }
+
   /** Remove um bloco especifico do registry */
   unregisterBlock(blockKey: string): void {
     this.callbacks.delete(blockKey);
