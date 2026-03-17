@@ -561,7 +561,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         let visibleCount = 0;
         cards.forEach((card, index) => {
             const mirror = this.plugin.settings.customMirrors[index];
-            const matches = !query || mirror.name.toLowerCase().contains(lowerQuery);
+            const matches = !query || mirror.name.toLowerCase().includes(lowerQuery);
             (card as HTMLElement).style.display = matches ? '' : 'none';
             if (matches) visibleCount++;
         });
