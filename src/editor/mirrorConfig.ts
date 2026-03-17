@@ -63,7 +63,8 @@ export function evaluateConditions(
 // MATCHING
 // =================================================================================
 
-/** Resolve viewOverrides com fallback pra legacy hide_props */
+/** Resolve viewOverrides. hideProps e autoritativo apos migracao em loadSettings().
+ *  legacyHideProps mantido como fallback pra data.json nao migrado (edge case). */
 function resolveViewOverrides(overrides: ViewOverrides | undefined, legacyHideProps: boolean): ViewOverrides {
   if (overrides) return { ...overrides, hideProps: overrides.hideProps || legacyHideProps };
   return { ...DEFAULT_VIEW_OVERRIDES, hideProps: legacyHideProps };

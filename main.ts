@@ -292,7 +292,33 @@ export default class MirrorUIPlugin extends Plugin {
 
   async loadSettings() {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.migrateLegacyHideProps();
     this.rebuildKnownTemplatePaths();
+  }
+
+  /** Migrate legacy hide_props toggle into viewOverrides.hideProps (one-time, idempotent).
+   *  Pre-v42 data.json had only custom_settings_hide_props. resolveViewOverrides used || to merge,
+   *  but that conflates "default false" with "explicitly false". This migration makes hideProps
+   *  authoritative in viewOverrides and clears the legacy field. */
+  private migrateLegacyHideProps() {
+    const s = this.settings;
+    let dirty = false;
+    if (s.global_settings_hide_props && !s.global_view_overrides?.hideProps) {
+      s.global_view_overrides = { ...(s.global_view_overrides || {}), hideProps: true, readableLineLength: s.global_view_overrides?.readableLineLength ?? null, showInlineTitle: s.global_view_overrides?.showInlineTitle ?? null };
+      s.global_settings_hide_props = false;
+      dirty = true;
+    }
+    for (const m of s.customMirrors) {
+      if (m.custom_settings_hide_props && !m.custom_view_overrides?.hideProps) {
+        m.custom_view_overrides = { ...(m.custom_view_overrides || {}), hideProps: true, readableLineLength: m.custom_view_overrides?.readableLineLength ?? null, showInlineTitle: m.custom_view_overrides?.showInlineTitle ?? null };
+        m.custom_settings_hide_props = false;
+        dirty = true;
+      }
+    }
+    if (dirty) {
+      Logger.log('[migration] legacy hide_props synced to viewOverrides');
+      this.saveData(this.settings);
+    }
   }
 
   async saveSettings() {
