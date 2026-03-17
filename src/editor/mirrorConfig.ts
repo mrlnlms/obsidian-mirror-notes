@@ -85,7 +85,8 @@ function configFromMirror(mirror: CustomMirror): ApplicableMirrorConfig {
 export function getApplicableConfig(
   plugin: MirrorUIPlugin,
   file: TFile | null,
-  frontmatter: any
+  frontmatter: any,
+  viewId?: string
 ): ApplicableMirrorConfig | null {
   if (!file) return null;
 
@@ -150,9 +151,11 @@ export function getApplicableConfig(
   configCache.set(file.path, { config: result, frontmatterHash: fmHash });
 
   // Apply position override (DOM fallback → CM6) — depois do cache
-  if (result && plugin.positionOverrides.has(file.path)) {
-    const override = plugin.positionOverrides.get(file.path)!;
-    Logger.log(`Applying position override for ${file.path}: ${result.position} → ${override}`);
+  // Key includes viewId when available (per-view override isolation)
+  const overrideKey = viewId ? `${viewId}:${file.path}` : file.path;
+  if (result && plugin.positionOverrides.has(overrideKey)) {
+    const override = plugin.positionOverrides.get(overrideKey)!;
+    Logger.log(`Applying position override for ${file.path} [${viewId ?? 'no-view'}]: ${result.position} → ${override}`);
     result = { ...result, position: override };
   }
 

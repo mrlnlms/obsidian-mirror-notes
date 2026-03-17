@@ -16,6 +16,8 @@ vi.mock('../src/editor/mirrorState', () => ({
   mirrorStateField: Symbol('mirrorStateField'),
   forceMirrorUpdateEffect: { of: vi.fn() },
   mirrorPluginFacet: { of: vi.fn() },
+  filePathFacet: { of: vi.fn() },
+  viewIdFacet: { of: vi.fn() },
   cleanupMirrorCaches: vi.fn(),
   toggleWidgetEffect: Symbol('toggleWidgetEffect'),
 }));
@@ -36,7 +38,10 @@ vi.mock('../src/rendering/domInjector', () => ({
   isDomPosition: vi.fn(),
   injectDomMirror: vi.fn(),
   removeAllDomMirrors: vi.fn(),
+  removeOtherDomMirrors: vi.fn(),
   cleanupAllDomMirrors: vi.fn(),
+  getViewId: vi.fn().mockReturnValue('v0'),
+  resetViewIdCounter: vi.fn(),
 }));
 vi.mock('../src/editor/marginPanelExtension', () => ({
   mirrorMarginPanelPlugin: Symbol('marginPanel'),

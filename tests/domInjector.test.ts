@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   isDomPosition, isDomTargetVisible, resolveTarget, getFallbackPosition,
-  injectDomMirror, removeDomMirror, removeAllDomMirrors, cleanupAllDomMirrors,
+  injectDomMirror, removeDomMirror, removeAllDomMirrors, removeOtherDomMirrors,
+  cleanupAllDomMirrors, getViewId, resetViewIdCounter,
 } from '../src/rendering/domInjector';
 import { renderMirrorTemplate } from '../src/rendering/templateRenderer';
 import { MirrorPosition, ApplicableMirrorConfig } from '../src/editor/mirrorTypes';
@@ -377,6 +378,36 @@ describe('getFallbackPosition', () => {
 });
 
 // =============================================================================
+// getViewId
+// =============================================================================
+
+describe('getViewId', () => {
+  beforeEach(() => {
+    resetViewIdCounter();
+  });
+
+  it('returns stable id for same element', () => {
+    const el = document.createElement('div');
+    const id1 = getViewId(el);
+    const id2 = getViewId(el);
+    expect(id1).toBe(id2);
+  });
+
+  it('returns different ids for different elements', () => {
+    const el1 = document.createElement('div');
+    const el2 = document.createElement('div');
+    expect(getViewId(el1)).not.toBe(getViewId(el2));
+  });
+
+  it('ids follow v0, v1, v2 pattern', () => {
+    const el1 = document.createElement('div');
+    const el2 = document.createElement('div');
+    expect(getViewId(el1)).toBe('v0');
+    expect(getViewId(el2)).toBe('v1');
+  });
+});
+
+// =============================================================================
 // Helpers for inject/remove/cleanup tests
 // =============================================================================
 
@@ -402,6 +433,7 @@ describe('injectDomMirror', () => {
 
   beforeEach(() => {
     cleanupAllDomMirrors();
+    resetViewIdCounter();
     renderSpy.mockClear();
   });
 
@@ -469,7 +501,7 @@ describe('injectDomMirror', () => {
     expect(vc.querySelector('.mirror-dom-injection')).toBeNull();
   });
 
-  it('calls renderMirrorTemplate with correct arguments', async () => {
+  it('calls renderMirrorTemplate with correct cacheKey including viewId', async () => {
     const plugin = createFakePlugin();
     const vc = createViewContent({ title: true });
     const view = createFakeView('note-inject-5.md', vc);
@@ -484,7 +516,9 @@ describe('injectDomMirror', () => {
     expect(callArgs.templatePath).toBe('templates/test.md');
     expect(callArgs.variables).toBe(fm);
     expect(callArgs.sourcePath).toBe('note-inject-5.md');
-    expect(callArgs.cacheKey).toBe('dom-note-inject-5.md-above-title');
+    // cacheKey now includes viewId
+    const viewId = getViewId(view.containerEl);
+    expect(callArgs.cacheKey).toBe(`dom-${viewId}-note-inject-5.md-above-title`);
   });
 
   it('returns config.position early when view has no file', async () => {
@@ -508,24 +542,26 @@ describe('injectDomMirror', () => {
 describe('removeDomMirror', () => {
   beforeEach(() => {
     cleanupAllDomMirrors();
+    resetViewIdCounter();
   });
 
   it('removes container from DOM and internal map', async () => {
     const plugin = createFakePlugin();
     const vc = createViewContent({ title: true });
     const view = createFakeView('note-remove-1.md', vc);
+    const viewId = getViewId(view.containerEl);
     const config = makeConfig('above-title');
 
     await injectDomMirror(plugin, view, config, {});
     expect(vc.querySelector('.mirror-dom-injection')).not.toBeNull();
 
-    removeDomMirror('note-remove-1.md', 'above-title');
+    removeDomMirror(viewId, 'note-remove-1.md', 'above-title');
 
     expect(vc.querySelector('.mirror-dom-injection')).toBeNull();
   });
 
   it('is safe to call for non-existent key', () => {
-    expect(() => removeDomMirror('nonexistent.md', 'above-title')).not.toThrow();
+    expect(() => removeDomMirror('v99', 'nonexistent.md', 'above-title')).not.toThrow();
   });
 });
 
@@ -536,20 +572,50 @@ describe('removeDomMirror', () => {
 describe('removeAllDomMirrors', () => {
   beforeEach(() => {
     cleanupAllDomMirrors();
+    resetViewIdCounter();
   });
 
-  it('removes all containers for a file (multiple positions)', async () => {
+  it('removes all containers for a view + file (multiple positions)', async () => {
     const plugin = createFakePlugin();
     const vc = createViewContent({ title: true, properties: true });
     const view = createFakeView('note-removeall.md', vc);
+    const viewId = getViewId(view.containerEl);
 
     await injectDomMirror(plugin, view, makeConfig('above-title'), {});
     await injectDomMirror(plugin, view, makeConfig('below-properties'), {});
     expect(vc.querySelectorAll('.mirror-dom-injection').length).toBe(2);
 
-    removeAllDomMirrors('note-removeall.md');
+    removeAllDomMirrors(viewId, 'note-removeall.md');
 
     expect(vc.querySelectorAll('.mirror-dom-injection').length).toBe(0);
+  });
+});
+
+// =============================================================================
+// removeOtherDomMirrors
+// =============================================================================
+
+describe('removeOtherDomMirrors', () => {
+  beforeEach(() => {
+    cleanupAllDomMirrors();
+    resetViewIdCounter();
+  });
+
+  it('removes other positions but keeps the specified one', async () => {
+    const plugin = createFakePlugin();
+    const vc = createViewContent({ title: true, properties: true });
+    const view = createFakeView('note-other.md', vc);
+    const viewId = getViewId(view.containerEl);
+
+    await injectDomMirror(plugin, view, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view, makeConfig('below-properties'), {});
+    expect(vc.querySelectorAll('.mirror-dom-injection').length).toBe(2);
+
+    removeOtherDomMirrors(viewId, 'note-other.md', 'above-title');
+
+    const remaining = vc.querySelectorAll('.mirror-dom-injection');
+    expect(remaining.length).toBe(1);
+    expect(remaining[0].getAttribute('data-position')).toBe('above-title');
   });
 });
 
@@ -558,8 +624,9 @@ describe('removeAllDomMirrors', () => {
 // =============================================================================
 
 describe('cleanupAllDomMirrors', () => {
-  it('removes containers from different files', async () => {
+  it('removes containers from different files and views', async () => {
     cleanupAllDomMirrors(); // start clean
+    resetViewIdCounter();
     const plugin = createFakePlugin();
 
     const vc1 = createViewContent({ title: true });
@@ -577,5 +644,106 @@ describe('cleanupAllDomMirrors', () => {
 
     expect(vc1.querySelector('.mirror-dom-injection')).toBeNull();
     expect(vc2.querySelector('.mirror-dom-injection')).toBeNull();
+  });
+});
+
+// =============================================================================
+// Per-view isolation (same file in multiple panes)
+// =============================================================================
+
+describe('per-view isolation', () => {
+  beforeEach(() => {
+    cleanupAllDomMirrors();
+    resetViewIdCounter();
+  });
+
+  it('same file in two panes → independent containers', async () => {
+    const plugin = createFakePlugin();
+    const vc1 = createViewContent({ title: true });
+    const vc2 = createViewContent({ title: true });
+    const view1 = createFakeView('shared.md', vc1);
+    const view2 = createFakeView('shared.md', vc2);
+
+    await injectDomMirror(plugin, view1, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view2, makeConfig('above-title'), {});
+
+    // Both panes have their own container
+    expect(vc1.querySelector('.mirror-dom-injection')).not.toBeNull();
+    expect(vc2.querySelector('.mirror-dom-injection')).not.toBeNull();
+  });
+
+  it('removing from one view does not affect the other', async () => {
+    const plugin = createFakePlugin();
+    const vc1 = createViewContent({ title: true });
+    const vc2 = createViewContent({ title: true });
+    const view1 = createFakeView('shared.md', vc1);
+    const view2 = createFakeView('shared.md', vc2);
+
+    await injectDomMirror(plugin, view1, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view2, makeConfig('above-title'), {});
+
+    const viewId1 = getViewId(view1.containerEl);
+    removeDomMirror(viewId1, 'shared.md', 'above-title');
+
+    expect(vc1.querySelector('.mirror-dom-injection')).toBeNull();
+    expect(vc2.querySelector('.mirror-dom-injection')).not.toBeNull();
+  });
+
+  it('removeAllDomMirrors only cleans target view', async () => {
+    const plugin = createFakePlugin();
+    const vc1 = createViewContent({ title: true, properties: true });
+    const vc2 = createViewContent({ title: true });
+    const view1 = createFakeView('shared.md', vc1);
+    const view2 = createFakeView('shared.md', vc2);
+
+    await injectDomMirror(plugin, view1, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view1, makeConfig('below-properties'), {});
+    await injectDomMirror(plugin, view2, makeConfig('above-title'), {});
+
+    const viewId1 = getViewId(view1.containerEl);
+    removeAllDomMirrors(viewId1, 'shared.md');
+
+    expect(vc1.querySelectorAll('.mirror-dom-injection').length).toBe(0);
+    expect(vc2.querySelector('.mirror-dom-injection')).not.toBeNull();
+  });
+
+  it('removeOtherDomMirrors scoped to single view', async () => {
+    const plugin = createFakePlugin();
+    const vc1 = createViewContent({ title: true, properties: true });
+    const vc2 = createViewContent({ title: true });
+    const view1 = createFakeView('shared.md', vc1);
+    const view2 = createFakeView('shared.md', vc2);
+
+    await injectDomMirror(plugin, view1, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view1, makeConfig('below-properties'), {});
+    await injectDomMirror(plugin, view2, makeConfig('above-title'), {});
+
+    const viewId1 = getViewId(view1.containerEl);
+    removeOtherDomMirrors(viewId1, 'shared.md', 'above-title');
+
+    // view1: only above-title kept
+    const remaining1 = vc1.querySelectorAll('.mirror-dom-injection');
+    expect(remaining1.length).toBe(1);
+    expect(remaining1[0].getAttribute('data-position')).toBe('above-title');
+    // view2: untouched
+    expect(vc2.querySelector('.mirror-dom-injection')).not.toBeNull();
+  });
+
+  it('containers have unique data-mirror-key per view', async () => {
+    const plugin = createFakePlugin();
+    const vc1 = createViewContent({ title: true });
+    const vc2 = createViewContent({ title: true });
+    const view1 = createFakeView('shared.md', vc1);
+    const view2 = createFakeView('shared.md', vc2);
+
+    await injectDomMirror(plugin, view1, makeConfig('above-title'), {});
+    await injectDomMirror(plugin, view2, makeConfig('above-title'), {});
+
+    const key1 = vc1.querySelector('.mirror-dom-injection')!.getAttribute('data-mirror-key');
+    const key2 = vc2.querySelector('.mirror-dom-injection')!.getAttribute('data-mirror-key');
+
+    expect(key1).not.toBe(key2);
+    expect(key1).toContain('shared.md');
+    expect(key2).toContain('shared.md');
   });
 });

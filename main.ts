@@ -1,6 +1,6 @@
 import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
-import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, filePathFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
+import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, filePathFacet, viewIdFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
 import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/dev/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
@@ -11,7 +11,7 @@ import { TIMING } from './src/editor/timingConfig';
 import { clearConfigCache, getApplicableConfig } from './src/editor/mirrorConfig';
 import { MirrorPosition, CM6_POSITIONS } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, cleanupAllDomMirrors } from './src/rendering/domInjector';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, cleanupAllDomMirrors, getViewId } from './src/rendering/domInjector';
 import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
@@ -472,31 +472,40 @@ export default class MirrorUIPlugin extends Plugin {
     }
   }
 
+  /** Helper to build positionOverrides key (per-view isolation) */
+  private positionOverrideKey(viewId: string, filePath: string): string {
+    return `${viewId}:${filePath}`;
+  }
+
   async setupDomPosition(view: MarkdownView, isRetry = false) {
     const file = view.file;
     if (!file) return;
 
+    const viewId = getViewId(view.containerEl);
+    const overrideKey = this.positionOverrideKey(viewId, file.path);
+
     // Always clear override first so getApplicableConfig reads the original position.
     // Without this, a stale 'bottom' override from a previous fallback would persist
     // and prevent above-backlinks from being re-evaluated as a DOM position.
-    this.positionOverrides.delete(file.path);
+    this.positionOverrides.delete(overrideKey);
 
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-    const config = getApplicableConfig(this, file, frontmatter);
+    const config = getApplicableConfig(this, file, frontmatter, viewId);
     // @ts-ignore — getMode not in official typings
     const isReadingView = view.getMode?.() === 'preview';
     // In Reading View, CM6 doesn't render — top/bottom need DOM injection too
-    const shouldInjectDom = isDomPosition(config?.position ?? 'top') ||
-                            (isReadingView && CM6_POSITIONS.includes(config?.position ?? ''));
+    const configPos = config?.position;
+    const shouldInjectDom = (configPos && isDomPosition(configPos)) ||
+                            (isReadingView && configPos && (CM6_POSITIONS as readonly string[]).includes(configPos));
     if (!config || !shouldInjectDom) {
-      removeAllDomMirrors(file.path);
+      removeAllDomMirrors(viewId, file.path);
       return;
     }
 
     // Only remove containers for OTHER positions (e.g. position changed in settings).
     // Keep current position's container — injectDomMirror reuses it, avoiding race
     // condition where removeAll destroys a container mid-async-render.
-    removeOtherDomMirrors(file.path, config.position);
+    removeOtherDomMirrors(viewId, file.path, config.position);
 
     let actualPos = await injectDomMirror(this, view, config, frontmatter);
 
@@ -507,7 +516,7 @@ export default class MirrorUIPlugin extends Plugin {
     }
 
     // Registrar dependencia de template (re-render quando template muda)
-    const blockKey = `dom-${file.path}-${config.position}`;
+    const blockKey = `dom-${viewId}-${file.path}-${config.position}`;
     this.templateDeps.register(config.templatePath, blockKey, async () => {
       const fm = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
       let pos = await injectDomMirror(this, view, config, fm);
@@ -518,8 +527,8 @@ export default class MirrorUIPlugin extends Plugin {
 
     if (actualPos !== config.position) {
       // DOM target not found — fallback to CM6
-      Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path}`);
-      this.positionOverrides.set(file.path, actualPos);
+      Logger.log(`DOM fallback: ${config.position} -> ${actualPos} for ${file.path} [${viewId}]`);
+      this.positionOverrides.set(overrideKey, actualPos);
       const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
@@ -532,9 +541,9 @@ export default class MirrorUIPlugin extends Plugin {
         for (const delay of [500, 1500, 3000]) {
           setTimeout(async () => {
             // Only retry if override is still active (not yet resolved by an earlier retry)
-            if (this.positionOverrides.has(file.path)) {
-              Logger.log(`Retrying DOM position ${config.position} for ${file.path} (${delay}ms)`);
-              this.positionOverrides.delete(file.path);
+            if (this.positionOverrides.has(overrideKey)) {
+              Logger.log(`Retrying DOM position ${config.position} for ${file.path} [${viewId}] (${delay}ms)`);
+              this.positionOverrides.delete(overrideKey);
               await this.setupDomPosition(view, true);
             }
           }, delay);
@@ -603,10 +612,12 @@ export default class MirrorUIPlugin extends Plugin {
         });
       }
 
+      const viewId = getViewId(view.containerEl);
       cm.dispatch({
         effects: StateEffect.appendConfig.of([
           mirrorPluginFacet.of(this),
           filePathFacet.of(file.path),
+          viewIdFacet.of(viewId),
           mirrorStateField,
           mirrorMarginPanelPlugin
         ])

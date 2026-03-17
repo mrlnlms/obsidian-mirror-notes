@@ -24,6 +24,11 @@ export const filePathFacet = Facet.define<string, string>({
   combine: values => values[0] ?? ''
 });
 
+/** Facet que armazena o viewId do pane deste editor (setado por setupEditor) */
+export const viewIdFacet = Facet.define<string, string>({
+  combine: values => values[0] ?? ''
+});
+
 // Effects
 export const updateTemplateEffect = StateEffect.define<{templatePath: string}>();
 export const toggleWidgetEffect = StateEffect.define<boolean>();
@@ -79,7 +84,8 @@ function handleForcedUpdate(
   newFrontmatterHash: string
 ): MirrorFieldState {
   clearConfigCache();
-  const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter);
+  const viewId = tr.state.facet(viewIdFacet);
+  const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter, viewId);
 
   const configChanged =
     (!!freshConfig) !== value.enabled ||
@@ -151,7 +157,8 @@ function handleConfigChange(
   newFrontmatter: Record<string, any>,
   newFrontmatterHash: string
 ): MirrorFieldState | null {
-  const config = getApplicableConfig(plugin, file, newFrontmatter);
+  const viewId = tr.state.facet(viewIdFacet);
+  const config = getApplicableConfig(plugin, file, newFrontmatter, viewId);
 
   const enabledChanged = value.enabled !== !!config;
   const positionChanged = value.config?.position !== config?.position;
@@ -208,7 +215,8 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const file = filePath ? plugin?.app.vault.getAbstractFileByPath(filePath) as any : null;
     const frontmatterHash = hashObject(extractRawYaml(state.doc.toString()));
     const frontmatter = filePath ? getMetadataCacheFrontmatter(plugin, filePath) : {};
-    const config = getApplicableConfig(plugin, file, frontmatter);
+    const viewId = state.facet(viewIdFacet);
+    const config = getApplicableConfig(plugin, file, frontmatter, viewId);
 
     const mirrorState: MirrorState = {
       enabled: !!config,

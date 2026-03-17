@@ -17,9 +17,30 @@ const SELECTOR_RV_MOD_FOOTER = '.mod-footer';
 // Track injected containers per view for cleanup
 const injectedContainers = new Map<string, HTMLElement>();
 
-/** Unique key for a DOM injection (per file + position) */
-function injectionKey(filePath: string, position: MirrorPosition): string {
-  return `dom-${filePath}-${position}`;
+// --- Per-view identification via WeakMap ---
+// Each pane gets a unique viewId tied to its containerEl.
+// WeakMap auto-cleans when the DOM element is garbage-collected (leaf closes).
+const viewIds = new WeakMap<HTMLElement, string>();
+let viewIdCounter = 0;
+
+/** Get or create a stable identifier for a view pane (tied to its containerEl lifecycle) */
+export function getViewId(containerEl: HTMLElement): string {
+  let id = viewIds.get(containerEl);
+  if (!id) {
+    id = `v${viewIdCounter++}`;
+    viewIds.set(containerEl, id);
+  }
+  return id;
+}
+
+/** Reset viewId counter (for tests only) */
+export function resetViewIdCounter(): void {
+  viewIdCounter = 0;
+}
+
+/** Unique key for a DOM injection (per view + file + position) */
+function injectionKey(viewId: string, filePath: string, position: MirrorPosition): string {
+  return `dom-${viewId}-${filePath}-${position}`;
 }
 
 /** Check if a DOM position's target element is actually visible based on Obsidian settings.
@@ -146,7 +167,8 @@ export async function injectDomMirror(
   const viewContent = view.containerEl.querySelector('.view-content') as HTMLElement;
   if (!viewContent) return config.position;
 
-  const key = injectionKey(file.path, config.position);
+  const viewId = getViewId(view.containerEl);
+  const key = injectionKey(viewId, file.path, config.position);
   const resolved = resolveTarget(viewContent, config.position, plugin.app);
 
   // If target element not found, return fallback position for CM6 to handle
@@ -154,7 +176,7 @@ export async function injectDomMirror(
     const fallback = getFallbackPosition(config.position);
     Logger.log(`DOM position "${config.position}" target not found, falling back to "${fallback}"`);
     // Clean up any existing container for this position
-    removeDomMirror(file.path, config.position);
+    removeDomMirror(viewId, file.path, config.position);
     return fallback;
   }
 
@@ -193,13 +215,13 @@ export async function injectDomMirror(
     cacheKey: key
   });
 
-  Logger.log(`DOM mirror injected at "${config.position}" for ${file.path}`);
+  Logger.log(`DOM mirror injected at "${config.position}" for ${file.path} [${viewId}]`);
   return config.position; // successful injection, no fallback needed
 }
 
 /** Remove a DOM-injected mirror container */
-export function removeDomMirror(filePath: string, position: MirrorPosition): void {
-  const key = injectionKey(filePath, position);
+export function removeDomMirror(viewId: string, filePath: string, position: MirrorPosition): void {
+  const key = injectionKey(viewId, filePath, position);
   const container = injectedContainers.get(key);
   if (container) {
     container.remove();
@@ -207,21 +229,23 @@ export function removeDomMirror(filePath: string, position: MirrorPosition): voi
   }
 }
 
-/** Remove all DOM-injected mirrors for a file */
-export function removeAllDomMirrors(filePath: string): void {
+/** Remove all DOM-injected mirrors for a specific view + file */
+export function removeAllDomMirrors(viewId: string, filePath: string): void {
+  const prefix = `dom-${viewId}-${filePath}-`;
   for (const [key, container] of injectedContainers) {
-    if (key.startsWith(`dom-${filePath}-`)) {
+    if (key.startsWith(prefix)) {
       container.remove();
       injectedContainers.delete(key);
     }
   }
 }
 
-/** Remove DOM mirrors for a file EXCEPT the given position (avoids race condition with async render) */
-export function removeOtherDomMirrors(filePath: string, keepPosition: MirrorPosition): void {
-  const keepKey = injectionKey(filePath, keepPosition);
+/** Remove DOM mirrors for a view + file EXCEPT the given position (avoids race condition with async render) */
+export function removeOtherDomMirrors(viewId: string, filePath: string, keepPosition: MirrorPosition): void {
+  const prefix = `dom-${viewId}-${filePath}-`;
+  const keepKey = injectionKey(viewId, filePath, keepPosition);
   for (const [key, container] of injectedContainers) {
-    if (key.startsWith(`dom-${filePath}-`) && key !== keepKey) {
+    if (key.startsWith(prefix) && key !== keepKey) {
       container.remove();
       injectedContainers.delete(key);
     }
