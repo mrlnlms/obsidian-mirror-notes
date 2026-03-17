@@ -6,10 +6,6 @@ Trabalho tecnico pendente. Atualizado na v47.
 
 (nenhum bug aberto)
 
-## Reading View gaps
-
-- **viewOverrides em Reading View** — `applyViewOverrides` depende do CM6 StateField, nao funciona em RV. Se mirror config tem `hideProps: true`, nao aplica em RV. Solucao: ler config de `getApplicableConfig` em vez do StateField
-
 ## Epico: Margin Panel
 
 O margin panel (`marginPanelExtension.ts`) renderiza mirrors nas posicoes `left` e `right` como ViewPlugin CM6. Posicionamento flush (left:0/right:0) e ResizeObserver ja implementados (v45). Plano de trabalho em `docs/superpowers/plans/`.

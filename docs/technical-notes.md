@@ -39,7 +39,7 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 **Trade-offs:**
 - 50ms debounce no mode switch e imperceptivel mas previne cascata de re-renders
 - CM6 widgets continuam sendo criados em RV (StateField registrado), mas ficam ocultos (`.markdown-source-view` display:none). Nao causa problema — e assim que Obsidian funciona
-- `applyViewOverrides` nao funciona em RV (depende do StateField). Fora de escopo — anotar no backlog
+- `applyViewOverrides` funciona em RV porque CM6 existe em ambos os modos — Obsidian cria os dois containers simultaneamente. CSS class no `.view-content` cobre LP e RV
 
 ---
 
