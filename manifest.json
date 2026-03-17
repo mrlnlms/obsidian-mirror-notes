@@ -2,7 +2,7 @@
 	"id": "mirror-notes",
 	"name": "Mirror Notes",
 	"version": "1.1.0",
-	"minAppVersion": "0.15.0",
+	"minAppVersion": "1.0.0",
 	"description": "Display dynamic templates in your notes based on frontmatter properties",
 	"author": "mrlnlms",
 	"authorUrl": "https://github.com/mrlnlms",

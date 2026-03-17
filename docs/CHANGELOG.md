@@ -2,7 +2,16 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v50 — MutationObserver auto-recovery
+## Versao Atual: v51 — Codex audit fixes + minAppVersion
+
+### v51: Per-template debounce, RenderChild cleanup, minAppVersion audit
+
+- Per-template debounce em `templateChangeHandler` — templates concorrentes nao cancelam callbacks um do outro
+- `MarkdownRenderChild` cleanup: `removeChild(prev)` antes de `addChild(new)` em re-renders de code blocks
+- `minAppVersion` atualizado de `0.15.0` → `1.0.0` (floor real: finalizacao da migracao CM6)
+- `versions.json` atualizado com `1.1.0: "1.0.0"`
+- Backlog settings UI: notas sobre naming inconsistencies, mixing PT/EN, opcoes deprecated
+- 213 testes (+6: templateChangeHandler 5 cenarios, templateRenderer acumulacao 1)
 
 ### v50: Auto-recovery de containers RV destruidos pelo Obsidian
 

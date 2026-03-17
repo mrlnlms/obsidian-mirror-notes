@@ -16,11 +16,14 @@ Itens pendentes:
 
 ## Revisao de Settings UI
 
-Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
+Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade e divida tecnica:
 
 - **Renomear mirrors** — hoje nao tem como renomear um mirror criado, so deletar e recriar
 - **Usabilidade com muitos mirrors** — com dezenas de mirrors a lista fica dificil de navegar. Busca existe (v31) mas layout/hierarquia visual precisam de revisao
 - **Layout geral** — revisar organizacao visual, agrupamento, e hierarquia da pagina
+- **Naming inconsistencies** — typo `overide` (sem o segundo r) presente em campos do settings e data.json. Corrigir implica migration de dados existentes (breaking change pra quem ja tem configs salvas)
+- **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
+- **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
 ## Integracao com outros plugins
 
@@ -116,6 +119,7 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 - [x] Log de conflito em buildMirrorIndex — warning quando dois mirrors apontam pro mesmo arquivo (v32)
 - [x] Fallback DOM → CM6 salto visual — resolvido em duas frentes: posicionamento correto via isDomTargetVisible + fallback chain (v39), CSS parity com Reading View nativo (v37/v38)
 - [x] Tag matching — ja funciona via `filterProps` existente. `mirrorConfig.ts` faz `Array.isArray(val) ? val.some(...)` pra arrays como `tags`. Teste cobrindo (v32/v41)
+- [x] Auditar minAppVersion real — validado: CM6 (StateField, ViewPlugin, Decoration), registerMarkdownCodeBlockProcessor, APIs internas (getConfig, internalPlugins), Live Preview/Reading View. Floor real e `1.0.0` (finalizacao da migracao CM6). manifest.json e versions.json atualizados de `0.15.0` → `1.0.0` (v51)
 - [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
 - [x] hideProperties CSS — seletor funciona no Obsidian atual. Bug era falso positivo — `.metadata-container` continua descendente de `.view-content` (parent mudou pra `.cm-sizer` mas CSS descendant selector cobre). Diagnosticado v42
 - [x] Per-view Obsidian setting overrides — ViewOverrides (hideProps, readableLineLength, showInlineTitle) com CSS per-view e class nativa `is-readable-line-width` (v42)

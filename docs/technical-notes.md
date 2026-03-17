@@ -2,7 +2,41 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v50 — MutationObserver auto-recovery + cooldown
+## Versao Atual: v51 — Codex audit fixes + minAppVersion
+
+### O que mudou na v51
+
+**Contexto:** analise externa (Codex) revisou o projeto e identificou 3 findings. Finding 1 (filePathFacet stale) descartado como falso positivo (ja investigado na v49). Findings 2 e 3 eram bugs reais de baixa severidade.
+
+**Fix 1: per-template debounce (templateChangeHandler.ts)**
+
+Problema: `templateUpdateTimeout` era um unico `setTimeout` global. Se dois templates diferentes mudavam dentro da janela de debounce (500ms), o segundo `clearTimeout` cancelava o refresh do primeiro. Callbacks de templateA eram perdidos.
+
+Causa: design original assumia que so um template mudava por vez. Com cross-note reactivity (v30+) e multiplos mirrors apontando pra templates diferentes, o cenario de edicao concorrente ficou possivel.
+
+Fix: trocar `let templateUpdateTimeout` por `Map<string, NodeJS.Timeout>` indexado por filePath. Cada template tem seu proprio debounce independente. `clearTemplateChangeTimeout()` itera o Map. Mesmo padrao de `crossNoteTimeouts` no main.ts (v41).
+
+**Fix 2: MarkdownRenderChild acumulando (templateRenderer.ts)**
+
+Problema: a cada `doRender()` de code block, um novo `MarkdownRenderChild` era adicionado ao component sem remover o anterior. `container.innerHTML = ""` removia o DOM, mas o child antigo ficava no array `_children` do component como referencia morta ate o code block ser destruido.
+
+Impacto: numa nota com 3 code blocks e 10 re-renders cada (cross-note reactivity), acumulava 30 MarkdownRenderChild orphans. Nao era leak permanente (cleanup no destroy), mas gastava memoria desnecessariamente.
+
+Fix: `lastRenderChildren` Map<string, MarkdownRenderChild> indexado por cacheKey. Antes de `addChild(new)`, faz `removeChild(prev)`. `clearRenderCache()` tambem limpa o Map de children.
+
+**Audit minAppVersion**
+
+Problema: manifest.json declarava `minAppVersion: "0.15.0"`, mas o plugin usa CM6 (StateField, ViewPlugin, Decoration), APIs internas (`editor.cm`, `view.getMode()`, `vault.getConfig()`, `vault.on('raw')`, `app.internalPlugins`) e padroes que so estabilizaram na 1.0.0. Dev typings: `obsidian ^1.12.3`.
+
+Decisao: floor real e `1.0.0` — quando Obsidian finalizou a migracao CM6. Atualizado manifest.json e versions.json.
+
+**Arquivos tocados:** `src/rendering/templateChangeHandler.ts`, `src/rendering/templateRenderer.ts`, `manifest.json`, `versions.json`, `docs/backlog.md`
+
+**Testes:** 213 (+6 novos: templateChangeHandler 5 cenarios, templateRenderer 1 cenario de acumulacao)
+
+---
+
+## v50 — MutationObserver auto-recovery + cooldown
 
 ### O que mudou na v50
 
