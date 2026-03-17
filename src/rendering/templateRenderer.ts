@@ -15,6 +15,10 @@ export interface RenderContext {
 // Caches compartilhados entre CM6 widget e code block processor
 const lastRenderedContent = new Map<string, string>();
 const renderingPromises = new Map<string, Promise<void>>();
+/** Track last MarkdownRenderChild per code block to unload on re-render.
+ *  Without this, each doRender() adds a new child to the component without
+ *  removing the previous one, leaking detached DOM lifecycle handlers. */
+const lastRenderChildren = new Map<string, MarkdownRenderChild>();
 
 function simpleHash(str: string): string {
   let hash = 0;
@@ -108,8 +112,14 @@ async function doRender(ctx: RenderContext): Promise<void> {
 
     // Registrar no lifecycle do Obsidian (necessario pro Reading View)
     if (ctx.component) {
+      // Unload previous child to avoid accumulating detached lifecycle handlers
+      const prev = lastRenderChildren.get(cacheKey);
+      if (prev) {
+        ctx.component.removeChild(prev);
+      }
       const renderChild = new MarkdownRenderChild(contentDiv);
       ctx.component.addChild(renderChild);
+      lastRenderChildren.set(cacheKey, renderChild);
     }
 
     Logger.log('Markdown rendered successfully');
@@ -122,7 +132,9 @@ async function doRender(ctx: RenderContext): Promise<void> {
 export function clearRenderCache(cacheKey?: string): void {
   if (cacheKey) {
     lastRenderedContent.delete(cacheKey);
+    lastRenderChildren.delete(cacheKey);
   } else {
     lastRenderedContent.clear();
+    lastRenderChildren.clear();
   }
 }

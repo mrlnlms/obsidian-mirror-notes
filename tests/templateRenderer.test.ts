@@ -279,4 +279,52 @@ describe('renderMirrorTemplate', () => {
     expect(child.containerEl).toBeInstanceOf(HTMLElement);
     addChildSpy.mockRestore();
   });
+
+  it('cleans up previous MarkdownRenderChild on re-render (no accumulation)', async () => {
+    const { Component } = await import('obsidian');
+    const fakeComponent = new Component();
+    const addChildSpy = vi.spyOn(fakeComponent, 'addChild');
+    const removeChildSpy = vi.spyOn(fakeComponent, 'removeChild');
+
+    let version = 1;
+    const plugin = createFakePlugin({
+      app: {
+        ...createFakePlugin().app,
+        vault: {
+          getAbstractFileByPath: (path: string) => {
+            const f = new TFile();
+            f.path = path;
+            f.name = path.split('/').pop() || '';
+            return f;
+          },
+          cachedRead: async () => `Version ${version}`,
+        },
+      },
+    });
+
+    const ctx = {
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: {},
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-no-accumulate',
+      component: fakeComponent,
+    };
+
+    // Render 3 times with different content to bypass hash cache
+    await renderMirrorTemplate(ctx);
+    version = 2;
+    await renderMirrorTemplate(ctx);
+    version = 3;
+    await renderMirrorTemplate(ctx);
+
+    // addChild called 3 times (once per render)
+    expect(addChildSpy).toHaveBeenCalledTimes(3);
+    // removeChild called 2 times (cleanup of previous on 2nd and 3rd render)
+    expect(removeChildSpy).toHaveBeenCalledTimes(2);
+
+    addChildSpy.mockRestore();
+    removeChildSpy.mockRestore();
+  });
 });

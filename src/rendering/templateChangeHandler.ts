@@ -5,18 +5,20 @@ import { Logger } from '../dev/logger';
 import { getEditorView } from '../utils/obsidianInternals';
 import type MirrorUIPlugin from '../../main';
 
-let templateUpdateTimeout: NodeJS.Timeout | null = null;
+/** Per-template debounce: each template gets its own timeout so concurrent
+ *  changes to different templates don't cancel each other's callbacks. */
+const templateUpdateTimeouts = new Map<string, NodeJS.Timeout>();
 
 export function handleTemplateChange(plugin: MirrorUIPlugin, filePath: string) {
   const templateCbs = plugin.templateDeps.getDependentCallbacks(filePath);
   // Fast path: se nenhum callback E nao e template dos settings → skip
   if (templateCbs.length === 0 && !plugin.knownTemplatePaths.has(filePath)) return;
 
-  if (templateUpdateTimeout) {
-    clearTimeout(templateUpdateTimeout);
-  }
+  const existing = templateUpdateTimeouts.get(filePath);
+  if (existing) clearTimeout(existing);
 
-  templateUpdateTimeout = setTimeout(() => {
+  templateUpdateTimeouts.set(filePath, setTimeout(() => {
+    templateUpdateTimeouts.delete(filePath);
     // Callbacks registrados (code blocks + DOM mirrors)
     if (templateCbs.length > 0) {
       Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
@@ -35,13 +37,10 @@ export function handleTemplateChange(plugin: MirrorUIPlugin, filePath: string) {
         }
       }
     });
-    templateUpdateTimeout = null;
-  }, TIMING.METADATA_CHANGE_DEBOUNCE);
+  }, TIMING.METADATA_CHANGE_DEBOUNCE));
 }
 
 export function clearTemplateChangeTimeout() {
-  if (templateUpdateTimeout) {
-    clearTimeout(templateUpdateTimeout);
-    templateUpdateTimeout = null;
-  }
+  for (const t of templateUpdateTimeouts.values()) clearTimeout(t);
+  templateUpdateTimeouts.clear();
 }
