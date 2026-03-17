@@ -76,7 +76,8 @@ async function doRender(ctx: RenderContext): Promise<void> {
     let processedContent = templateContent;
     if (variables && Object.keys(variables).length > 0) {
       processedContent = templateContent.replace(/\{\{(\w+)\}\}/g, (match, key) => {
-        return variables[key] || match;
+        const val = variables[key];
+        return val != null ? String(val) : match;
       });
     }
 
