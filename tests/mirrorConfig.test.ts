@@ -306,7 +306,6 @@ describe('getApplicableConfig', () => {
         enable_global_live_preview_mode: true,
         global_settings_live_preview_note: 'templates/global.md',
         global_settings_live_preview_pos: 'bottom',
-        global_settings_hide_props: false,
       },
     });
     const file = makeTFile('any-note.md');

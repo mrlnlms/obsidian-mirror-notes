@@ -184,7 +184,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
             .setDesc("Override Obsidian display settings for pages matched by this mirror.")
             .setHeading();
 
-        const globalOverrides = this.plugin.settings.global_view_overrides ?? { hideProps: this.plugin.settings.global_settings_hide_props, readableLineLength: null, showInlineTitle: null };
+        const globalOverrides = this.plugin.settings.global_view_overrides ?? { hideProps: false, readableLineLength: null, showInlineTitle: null };
 
         new Setting(globalMirrorSettings)
             .setName("Hide properties")
@@ -192,7 +192,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
             .addToggle((cb) => {
                 cb.setValue(globalOverrides.hideProps)
                 .onChange((value) => {
-                    this.plugin.settings.global_settings_hide_props = value;
                     if (!this.plugin.settings.global_view_overrides) {
                         this.plugin.settings.global_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
                     }
@@ -463,7 +462,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 .setDesc("Override Obsidian display settings for pages matched by this mirror.")
                 .setHeading();
 
-            const customOverrides = customMirrors[index].custom_view_overrides ?? { hideProps: customMirrors[index].custom_settings_hide_props, readableLineLength: null, showInlineTitle: null };
+            const customOverrides = customMirrors[index].custom_view_overrides ?? { hideProps: false, readableLineLength: null, showInlineTitle: null };
 
             new Setting(card)
                 .setName("Hide properties")
@@ -471,7 +470,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 .addToggle((cb) => {
                     cb.setValue(customOverrides.hideProps)
                     .onChange((value) => {
-                        customMirrors[index].custom_settings_hide_props = value;
                         if (!customMirrors[index].custom_view_overrides) {
                             customMirrors[index].custom_view_overrides = { hideProps: false, readableLineLength: null, showInlineTitle: null };
                         }

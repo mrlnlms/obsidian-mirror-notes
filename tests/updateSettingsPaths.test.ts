@@ -18,7 +18,6 @@ function makeMirror(overrides?: Partial<CustomMirror>): CustomMirror {
     custom_settings_preview_note: '',
     custom_settings_preview_pos: 'top',
     custom_settings_overide: false,
-    custom_settings_hide_props: false,
     custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
     custom_show_container_border: true,
     custom_auto_update_paths: true,

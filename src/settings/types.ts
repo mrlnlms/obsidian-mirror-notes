@@ -41,7 +41,6 @@ export interface MirrorUIPluginSettings {
     global_settings_preview_note: string;
     global_settings_preview_pos: string;
     global_settings_overide: boolean;
-    global_settings_hide_props: boolean; // legacy — migrado pra global_view_overrides.hideProps
     global_view_overrides: ViewOverrides;
     global_show_container_border: boolean;
     auto_update_paths: boolean;
@@ -59,7 +58,6 @@ export interface CustomMirror {
     custom_settings_preview_note: string;
     custom_settings_preview_pos: string;
     custom_settings_overide: boolean;
-    custom_settings_hide_props: boolean; // legacy — migrado pra custom_view_overrides.hideProps
     custom_view_overrides: ViewOverrides;
     custom_show_container_border: boolean;
     custom_auto_update_paths: boolean;
@@ -78,7 +76,6 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     global_settings_preview_note: "",
     global_settings_preview_pos: "top",
     global_settings_overide: false,
-    global_settings_hide_props: false,
     global_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
     global_show_container_border: true,
     auto_update_paths: true,
@@ -97,7 +94,6 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         custom_settings_preview_note: "",
         custom_settings_preview_pos: "top",
         custom_settings_overide: false,
-        custom_settings_hide_props: false,
         custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
         custom_show_container_border: true,
         custom_auto_update_paths: true,
