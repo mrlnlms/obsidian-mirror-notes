@@ -5,6 +5,11 @@ import { renderMirrorTemplate } from "../rendering/templateRenderer";
 
 export const PANEL_WIDTH = 250;
 
+/** Build cache key for margin panel — includes widgetId so content changes trigger re-render */
+export function marginPanelCacheKey(filePath: string, side: string, templatePath: string, widgetId: string): string {
+  return `margin-${filePath}-${side}-${templatePath}-${widgetId}`;
+}
+
 /** Pure positioning logic — returns CSS style props for the panel */
 export function calcPanelStyle(side: 'left' | 'right'): { left?: string; right?: string } {
   if (side === 'left') {
@@ -70,7 +75,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     }
 
     const side = config.position as 'left' | 'right';
-    const cacheKey = `margin-${mirrorState.filePath}-${side}-${config.templatePath}-${mirrorState.widgetId}`;
+    const cacheKey = marginPanelCacheKey(mirrorState.filePath, side, config.templatePath, mirrorState.widgetId);
     this.lastWidgetId = mirrorState.widgetId;
 
     // Reuse existing panel if same config + same content (widgetId changes on frontmatter/template edits)
