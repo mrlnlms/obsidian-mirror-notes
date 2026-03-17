@@ -3,6 +3,7 @@ import { Condition, ConditionType, CustomMirror } from "./types";
 import { FileSuggest, FolderSuggest, YamlPropertySuggest } from "../suggesters/file-suggest";
 import { addPathValidation } from "./pathValidator";
 import { addSearchClass } from "../utils/obsidianInternals";
+import { arraymove } from "../utils/array";
 
 interface ConditionBuilderOptions {
     app: App;
@@ -10,12 +11,6 @@ interface ConditionBuilderOptions {
     customMirror: CustomMirror;
     onSave: () => void;
     onRedisplay: () => void;
-}
-
-function arraymove(arr: any[], fromIndex: number, toIndex: number): void {
-    const element = arr[fromIndex];
-    arr.splice(fromIndex, 1);
-    arr.splice(toIndex, 0, element);
 }
 
 const CONDITION_TYPE_LABELS: Record<ConditionType, string> = {
