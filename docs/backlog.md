@@ -1,72 +1,10 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v47.
+Trabalho tecnico pendente. Atualizado na v48.
 
 ## Bugs
 
 (nenhum bug aberto)
-
-## Hardening: DOM injection per-view
-
-### Problema
-
-`injectedContainers` em `src/rendering/domInjector.ts:18` e um `Map<string, HTMLElement>` global com key `dom-${filePath}-${position}`. Quando o mesmo arquivo abre em dois panes, ambos tentam usar a mesma key. `insertBefore` move o container do pane A pro pane B — pane A perde o mirror.
-
-**Reproduzir:** abrir a mesma nota (que tenha mirror DOM, ex: above-title ou top em Reading View) em dois panes lado a lado. O mirror so aparece no pane que foi ativado por ultimo.
-
-**CM6 nao tem esse problema** — cada pane tem seu proprio editor com StateField independente (fix do `filePathFacet` na v36). O problema e exclusivo do DOM injector.
-
-### Funcoes afetadas
-
-Todas em `src/rendering/domInjector.ts`:
-
-| Funcao | Assinatura atual | O que muda |
-|--------|-----------------|-----------|
-| `injectionKey()` | `(filePath, position)` → string | Adicionar viewId: `(viewId, filePath, position)` |
-| `injectDomMirror()` | `(plugin, view, config, fm)` | Extrair viewId do `view`, passar pra `injectionKey` |
-| `removeDomMirror()` | `(filePath, position)` | Adicionar viewId como parametro |
-| `removeAllDomMirrors()` | `(filePath)` | Adicionar viewId — so limpar containers daquela view |
-| `removeOtherDomMirrors()` | `(filePath, keepPosition)` | Adicionar viewId |
-| `cleanupAllDomMirrors()` | `()` | Sem mudanca (limpa tudo) |
-
-### Callers em `main.ts` que precisam passar viewId
-
-- `setupDomPosition(view)` — tem acesso ao `view`, pode extrair viewId
-- `refreshAllEditors()` — itera views, tem acesso
-- `onLayoutReady` — itera leaves, tem acesso
-- Template dependency callback em `setupDomPosition` — closure ja captura `view`
-- `onunload` → `cleanupAllDomMirrors()` — sem mudanca
-
-### Como gerar viewId
-
-Opcao mais simples: `WeakMap<HTMLElement, string>` usando `view.containerEl` como key. Cada view tem containerEl unico e estavel durante a sessao. Nao precisa de API interna do Obsidian.
-
-```typescript
-const viewIds = new WeakMap<HTMLElement, string>();
-let viewIdCounter = 0;
-
-function getViewId(containerEl: HTMLElement): string {
-  let id = viewIds.get(containerEl);
-  if (!id) {
-    id = `v${viewIdCounter++}`;
-    viewIds.set(containerEl, id);
-  }
-  return id;
-}
-```
-
-WeakMap garante cleanup automatico quando o DOM element e coletado (leaf fechada).
-
-### Impacto e risco
-
-- **Arquivos tocados:** `src/rendering/domInjector.ts` (todas as funcoes) + `main.ts` (todos os callers de remove/inject)
-- **Testes:** `tests/domInjector.test.ts` — todos os testes de inject/remove precisam passar viewId. Adicionar teste especifico: mesmo arquivo em dois viewContents → dois containers independentes
-- **Risco de regressao:** medio — toca no pipeline inteiro de DOM injection. Testar todas as posicoes DOM + top/bottom em RV + cleanup no mode switch
-- **Nao afeta:** CM6 widgets, code blocks, margin panels, template rendering, config matching
-
-### Decisao
-
-Resolvido ~~**`resolveViewOverrides` hideProps merge**~~ (v47, migracao no loadSettings). Este item (per-view) fica pro proximo epico ou quando implementar multiplos mirrors na mesma nota. O cenario e raro no uso normal (pane ativo sempre funciona), mas e uma limitacao real de arquitetura.
 
 ## Epico: Margin Panel
 
@@ -183,3 +121,4 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 - [x] Margin panel ResizeObserver — responsive a resize de janela, sidebar, split panes (v45)
 - [x] Logica AND/OR nos filtros — conditions unificadas, evaluateConditions com any/all, negacao per-condition, mirrorIndex eliminado, conditionBuilder UI (v46)
 - [x] Reading View DOM injection — top/bottom renderizam via DOM em Reading View, layout-change event com debounce 50ms, lastViewMode guard (v47)
+- [x] Per-view DOM injection — viewId via WeakMap, containers independentes por pane, positionOverrides per-view, viewIdFacet no CM6, fix TS error CM6_POSITIONS.includes (v48)

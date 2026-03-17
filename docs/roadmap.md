@@ -34,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v48 | Per-view DOM injection | viewId via WeakMap, containers independentes por pane, positionOverrides per-view, viewIdFacet |
 | v47 | Reading View DOM injection | top/bottom em RV via DOM injection, layout-change event, debounce 50ms, lastViewMode guard |
 | v46 | AND/OR compound filters | Conditions unificadas, evaluateConditions any/all, negacao is/not, mirrorIndex eliminado, conditionBuilder UI |
 | v45 | Margin panel positioning | Posicionamento flush (left:0/right:0), ResizeObserver responsivo |

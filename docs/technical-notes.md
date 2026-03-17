@@ -2,7 +2,31 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v47 — Reading View DOM injection
+## Versao Atual: v48 — Per-view DOM injection isolation
+
+### O que mudou na v48
+
+**Contexto:** `injectedContainers` Map usava key `dom-${filePath}-${position}`. Mesmo arquivo em dois panes compartilhava a mesma key. `insertBefore` (DOM spec) MOVE o container de pane A pra B — pane A perdia o mirror.
+
+**Causa raiz:** DOM injector nao tinha conceito de "qual pane". CM6 ja resolvia isso via `filePathFacet` (v36) — cada pane tem StateField independente. Mas o DOM injector era global.
+
+**Solucao: viewId via WeakMap**
+
+1. **`domInjector.ts` — `getViewId(containerEl)`:** WeakMap `<HTMLElement, string>` gera ID unico (`v0`, `v1`, ...) por `view.containerEl`. Auto-cleanup via GC quando leaf fecha. `injectionKey` agora e `dom-${viewId}-${filePath}-${position}`. Todas as funcoes de remove recebem viewId.
+
+2. **`mirrorState.ts` — `viewIdFacet`:** Facet CM6 analogamente a `filePathFacet`, setado em `setupEditor`. Permite que o StateField passe viewId pro `getApplicableConfig`.
+
+3. **`mirrorConfig.ts` — `getApplicableConfig(plugin, file, fm, viewId?)`:** positionOverrides lookup usa key composta `${viewId}:${filePath}`. Parametro opcional — callers sem contexto de view (ex: testes de config) continuam funcionando.
+
+4. **`main.ts` — `setupDomPosition`:** extrai viewId no inicio, passa pra todas as operacoes (remove, inject, positionOverrides, templateDeps blockKey). Helper `positionOverrideKey()` evita repeticao.
+
+**Fix bonus:** erro TS pre-existente em `CM6_POSITIONS.includes(config?.position ?? '')` — `''` nao era assignable a `MirrorPosition`. Fix: cast `CM6_POSITIONS as readonly string[]`.
+
+**Testes:** 185 (+9). 3 testes de `getViewId` (estabilidade, unicidade, pattern). 5 testes de isolamento per-view (containers independentes, remove scoped, cleanup scoped, keys unicas). 1 teste de `removeOtherDomMirrors`.
+
+**Arquivos tocados:** `domInjector.ts` (core), `mirrorState.ts` (facet), `mirrorConfig.ts` (viewId param), `main.ts` (callers), `domInjector.test.ts`, `updateHideProps.test.ts` (mocks).
+
+## v47 — Reading View DOM injection
 
 ### O que mudou na v47
 

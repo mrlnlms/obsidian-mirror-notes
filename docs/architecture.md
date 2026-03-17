@@ -3,7 +3,7 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v46)
+## File Map (v48)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, CM6 setup, code block, cross-note, viewOverrides)
@@ -123,10 +123,21 @@ Cleanup automatico: RV → LP = `setupDomPosition` vê que `top`/`bottom` nao sa
 
 `backlinkInDocument` NAO e reativo pra abas abertas. `isDomTargetVisible` so checa `bl.enabled` (plugin ON/OFF). `resolveTarget` usa `children.length > 0` pra DOM truth. Detalhes em [technical-notes.md secao v40](technical-notes.md#o-que-mudou-na-v40).
 
+### Per-view identification (v48)
+
+Cada pane recebe um `viewId` unico via `WeakMap<HTMLElement, string>` em `domInjector.ts`, usando `view.containerEl` como key. WeakMap auto-limpa quando o DOM element e coletado (leaf fechada).
+
+- `injectionKey` formato: `dom-${viewId}-${filePath}-${position}` — containers DOM sao independentes por pane
+- `getViewId(containerEl)` exportado de `domInjector.ts` — unica fonte de viewId
+- CM6: `viewIdFacet` (analogamente a `filePathFacet`) setado em `setupEditor` via `appendConfig`
+- `positionOverrides` key: `${viewId}:${filePath}` — isolamento de fallback DOM→CM6 por pane
+- `templateDeps` blockKey: `dom-${viewId}-${filePath}-${position}` — callbacks de re-render por pane
+- Config cache (`configCache` em `mirrorConfig.ts`) permanece keyed por `file.path` — cache e base, override per-view e aplicado depois
+
 ### positionOverrides (Map no plugin)
 
-- Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(filePath, fallbackPos)`
-- `getApplicableConfig()` aplica override DEPOIS do cache — override e estado runtime, nao deve poluir o cache (v44)
+- Quando domInjector detecta fallback, seta `plugin.positionOverrides.set(viewId:filePath, fallbackPos)`
+- `getApplicableConfig(plugin, file, fm, viewId?)` aplica override DEPOIS do cache — override e estado runtime, nao deve poluir o cache (v44)
 - Override e limpo ANTES de `getApplicableConfig` em `setupDomPosition()` — garante re-avaliacao fresh a cada chamada
 - Tambem limpo em `refreshAllEditors()` (refresh global)
 

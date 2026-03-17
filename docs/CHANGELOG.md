@@ -2,7 +2,17 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v47 — Reading View DOM injection
+## Versao Atual: v48 — Per-view DOM injection isolation
+
+### v48: Containers DOM independentes por pane
+
+- viewId via WeakMap (`getViewId`) — cada pane recebe ID unico amarrado ao `containerEl`
+- `injectionKey` inclui viewId: `dom-${viewId}-${filePath}-${position}`
+- Mesmo arquivo em dois panes → mirrors independentes (antes: so o ultimo pane ativado mostrava)
+- `viewIdFacet` no CM6 — positionOverrides per-view no StateField
+- `positionOverrides` key composta `${viewId}:${filePath}` — fallback DOM→CM6 isolado por pane
+- Fix TS error pre-existente em `CM6_POSITIONS.includes`
+- 185 testes (+9 novos: getViewId, isolamento per-view, remove/cleanup scoped)
 
 ### v47: Mirrors top/bottom renderizam em Reading View
 
