@@ -16,6 +16,8 @@ const SELECTOR_RV_MOD_FOOTER = '.mod-footer';
 
 // Track injected containers per view for cleanup
 const injectedContainers = new Map<string, HTMLElement>();
+// Track MutationObservers per container for auto re-injection
+const injectionObservers = new Map<string, MutationObserver>();
 
 // --- Per-view identification via WeakMap ---
 // Each pane gets a unique viewId tied to its containerEl.
@@ -154,12 +156,54 @@ export function isDomPosition(position: MirrorPosition): boolean {
   return DOM_POSITIONS.includes(position);
 }
 
+/** Setup a MutationObserver on the container's parent to detect removal by Obsidian.
+ *  When the container is removed (isConnected becomes false), disconnects and calls onRemoved. */
+export function setupContainerObserver(
+  key: string,
+  container: HTMLElement,
+  onRemoved: () => void
+): void {
+  injectionObservers.get(key)?.disconnect();
+
+  const parent = container.parentElement;
+  if (!parent) return;
+
+  const observer = new MutationObserver(() => {
+    if (!container.isConnected) {
+      observer.disconnect();
+      injectionObservers.delete(key);
+      Logger.log(`[observer] container removed from DOM, re-injecting [${key}]`);
+      onRemoved();
+    }
+  });
+
+  observer.observe(parent, { childList: true });
+  injectionObservers.set(key, observer);
+}
+
+/** Disconnect a single container observer */
+export function disconnectObserver(key: string): void {
+  injectionObservers.get(key)?.disconnect();
+  injectionObservers.delete(key);
+}
+
+/** Disconnect all observers matching a key prefix */
+export function disconnectObserversByPrefix(prefix: string): void {
+  for (const [key, obs] of injectionObservers) {
+    if (key.startsWith(prefix)) {
+      obs.disconnect();
+      injectionObservers.delete(key);
+    }
+  }
+}
+
 /** Inject or update a mirror widget at a DOM position */
 export async function injectDomMirror(
   plugin: MirrorUIPlugin,
   view: MarkdownView,
   config: ApplicableMirrorConfig,
-  frontmatter: Record<string, string>
+  frontmatter: Record<string, string>,
+  onContainerRemoved?: () => void
 ): Promise<MirrorPosition> {
   const file = view.file;
   if (!file) return config.position;
@@ -205,6 +249,11 @@ export async function injectDomMirror(
     target.appendChild(container);
   }
 
+  // Setup observer for auto re-injection when Obsidian destroys the container
+  if (onContainerRemoved && container.parentElement) {
+    setupContainerObserver(key, container, onContainerRemoved);
+  }
+
   // Render template content
   await renderMirrorTemplate({
     plugin,
@@ -222,6 +271,7 @@ export async function injectDomMirror(
 /** Remove a DOM-injected mirror container */
 export function removeDomMirror(viewId: string, filePath: string, position: MirrorPosition): void {
   const key = injectionKey(viewId, filePath, position);
+  disconnectObserver(key);
   const container = injectedContainers.get(key);
   if (container) {
     container.remove();
@@ -234,6 +284,7 @@ export function removeAllDomMirrors(viewId: string, filePath: string): void {
   const prefix = `dom-${viewId}-${filePath}-`;
   for (const [key, container] of injectedContainers) {
     if (key.startsWith(prefix)) {
+      disconnectObserver(key);
       container.remove();
       injectedContainers.delete(key);
     }
@@ -246,6 +297,7 @@ export function removeOtherDomMirrors(viewId: string, filePath: string, keepPosi
   const keepKey = injectionKey(viewId, filePath, keepPosition);
   for (const [key, container] of injectedContainers) {
     if (key.startsWith(prefix) && key !== keepKey) {
+      disconnectObserver(key);
       container.remove();
       injectedContainers.delete(key);
     }
@@ -254,6 +306,10 @@ export function removeOtherDomMirrors(viewId: string, filePath: string, keepPosi
 
 /** Clean up all DOM-injected mirrors (for plugin unload) */
 export function cleanupAllDomMirrors(): void {
+  for (const obs of injectionObservers.values()) {
+    obs.disconnect();
+  }
+  injectionObservers.clear();
   for (const container of injectedContainers.values()) {
     container.remove();
   }

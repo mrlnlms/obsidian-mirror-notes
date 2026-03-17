@@ -2,7 +2,51 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v49 — Dual-template (LP + RV)
+## Versao Atual: v50 — MutationObserver auto-recovery + cooldown
+
+### O que mudou na v50
+
+**Contexto:** desde a v47 (Reading View DOM injection), containers injetados no `.markdown-preview-sizer` eram destruidos pelo Obsidian durante mode switches e re-renders internos. O container e um elemento "intruso" — nao faz parte do render tree do Obsidian. Quando o Obsidian reconstroi o sizer, nosso container desaparece. O pane ativo era re-injetado via `layout-change`/`active-leaf-change`, mas panes inativos perdiam o mirror ate receberem foco.
+
+**Diagnostico:** log temporario (`[DIAG-pane]`) em `domPositionManager.ts` confirmou o fluxo: `existingContainers=1 isConnected=true` → mode switch → `existingContainers=0`. Container sumia sem que nenhum event handler re-injetasse pra panes inativos.
+
+**Solucao: MutationObserver + cooldown com bypass**
+
+A implementacao envolveu 3 camadas que interagem de forma nao-trivial:
+
+1. **MutationObserver no sizer (`domInjector.ts`):**
+   - `setupContainerObserver(key, container, onRemoved)` — observa `container.parentElement` com `{ childList: true }`
+   - Quando `!container.isConnected` → desconecta observer imediatamente (previne callbacks duplicados) → chama `onRemoved()`
+   - Map `injectionObservers` paralelo ao `injectedContainers` com mesma key
+   - `injectDomMirror` ganhou parametro opcional `onContainerRemoved?: () => void`
+   - Observer criado apos insercao bem-sucedida, desconectado em todas as funcoes de cleanup
+
+2. **Cooldown 100ms (`domPositionManager.ts`):**
+   - Sem cooldown, o observer re-injetava instantaneamente, e depois `file-open` + `active-leaf-change` (delay 25ms) chamavam `setupDomPosition` de novo — resultado: 3 injections pra 1 operacao (2 desperdicadas, cache hit mas log poluido)
+   - `lastSetupTime` Map por `viewId:filePath` — bloqueia chamadas dentro de 100ms
+
+3. **Bypass do cooldown pra observer (`isMutationRecovery`):**
+   - Problema encontrado no teste: container injetado → Obsidian destroi imediatamente (rebuild do sizer) → observer dispara → cooldown bloqueia porque a injection que criou o container setou o timestamp ha <100ms → container PERDIDO
+   - Fix: `setupDomPosition(plugin, view, isRetry, isMutationRecovery)` — quarto parametro. Observer chama com `isMutationRecovery=true`, que bypassa o cooldown mas SETA o timestamp pra bloquear event handlers subsequentes
+   - `isRetry=true` (backlinks timing) tambem bypassa cooldown
+
+**Complexidade e armadilhas encontradas:**
+
+- **Cooldown bloqueando observer:** a primeira implementacao do cooldown nao distinguia entre chamadas de event handlers (desperdicadas) e do observer (legitimas). O observer era bloqueado quando o container era destruido logo apos criacao — exatamente o cenario que ele deveria cobrir. Resolvido com flag `isMutationRecovery`
+- **Dependencia circular:** `domInjector.ts` nao pode importar de `domPositionManager.ts` (que ja importa de `domInjector`). Resolvido com callback pattern: `injectDomMirror` recebe callback, `domPositionManager` passa `() => setupDomPosition(plugin, view, false, true)`
+- **Observer no sizer vs view-content:** observar `.view-content` com `subtree: true` seria ruidoso (qualquer mudanca no RV dispara). Observar o sizer direto com `childList: true` e cirurgico — so dispara quando children diretos mudam
+- **Sizer substituido vs children reconstruidos:** se o sizer inteiro e substituido (nao so children), o observer no sizer antigo nao dispara. `layout-change` cobre o pane ativo. Pane inativo: coberto por `active-leaf-change` ao receber foco
+
+**Cleanup adicional:**
+- Diagnostico temporario `[DIAG-pane]` removido de `domPositionManager.ts`
+
+**Arquivos tocados:** `src/rendering/domInjector.ts`, `src/rendering/domPositionManager.ts`, `tests/domInjector.test.ts`
+
+**Testes:** 207 (+10 novos: setupContainerObserver 5 cenarios, disconnectObserver/ByPrefix 2 cenarios, injectDomMirror com callback 3 cenarios)
+
+---
+
+## v49 — Dual-template (LP + RV)
 
 ### O que mudou na v49
 

@@ -3,7 +3,7 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v49)
+## File Map (v50)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, orchestracao)
@@ -126,6 +126,32 @@ Deteccao de modo: `view.getMode()` retorna `'source'` (LP) ou `'preview'` (RV). 
 Evento `layout-change` detecta mode switch (LP ↔ RV) — `file-open`/`active-leaf-change` nao disparam pra mudanca de modo na mesma aba. Trailing debounce 50ms porque `getMode()` pode oscilar durante a transicao do Obsidian. Guard `lastViewMode` Map previne re-processamento quando modo nao mudou.
 
 Cleanup automatico: RV → LP = `setupDomPosition` vê que `top`/`bottom` nao sao DOM positions em LP → `removeAllDomMirrors`. LP → RV = CM6 widgets ficam ocultos (`.markdown-source-view` hidden), DOM injection ativa.
+
+### MutationObserver auto-recovery (v50)
+
+Obsidian destroi e reconstroi o `.markdown-preview-sizer` durante mode switches e re-renders internos do Reading View. Nosso container DOM injetado e destruido junto porque nao faz parte do render tree do Obsidian (e um "intruso"). Sem protecao, panes inativos perdem o mirror ate receberem foco.
+
+**Mecanismo:**
+
+1. `injectDomMirror()` aceita callback opcional `onContainerRemoved`
+2. Apos inserir o container no DOM, `setupContainerObserver()` cria MutationObserver no `parentElement` do container (o sizer) com `{ childList: true }`
+3. Quando o observer detecta `!container.isConnected`, desconecta imediatamente e chama o callback
+4. O callback chama `setupDomPosition(plugin, view, false, true)` — `isMutationRecovery=true` bypassa o cooldown
+
+**Lifecycle dos observers:**
+
+- Map paralelo `injectionObservers` (mesma key do `injectedContainers`)
+- Criados em `injectDomMirror()` apos insercao bem-sucedida
+- Desconectados em todas as funcoes de cleanup: `removeDomMirror`, `removeAllDomMirrors`, `removeOtherDomMirrors`, `cleanupAllDomMirrors`
+- `disconnectObserversByPrefix()` chamado em `setupDomPosition` junto com `templateDeps.unregisterByPrefix()`
+
+**Cooldown (100ms):** `setupDomPosition` tem cooldown por `viewId:filePath` que previne chamadas duplicadas de event handlers (observer re-injeta instantaneamente, `file-open`/`active-leaf-change` chegam 25ms depois). O cooldown:
+
+- Bloqueia chamadas normais dentro de 100ms
+- NAO bloqueia `isMutationRecovery=true` (observer) nem `isRetry=true` (backlinks timing)
+- Seta o timestamp apos passar o guard — observer bypassa mas reseta o timer pra bloquear event handlers subsequentes
+
+**Limitacao conhecida:** se o sizer inteiro for substituido (nao so rebuild de children), o observer no sizer antigo nao dispara. Coberto pelo `layout-change` handler pro pane ativo. Pane inativo: observer nao detecta substituicao total do sizer, mas ao receber foco via `active-leaf-change`, `setupDomPosition` re-injeta.
 
 ### isDomTargetVisible (v39)
 
@@ -254,7 +280,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (191 testes, 11 suites)
+npm test         # vitest (207 testes, 11 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

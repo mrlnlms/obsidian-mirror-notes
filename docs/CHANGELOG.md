@@ -2,7 +2,17 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v49 — Dual-template (LP + RV)
+## Versao Atual: v50 — MutationObserver auto-recovery
+
+### v50: Auto-recovery de containers RV destruidos pelo Obsidian
+
+- MutationObserver no `.markdown-preview-sizer` detecta quando container injetado e removido pelo Obsidian
+- Re-injecao automatica via callback — panes inativos mantem mirror sem precisar de foco
+- `setupContainerObserver()` com lifecycle completo: criacao, cleanup, desconexao em todas as funcoes de remove
+- Cooldown 100ms em `setupDomPosition` previne injections duplicadas de event handlers sobrepostos
+- `isMutationRecovery` flag permite que observer bypasse cooldown sem bloquear re-injecoes legitimas
+- Diagnostico temporario `[DIAG-pane]` removido
+- 207 testes (+10 novos: observer lifecycle, callback trigger, cleanup, disconnect)
 
 ### v49: Preview Mode fields funcionais + refactor main.ts
 

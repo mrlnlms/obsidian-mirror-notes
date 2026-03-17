@@ -1,10 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v49.
-
-## Bugs
-
-- **RV DOM container destruido pelo Obsidian** — Obsidian reconstroi `.markdown-preview-sizer` a cada mode switch/re-render. Nosso container injetado e destruido junto. Pane inativo perde mirror. Plano completo em `~/.claude/plans/humming-cooking-leaf.md`. Fix recomendado: MutationObserver no sizer pra detectar remocao e re-injetar
+Trabalho tecnico pendente. Atualizado na v50.
 
 ## Epico: Margin Panel
 
@@ -132,3 +128,4 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 - [x] Logica AND/OR nos filtros — conditions unificadas, evaluateConditions com any/all, negacao per-condition, mirrorIndex eliminado, conditionBuilder UI (v46)
 - [x] Reading View DOM injection — top/bottom renderizam via DOM em Reading View, layout-change event com debounce 50ms, lastViewMode guard (v47)
 - [x] Per-view DOM injection — viewId via WeakMap, containers independentes por pane, positionOverrides per-view, viewIdFacet no CM6, fix TS error CM6_POSITIONS.includes (v48)
+- [x] RV DOM container destruido pelo Obsidian — MutationObserver no sizer detecta remocao, re-injeta automaticamente. Cooldown 100ms + isMutationRecovery bypass (v50)

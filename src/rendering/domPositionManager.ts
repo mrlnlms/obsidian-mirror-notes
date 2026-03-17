@@ -2,7 +2,7 @@ import { MarkdownView } from 'obsidian';
 import { forceMirrorUpdateEffect } from '../editor/mirrorState';
 import { getApplicableConfig } from '../editor/mirrorConfig';
 import { CM6_POSITIONS } from '../editor/mirrorTypes';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, getViewId } from './domInjector';
+import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, getViewId, disconnectObserversByPrefix } from './domInjector';
 import { Logger } from '../dev/logger';
 import { getEditorView } from '../utils/obsidianInternals';
 import type MirrorUIPlugin from '../../main';
@@ -12,26 +12,40 @@ export function positionOverrideKey(viewId: string, filePath: string): string {
   return `${viewId}:${filePath}`;
 }
 
-export async function setupDomPosition(plugin: MirrorUIPlugin, view: MarkdownView, isRetry = false) {
+/** Cooldown: skip redundant setupDomPosition calls within 100ms for the same view+file.
+ *  Observer re-injection fires instantly; event handlers (file-open, active-leaf-change)
+ *  fire 25-50ms later for the same view — the second call is wasted work.
+ *  Observer callbacks (isMutationRecovery) bypass the cooldown but reset the timer. */
+const lastSetupTime = new Map<string, number>();
+const SETUP_COOLDOWN_MS = 100;
+
+export async function setupDomPosition(
+  plugin: MirrorUIPlugin, view: MarkdownView,
+  isRetry = false, isMutationRecovery = false
+) {
   const file = view.file;
   if (!file) return;
 
   const viewId = getViewId(view.containerEl);
   const overrideKey = positionOverrideKey(viewId, file.path);
 
-  // --- DIAGNOSTIC: multi-pane container state (temporario) ---
-  const viewContent = view.containerEl.querySelector('.view-content');
-  const existingContainers = viewContent?.querySelectorAll('.mirror-dom-injection') ?? [];
-  Logger.log(`[DIAG-pane] viewId=${viewId} file=${file.path} existingContainers=${existingContainers.length} containerEl.id=${view.containerEl.className?.substring(0, 40)}`);
-  for (const c of Array.from(existingContainers)) {
-    Logger.log(`[DIAG-pane]   container key=${c.getAttribute('data-mirror-key')} isConnected=${c.isConnected} pos=${c.getAttribute('data-position')}`);
+  // Cooldown guard: skip if we just ran for this view+file (observer + event overlap).
+  // Mutation recovery (observer callback) always passes — it detected real container removal.
+  if (!isRetry && !isMutationRecovery) {
+    const now = Date.now();
+    const last = lastSetupTime.get(overrideKey);
+    if (last && (now - last) < SETUP_COOLDOWN_MS) {
+      Logger.log(`setupDomPosition cooldown skip for ${file.path} [${viewId}] (${now - last}ms ago)`);
+      return;
+    }
   }
-  // --- END DIAGNOSTIC ---
+  lastSetupTime.set(overrideKey, Date.now());
 
   // Clear stale template dependency callbacks from previous file in this view.
   // Without this, navigating nota-A → nota-B leaves nota-A's callback registered;
   // editing the template would inject nota-A's frontmatter into nota-B's view.
   plugin.templateDeps.unregisterByPrefix(`dom-${viewId}-`);
+  disconnectObserversByPrefix(`dom-${viewId}-`);
 
   // Always clear override first so getApplicableConfig reads the original position.
   // Without this, a stale 'bottom' override from a previous fallback would persist
@@ -57,21 +71,27 @@ export async function setupDomPosition(plugin: MirrorUIPlugin, view: MarkdownVie
   // condition where removeAll destroys a container mid-async-render.
   removeOtherDomMirrors(viewId, file.path, config.position);
 
-  let actualPos = await injectDomMirror(plugin, view, config, frontmatter);
+  // Callback for MutationObserver: re-inject when Obsidian destroys the container.
+  // isMutationRecovery=true bypasses cooldown (real removal, not duplicate event).
+  const reInject = () => {
+    if (view.file) setupDomPosition(plugin, view, false, true);
+  };
+
+  let actualPos = await injectDomMirror(plugin, view, config, frontmatter, reInject);
 
   // Se fallback retornou outra posicao DOM, re-injetar nessa posicao
   if (actualPos !== config.position && isDomPosition(actualPos)) {
     const retryConfig = { ...config, position: actualPos };
-    actualPos = await injectDomMirror(plugin, view, retryConfig, frontmatter);
+    actualPos = await injectDomMirror(plugin, view, retryConfig, frontmatter, reInject);
   }
 
   // Registrar dependencia de template (re-render quando template muda)
   const blockKey = `dom-${viewId}-${file.path}-${config.position}`;
   plugin.templateDeps.register(config.templatePath, blockKey, async () => {
     const fm = plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
-    let pos = await injectDomMirror(plugin, view, config, fm);
+    let pos = await injectDomMirror(plugin, view, config, fm, reInject);
     if (pos !== config.position && isDomPosition(pos)) {
-      pos = await injectDomMirror(plugin, view, { ...config, position: pos }, fm);
+      pos = await injectDomMirror(plugin, view, { ...config, position: pos }, fm, reInject);
     }
   });
 

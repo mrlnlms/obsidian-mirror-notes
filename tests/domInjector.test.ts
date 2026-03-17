@@ -3,6 +3,7 @@ import {
   isDomPosition, isDomTargetVisible, resolveTarget, getFallbackPosition,
   injectDomMirror, removeDomMirror, removeAllDomMirrors, removeOtherDomMirrors,
   cleanupAllDomMirrors, getViewId, resetViewIdCounter,
+  setupContainerObserver, disconnectObserver, disconnectObserversByPrefix,
 } from '../src/rendering/domInjector';
 import { renderMirrorTemplate } from '../src/rendering/templateRenderer';
 import { MirrorPosition, ApplicableMirrorConfig } from '../src/editor/mirrorTypes';
@@ -745,5 +746,223 @@ describe('per-view isolation', () => {
     expect(key1).not.toBe(key2);
     expect(key1).toContain('shared.md');
     expect(key2).toContain('shared.md');
+  });
+});
+
+// =============================================================================
+// MutationObserver — auto re-injection when Obsidian destroys container
+// =============================================================================
+
+describe('setupContainerObserver', () => {
+  beforeEach(() => {
+    cleanupAllDomMirrors();
+    resetViewIdCounter();
+  });
+
+  it('calls onRemoved when container is removed from parent', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const container = document.createElement('div');
+    parent.appendChild(container);
+
+    const onRemoved = vi.fn();
+    setupContainerObserver('test-key-1', container, onRemoved);
+
+    // Simulate Obsidian removing the container
+    parent.removeChild(container);
+
+    // MutationObserver fires asynchronously
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(onRemoved).toHaveBeenCalledTimes(1);
+    document.body.removeChild(parent);
+  });
+
+  it('does NOT call onRemoved when unrelated child is added', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const container = document.createElement('div');
+    parent.appendChild(container);
+
+    const onRemoved = vi.fn();
+    setupContainerObserver('test-key-2', container, onRemoved);
+
+    // Add unrelated child — container still connected
+    const other = document.createElement('span');
+    parent.appendChild(other);
+
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(onRemoved).not.toHaveBeenCalled();
+    document.body.removeChild(parent);
+  });
+
+  it('disconnects observer after triggering (no duplicate callbacks)', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const container = document.createElement('div');
+    parent.appendChild(container);
+
+    const onRemoved = vi.fn();
+    setupContainerObserver('test-key-3', container, onRemoved);
+
+    // Remove container
+    parent.removeChild(container);
+    await new Promise(r => setTimeout(r, 0));
+
+    // Re-add and remove again — observer should be disconnected
+    parent.appendChild(container);
+    parent.removeChild(container);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(onRemoved).toHaveBeenCalledTimes(1);
+    document.body.removeChild(parent);
+  });
+
+  it('replaces existing observer for same key', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const container1 = document.createElement('div');
+    const container2 = document.createElement('div');
+    parent.appendChild(container1);
+    parent.appendChild(container2);
+
+    const onRemoved1 = vi.fn();
+    const onRemoved2 = vi.fn();
+    setupContainerObserver('test-key-4', container1, onRemoved1);
+    setupContainerObserver('test-key-4', container2, onRemoved2);
+
+    // Remove container1 — old observer should be disconnected
+    parent.removeChild(container1);
+    await new Promise(r => setTimeout(r, 0));
+    expect(onRemoved1).not.toHaveBeenCalled();
+
+    // Remove container2 — new observer should fire
+    parent.removeChild(container2);
+    await new Promise(r => setTimeout(r, 0));
+    expect(onRemoved2).toHaveBeenCalledTimes(1);
+
+    document.body.removeChild(parent);
+  });
+
+  it('does nothing when container has no parent', () => {
+    const container = document.createElement('div');
+    const onRemoved = vi.fn();
+    // Should not throw
+    setupContainerObserver('test-key-5', container, onRemoved);
+  });
+});
+
+describe('disconnectObserver / disconnectObserversByPrefix', () => {
+  beforeEach(() => {
+    cleanupAllDomMirrors();
+    resetViewIdCounter();
+  });
+
+  it('disconnectObserver prevents future callbacks', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const container = document.createElement('div');
+    parent.appendChild(container);
+
+    const onRemoved = vi.fn();
+    setupContainerObserver('test-disc-1', container, onRemoved);
+    disconnectObserver('test-disc-1');
+
+    parent.removeChild(container);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(onRemoved).not.toHaveBeenCalled();
+    document.body.removeChild(parent);
+  });
+
+  it('disconnectObserversByPrefix disconnects matching observers', async () => {
+    const parent = document.createElement('div');
+    document.body.appendChild(parent);
+    const c1 = document.createElement('div');
+    const c2 = document.createElement('div');
+    parent.appendChild(c1);
+    parent.appendChild(c2);
+
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+    setupContainerObserver('dom-v0-file.md-top', c1, cb1);
+    setupContainerObserver('dom-v0-file.md-bottom', c2, cb2);
+
+    disconnectObserversByPrefix('dom-v0-');
+
+    parent.removeChild(c1);
+    parent.removeChild(c2);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(cb1).not.toHaveBeenCalled();
+    expect(cb2).not.toHaveBeenCalled();
+    document.body.removeChild(parent);
+  });
+});
+
+describe('injectDomMirror with onContainerRemoved', () => {
+  beforeEach(() => {
+    cleanupAllDomMirrors();
+    resetViewIdCounter();
+    vi.mocked(renderMirrorTemplate).mockClear();
+  });
+
+  it('sets up observer when callback is provided', async () => {
+    const plugin = createFakePlugin();
+    const vc = createViewContent({ readingView: true });
+    const view = createFakeView('obs-test.md', vc);
+    document.body.appendChild(view.containerEl);
+
+    const onRemoved = vi.fn();
+    await injectDomMirror(plugin, view, makeConfig('top'), {}, onRemoved);
+
+    const container = vc.querySelector('.mirror-dom-injection')!;
+    expect(container).not.toBeNull();
+
+    // Remove container from sizer (simulates Obsidian rebuild)
+    container.parentElement!.removeChild(container);
+    await new Promise(r => setTimeout(r, 0));
+
+    expect(onRemoved).toHaveBeenCalledTimes(1);
+    document.body.removeChild(view.containerEl);
+  });
+
+  it('does NOT set up observer when callback is omitted', async () => {
+    const plugin = createFakePlugin();
+    const vc = createViewContent({ title: true });
+    const view = createFakeView('obs-test-2.md', vc);
+    document.body.appendChild(view.containerEl);
+
+    await injectDomMirror(plugin, view, makeConfig('above-title'), {});
+
+    const container = vc.querySelector('.mirror-dom-injection')!;
+    expect(container).not.toBeNull();
+
+    // Remove — no callback to fire, should not throw
+    container.parentElement!.removeChild(container);
+    await new Promise(r => setTimeout(r, 0));
+
+    document.body.removeChild(view.containerEl);
+  });
+
+  it('cleanup functions disconnect observers set via injectDomMirror', async () => {
+    const plugin = createFakePlugin();
+    const vc = createViewContent({ readingView: true });
+    const view = createFakeView('obs-test-3.md', vc);
+    document.body.appendChild(view.containerEl);
+
+    const onRemoved = vi.fn();
+    await injectDomMirror(plugin, view, makeConfig('top'), {}, onRemoved);
+
+    const viewId = getViewId(view.containerEl);
+
+    // Cleanup via removeAllDomMirrors — disconnects observer before removing container
+    removeAllDomMirrors(viewId, 'obs-test-3.md');
+
+    await new Promise(r => setTimeout(r, 0));
+    expect(onRemoved).not.toHaveBeenCalled();
+
+    document.body.removeChild(view.containerEl);
   });
 });
