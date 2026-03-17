@@ -43,6 +43,19 @@ describe('evaluateCondition', () => {
     expect(evaluateCondition(cond, file, {})).toBe(false);
   });
 
+  it('does not match sibling folder with same prefix (projects vs projects-archive)', () => {
+    const cond: Condition = { type: 'folder', negated: false, folderPath: 'projects' };
+    const siblingFile = makeTFile('projects-archive/old-note.md');
+    expect(evaluateCondition(cond, siblingFile, {})).toBe(false);
+  });
+
+  it('folder match works with or without trailing slash', () => {
+    const withSlash: Condition = { type: 'folder', negated: false, folderPath: 'projects/' };
+    const withoutSlash: Condition = { type: 'folder', negated: false, folderPath: 'projects' };
+    expect(evaluateCondition(withSlash, file, {})).toBe(true);
+    expect(evaluateCondition(withoutSlash, file, {})).toBe(true);
+  });
+
   it('matches property string value', () => {
     const cond: Condition = { type: 'property', negated: false, propertyName: 'type', propertyValue: 'project' };
     expect(evaluateCondition(cond, file, { type: 'project' })).toBe(true);

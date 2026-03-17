@@ -30,9 +30,12 @@ export function evaluateCondition(
     case 'file':
       result = file.path === condition.fileName || file.name === condition.fileName;
       break;
-    case 'folder':
-      result = !!condition.folderPath && file.path.startsWith(condition.folderPath);
+    case 'folder': {
+      // Ensure trailing slash to prevent "projects" matching "projects-archive/"
+      const folder = condition.folderPath?.endsWith('/') ? condition.folderPath : condition.folderPath + '/';
+      result = !!condition.folderPath && file.path.startsWith(folder);
       break;
+    }
     case 'property': {
       if (!condition.propertyName) break;
       const val = frontmatter?.[condition.propertyName];
