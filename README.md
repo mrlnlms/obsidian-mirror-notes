@@ -191,7 +191,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-47 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+49 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -201,7 +201,7 @@ npm run dev      # watch mode
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
 | Era 6: Hardening | Mar 2026 | v34-v42 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache, per-view overrides |
-| Era 7: Position Refinement | Mar 2026 | v43-v47 — Position simplification, cold start fixes, config cache hardening, margin panel flush positioning + ResizeObserver, AND/OR compound filters, Reading View DOM injection |
+| Era 7: Position Refinement | Mar 2026 | v43-v49 — Position simplification, cold start fixes, margin panel positioning, AND/OR filters, Reading View DOM injection, per-view isolation, dual-template LP/RV, main.ts refactor |
 
 ## Known Limitations
 

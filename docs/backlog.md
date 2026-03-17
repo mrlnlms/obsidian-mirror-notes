@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v48.
+Trabalho tecnico pendente. Atualizado na v49.
 
 ## Bugs
 
