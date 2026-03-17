@@ -6,6 +6,11 @@ Trabalho tecnico pendente. Atualizado na v47.
 
 (nenhum bug aberto)
 
+## Hardening futuro
+
+- **DOM injection key per-view** — injection key atual e `filePath + position`. Se o mesmo arquivo abrir em dois panes, o container e reparentado pro pane ativo, o inativo perde o mirror. Fix: incluir leaf/view ID na key + cleanup no `active-leaf-change`. Relevante pra multiplos mirrors na mesma nota. Risco baixo no uso normal (pane ativo sempre funciona)
+- **`resolveViewOverrides` hideProps merge** — `overrides.hideProps || legacyHideProps` usa OR pra backward compatibility (data.json pre-v42). Correto pro caso de migracao, mas `boolean` nao distingue "default false" de "explicitamente false". Cleanup futuro: migrar pra `boolean | null` onde null = herdar do legacy, depois remover campo legacy
+
 ## Epico: Margin Panel
 
 O margin panel (`marginPanelExtension.ts`) renderiza mirrors nas posicoes `left` e `right` como ViewPlugin CM6. Posicionamento flush (left:0/right:0) e ResizeObserver ja implementados (v45). Plano de trabalho em `docs/superpowers/plans/`.
