@@ -21,9 +21,10 @@ export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
   }
 
   // Fallback: check RV config directly (covers preview-only mirrors where StateField has no config)
-  if (!overrides && view.file && plugin.app?.metadataCache) {
-    // @ts-ignore — getMode not in official typings
-    const viewMode: string = view.getMode?.() ?? 'source';
+  // Only in preview mode — in source mode, no StateField config means no LP mirror, don't apply RV overrides
+  // @ts-ignore — getMode not in official typings
+  const viewMode: string = view.getMode?.() ?? 'source';
+  if (!overrides && viewMode === 'preview' && view.file && plugin.app?.metadataCache) {
     const viewId = getViewId(view.containerEl);
     const frontmatter = plugin.app.metadataCache.getFileCache(view.file)?.frontmatter || {};
     const rvConfig = getApplicableConfig(plugin, view.file, frontmatter, viewId, viewMode);

@@ -146,6 +146,8 @@ export default class MirrorUIPlugin extends Plugin {
             this.setupEditor(view);
           }
           setupDomPosition(this, view);
+          // Re-evaluate overrides on mode switch — dual-template may change applicable config
+          applyViewOverrides(this, view);
         }, 50);
       })
     );

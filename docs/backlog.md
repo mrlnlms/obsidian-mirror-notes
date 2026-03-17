@@ -4,7 +4,7 @@ Trabalho tecnico pendente. Atualizado na v49.
 
 ## Bugs
 
-(nenhum bug aberto)
+- **RV DOM container destruido pelo Obsidian** — Obsidian reconstroi `.markdown-preview-sizer` a cada mode switch/re-render. Nosso container injetado e destruido junto. Pane inativo perde mirror. Plano completo em `~/.claude/plans/humming-cooking-leaf.md`. Fix recomendado: MutationObserver no sizer pra detectar remocao e re-injetar
 
 ## Epico: Margin Panel
 

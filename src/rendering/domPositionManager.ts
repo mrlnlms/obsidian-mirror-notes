@@ -19,6 +19,15 @@ export async function setupDomPosition(plugin: MirrorUIPlugin, view: MarkdownVie
   const viewId = getViewId(view.containerEl);
   const overrideKey = positionOverrideKey(viewId, file.path);
 
+  // --- DIAGNOSTIC: multi-pane container state (temporario) ---
+  const viewContent = view.containerEl.querySelector('.view-content');
+  const existingContainers = viewContent?.querySelectorAll('.mirror-dom-injection') ?? [];
+  Logger.log(`[DIAG-pane] viewId=${viewId} file=${file.path} existingContainers=${existingContainers.length} containerEl.id=${view.containerEl.className?.substring(0, 40)}`);
+  for (const c of Array.from(existingContainers)) {
+    Logger.log(`[DIAG-pane]   container key=${c.getAttribute('data-mirror-key')} isConnected=${c.isConnected} pos=${c.getAttribute('data-position')}`);
+  }
+  // --- END DIAGNOSTIC ---
+
   // Clear stale template dependency callbacks from previous file in this view.
   // Without this, navigating nota-A → nota-B leaves nota-A's callback registered;
   // editing the template would inject nota-A's frontmatter into nota-B's view.
