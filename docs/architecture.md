@@ -46,6 +46,14 @@ O plugin renderiza templates de duas formas independentes:
 4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
 5. `main.ts` — `applyViewOverrides()` aplica overrides per-view (hideProps, readableLineLength, showInlineTitle)
 
+### Dual-template (v49)
+
+Cada mirror pode ter templates diferentes pra Live Preview e Reading View:
+- LP: `enable_custom_live_preview_mode` + `custom_settings_live_preview_note` + `custom_settings_live_preview_pos`
+- RV: `enable_custom_preview_mode` + `custom_settings_preview_note` + `custom_settings_preview_pos`
+
+`getApplicableConfig(plugin, file, fm, viewId?, viewMode?)` seleciona o template correto. Se RV nao tem template configurado, fallback pra LP. Cache key inclui viewMode — `${file.path}:${viewMode}`. StateField (CM6) sempre chama sem viewMode (default `source` — CM6 so existe em LP).
+
 ### Code block (Reading View + Live Preview, inline)
 
 1. `main.ts` — `registerMirrorCodeBlock(this)` registra o processor no `onload()`

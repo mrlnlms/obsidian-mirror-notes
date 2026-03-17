@@ -2,7 +2,29 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v48 — Per-view DOM injection isolation
+## Versao Atual: v49 — Dual-template (LP + RV)
+
+### O que mudou na v49
+
+**Contexto:** a UI sempre teve campos separados pra "Live Preview Mode Template" e "Preview Mode Template" — template, posicao, enable toggle. Mas o runtime (`getApplicableConfig` / `configFromMirror`) so usava os campos `_live_preview_`. Os campos `_preview_` eram persistidos, rename-aware, e notificados em delete, mas nunca entravam na decisao. Com Reading View funcionando (v47), hora de ativar.
+
+**Mudancas:**
+
+1. **`configFromMirror(mirror, viewMode?)`** — se `viewMode === 'preview'` E mirror tem `enable_custom_preview_mode` + template configurado, usa `custom_settings_preview_note` / `custom_settings_preview_pos`. Senao fallback pra live_preview.
+
+2. **`getApplicableConfig(plugin, file, fm, viewId?, viewMode?)`** — matching agora aceita mirror com pelo menos um modo ativo (`hasLP || hasRV`). Antes so checava LP. Global mirror idem.
+
+3. **Cache key mode-aware** — `${file.path}:${viewMode ?? 'source'}`. LP e RV cachados separado. Necessario porque o mesmo arquivo pode ter configs diferentes por modo.
+
+4. **`setupDomPosition`** — ja tinha `view.getMode()`, agora passa pra `getApplicableConfig`.
+
+5. **Cleanup legacy hideProps** — `custom_settings_hide_props` / `global_settings_hide_props` removidos dos types/defaults/settings UI. `resolveViewOverrides()` eliminada. `viewOverrides.hideProps` e autoritativo.
+
+**Arquivos tocados:** `mirrorConfig.ts`, `main.ts`, `types.ts`, `settings.ts`, `mirrorConfig.test.ts`
+
+---
+
+## v48 — Per-view DOM injection isolation
 
 ### O que mudou na v48
 

@@ -2,7 +2,18 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v48 — Per-view DOM injection isolation
+## Versao Atual: v49 — Dual-template (LP + RV)
+
+### v49: Preview Mode fields funcionais
+
+- Campos "Preview Mode Template" na UI agora sao usados em Reading View (antes: dead code)
+- `getApplicableConfig` recebe `viewMode` — seleciona template/posicao por modo de visualizacao
+- `configFromMirror` dual: se mirror tem `enable_custom_preview_mode` + template, usa em RV; senao fallback pra LP
+- Global mirror idem: `enable_global_preview_mode` + `global_settings_preview_note`
+- Cache key inclui viewMode (`file.path:source` / `file.path:preview`) — LP e RV cachados separado
+- Mirror so com RV ativo agora matcha (antes ignorado por checar so `enable_custom_live_preview_mode`)
+- Campo legacy `custom_settings_hide_props` removido, `resolveViewOverrides` eliminada
+- 191 testes (+6 novos: dual-template, fallback, RV-only, cache separation, global dual)
 
 ### v48: Containers DOM independentes por pane
 

@@ -34,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v49 | Dual-template LP + RV | Preview Mode fields funcionais, viewMode-aware config, cache mode-aware, legacy hideProps cleanup |
 | v48 | Per-view DOM injection | viewId via WeakMap, containers independentes por pane, positionOverrides per-view, viewIdFacet |
 | v47 | Reading View DOM injection | top/bottom em RV via DOM injection, layout-change event, debounce 50ms, lastViewMode guard |
 | v46 | AND/OR compound filters | Conditions unificadas, evaluateConditions any/all, negacao is/not, mirrorIndex eliminado, conditionBuilder UI |

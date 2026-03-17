@@ -267,6 +267,23 @@
         { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "reading-view" }
       ],
       "conditionLogic": "all"
+    },
+    {
+      "id": "dual-template", "name": "Dual Template (LP + RV)",
+      "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "samples/templates/positions/lp-dual-preview.md",
+      "custom_settings_live_preview_pos": "top",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "samples/templates/positions/rv-dual-preview.md",
+      "custom_settings_preview_pos": "top",
+      "custom_settings_overide": false,
+      "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [
+        { "type": "property", "negated": false, "propertyName": "test", "propertyValue": "dual-template" }
+      ],
+      "conditionLogic": "all"
     }
   ]
 }
