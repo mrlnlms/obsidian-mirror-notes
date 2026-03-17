@@ -44,6 +44,8 @@ Apos margin panel. A pagina de settings funciona mas tem gaps de usabilidade:
 
 ## Considerado resolvido
 
+- **`layout-change` so processa view ativa** — por design, nao e bug. Mode switch (Cmd+E) so acontece no pane ativo — Obsidian foca o pane antes de trocar modo. `getActiveViewOfType(MarkdownView)` cobre 100% do fluxo real. Varredura global de todos os panes seria desperdicio (layout-change dispara pra sidebar, splits, etc). Panes inativos sao atualizados quando recebem foco via `file-open`/`active-leaf-change`. Avaliado na v47, descartado como nao-problema
+- **`viewOverrides` em Reading View** — funciona sem codigo extra. CM6 existe em ambos os modos (Obsidian cria `.markdown-source-view` e `.markdown-reading-view` simultaneamente). `setupEditor` registra StateField, `applyViewOverrides` aplica CSS class no `.view-content` que cobre LP e RV. Validado empiricamente na v47 com `hideProps: true` — persiste entre mode switches e sobrevive cold start
 - **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
 - **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
 
