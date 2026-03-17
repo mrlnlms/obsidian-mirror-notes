@@ -423,4 +423,122 @@ describe('getApplicableConfig', () => {
     const config = getApplicableConfig(plugin, file, { type: 'project' });
     expect(config).toBeNull();
   });
+
+  // ---- Dual-template (viewMode) ----
+  it('uses live_preview template when viewMode is source', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'templates/lp.md',
+      custom_settings_live_preview_pos: 'top',
+      enable_custom_preview_mode: true,
+      custom_settings_preview_note: 'templates/rv.md',
+      custom_settings_preview_pos: 'bottom',
+      conditions: [{ type: 'file', negated: false, fileName: 'dual.md' }],
+    });
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
+    });
+    clearConfigCache();
+    const config = getApplicableConfig(plugin, makeTFile('dual.md'), {}, undefined, 'source');
+    expect(config!.templatePath).toBe('templates/lp.md');
+    expect(config!.position).toBe('top');
+  });
+
+  it('uses preview template when viewMode is preview', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'templates/lp.md',
+      custom_settings_live_preview_pos: 'top',
+      enable_custom_preview_mode: true,
+      custom_settings_preview_note: 'templates/rv.md',
+      custom_settings_preview_pos: 'bottom',
+      conditions: [{ type: 'file', negated: false, fileName: 'dual.md' }],
+    });
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
+    });
+    clearConfigCache();
+    const config = getApplicableConfig(plugin, makeTFile('dual.md'), {}, undefined, 'preview');
+    expect(config!.templatePath).toBe('templates/rv.md');
+    expect(config!.position).toBe('bottom');
+  });
+
+  it('falls back to live_preview when preview mode not configured', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'templates/lp.md',
+      enable_custom_preview_mode: false,
+      custom_settings_preview_note: '',
+      conditions: [{ type: 'file', negated: false, fileName: 'fallback.md' }],
+    });
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
+    });
+    clearConfigCache();
+    const config = getApplicableConfig(plugin, makeTFile('fallback.md'), {}, undefined, 'preview');
+    expect(config!.templatePath).toBe('templates/lp.md');
+  });
+
+  it('mirror with only preview mode matches in preview but not source', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: false,
+      custom_settings_live_preview_note: '',
+      enable_custom_preview_mode: true,
+      custom_settings_preview_note: 'templates/rv-only.md',
+      conditions: [{ type: 'file', negated: false, fileName: 'rv-only.md' }],
+    });
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
+    });
+    clearConfigCache();
+    // In preview → uses preview template
+    const rvConfig = getApplicableConfig(plugin, makeTFile('rv-only.md'), {}, undefined, 'preview');
+    expect(rvConfig!.templatePath).toBe('templates/rv-only.md');
+    // In source → no LP template → falls back to empty string (no template)
+    clearConfigCache();
+    const lpConfig = getApplicableConfig(plugin, makeTFile('rv-only.md'), {}, undefined, 'source');
+    // Mirror matches but LP template is empty → templatePath is empty
+    expect(lpConfig!.templatePath).toBe('');
+  });
+
+  it('cache separates LP and RV for same file', () => {
+    const mirror = createCustomMirror({
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'templates/lp.md',
+      enable_custom_preview_mode: true,
+      custom_settings_preview_note: 'templates/rv.md',
+      conditions: [{ type: 'file', negated: false, fileName: 'cached-dual.md' }],
+    });
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [mirror] },
+    });
+    clearConfigCache();
+    const fm = { title: 'Test' };
+    const lpConfig = getApplicableConfig(plugin, makeTFile('cached-dual.md'), fm, undefined, 'source');
+    const rvConfig = getApplicableConfig(plugin, makeTFile('cached-dual.md'), fm, undefined, 'preview');
+    expect(lpConfig!.templatePath).toBe('templates/lp.md');
+    expect(rvConfig!.templatePath).toBe('templates/rv.md');
+  });
+
+  it('global mirror uses preview template in preview mode', () => {
+    const plugin = createFakePlugin({
+      settings: {
+        ...createFakePlugin().settings,
+        global_settings: true,
+        enable_global_live_preview_mode: true,
+        global_settings_live_preview_note: 'templates/global-lp.md',
+        global_settings_live_preview_pos: 'top',
+        enable_global_preview_mode: true,
+        global_settings_preview_note: 'templates/global-rv.md',
+        global_settings_preview_pos: 'bottom',
+      },
+    });
+    clearConfigCache();
+    const lpConfig = getApplicableConfig(plugin, makeTFile('any.md'), {}, undefined, 'source');
+    expect(lpConfig!.templatePath).toBe('templates/global-lp.md');
+    clearConfigCache();
+    const rvConfig = getApplicableConfig(plugin, makeTFile('any.md'), {}, undefined, 'preview');
+    expect(rvConfig!.templatePath).toBe('templates/global-rv.md');
+    expect(rvConfig!.position).toBe('bottom');
+  });
 });

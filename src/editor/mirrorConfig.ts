@@ -63,11 +63,13 @@ export function evaluateConditions(
 // MATCHING
 // =================================================================================
 
-function configFromMirror(mirror: CustomMirror): ApplicableMirrorConfig {
+function configFromMirror(mirror: CustomMirror, viewMode?: string): ApplicableMirrorConfig {
+  const isPreview = viewMode === 'preview';
+  const usePreview = isPreview && mirror.enable_custom_preview_mode && !!mirror.custom_settings_preview_note;
   const viewOverrides = mirror.custom_view_overrides ?? { ...DEFAULT_VIEW_OVERRIDES };
   return {
-    templatePath: mirror.custom_settings_live_preview_note,
-    position: mirror.custom_settings_live_preview_pos as MirrorPosition,
+    templatePath: usePreview ? mirror.custom_settings_preview_note : mirror.custom_settings_live_preview_note,
+    position: (usePreview ? mirror.custom_settings_preview_pos : mirror.custom_settings_live_preview_pos) as MirrorPosition,
     hideProps: viewOverrides.hideProps,
     showContainer: mirror.custom_show_container_border,
     viewOverrides,
@@ -79,13 +81,16 @@ export function getApplicableConfig(
   plugin: MirrorUIPlugin,
   file: TFile | null,
   frontmatter: any,
-  viewId?: string
+  viewId?: string,
+  viewMode?: string
 ): ApplicableMirrorConfig | null {
   if (!file) return null;
 
   // Cache hit: se frontmatter nao mudou, retornar config cacheada
+  // Cache key inclui viewMode — LP e RV podem ter templates diferentes
   const fmHash = hashObject(frontmatter);
-  const cached = configCache.get(file.path);
+  const cacheKey = `${file.path}:${viewMode ?? 'source'}`;
+  const cached = configCache.get(cacheKey);
   if (cached && cached.frontmatterHash === fmHash) {
     return cached.config;
   }
@@ -96,7 +101,10 @@ export function getApplicableConfig(
   let matchedMirror: CustomMirror | null = null;
 
   for (const mirror of settings.customMirrors) {
-    if (!mirror.enable_custom_live_preview_mode || !mirror.custom_settings_live_preview_note) continue;
+    // Mirror precisa ter pelo menos um modo ativo com template configurado
+    const hasLP = mirror.enable_custom_live_preview_mode && !!mirror.custom_settings_live_preview_note;
+    const hasRV = mirror.enable_custom_preview_mode && !!mirror.custom_settings_preview_note;
+    if (!hasLP && !hasRV) continue;
     if (mirror.conditions.length === 0) continue;
     if (evaluateConditions(mirror.conditions, mirror.conditionLogic, file, frontmatter)) {
       matchedMirror = mirror;
@@ -104,10 +112,10 @@ export function getApplicableConfig(
     }
   }
 
-  // 2. Verificar se global mirror está ativo
-  const globalMirrorActive = settings.global_settings &&
-                            settings.enable_global_live_preview_mode &&
-                            settings.global_settings_live_preview_note;
+  // 2. Verificar se global mirror está ativo (pelo menos um modo com template)
+  const globalHasLP = settings.enable_global_live_preview_mode && !!settings.global_settings_live_preview_note;
+  const globalHasRV = settings.enable_global_preview_mode && !!settings.global_settings_preview_note;
+  const globalMirrorActive = settings.global_settings && (globalHasLP || globalHasRV);
 
   // 3. LÓGICA DE PRIORIDADE (sem iteracao duplicada — matchedMirror ja tem a referencia)
   let result: ApplicableMirrorConfig | null = null;
@@ -115,10 +123,10 @@ export function getApplicableConfig(
   if (matchedMirror) {
     if (!globalMirrorActive || !settings.global_settings_overide) {
       // Global desabilitado OU sem "Replace custom Mirrors" → Custom sempre vence
-      result = configFromMirror(matchedMirror);
+      result = configFromMirror(matchedMirror, viewMode);
     } else if (matchedMirror.custom_settings_overide) {
       // Global ativo COM override, mas custom tambem tem override → Custom vence
-      result = configFromMirror(matchedMirror);
+      result = configFromMirror(matchedMirror, viewMode);
     }
     // else: global ativo com override e custom sem override → cai pro global abaixo
   }
@@ -126,10 +134,12 @@ export function getApplicableConfig(
   // 4. Se chegou aqui sem result, aplicar global mirror (se ativo)
   if (!result && globalMirrorActive) {
     Logger.log(`Global mirror applied to: ${file.path}, frontmatter:`, frontmatter);
+    const isPreview = viewMode === 'preview';
+    const useGlobalPreview = isPreview && globalHasRV;
     const globalOverrides = settings.global_view_overrides ?? { ...DEFAULT_VIEW_OVERRIDES };
     result = {
-      templatePath: settings.global_settings_live_preview_note,
-      position: settings.global_settings_live_preview_pos as MirrorPosition,
+      templatePath: useGlobalPreview ? settings.global_settings_preview_note : settings.global_settings_live_preview_note,
+      position: (useGlobalPreview ? settings.global_settings_preview_pos : settings.global_settings_live_preview_pos) as MirrorPosition,
       hideProps: globalOverrides.hideProps,
       showContainer: settings.global_show_container_border,
       viewOverrides: globalOverrides,
@@ -141,7 +151,7 @@ export function getApplicableConfig(
   }
 
   // Cachear config base (sem override — override e estado runtime, nao deve poluir cache)
-  configCache.set(file.path, { config: result, frontmatterHash: fmHash });
+  configCache.set(cacheKey, { config: result, frontmatterHash: fmHash });
 
   // Apply position override (DOM fallback → CM6) — depois do cache
   // Key includes viewId when available (per-view override isolation)

@@ -464,9 +464,10 @@ export default class MirrorUIPlugin extends Plugin {
     this.positionOverrides.delete(overrideKey);
 
     const frontmatter = this.app.metadataCache.getFileCache(file)?.frontmatter || {};
-    const config = getApplicableConfig(this, file, frontmatter, viewId);
     // @ts-ignore — getMode not in official typings
-    const isReadingView = view.getMode?.() === 'preview';
+    const viewMode: string = view.getMode?.() ?? 'source';
+    const isReadingView = viewMode === 'preview';
+    const config = getApplicableConfig(this, file, frontmatter, viewId, viewMode);
     // In Reading View, CM6 doesn't render — top/bottom need DOM injection too
     const configPos = config?.position;
     const shouldInjectDom = (configPos && isDomPosition(configPos)) ||
