@@ -4,17 +4,13 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ## Ordem de execucao
 
-### 1. ~~Logica AND/OR nos filtros~~ ✓ (v46)
-
-### 2. Margin Panel (epico)
+### 1. Margin Panel (epico)
 
 Proximo bloco de trabalho. Posicionamento flush e ResizeObserver ja implementados (v45). Faltam: largura configuravel, threshold de sobreposicao, gutters, min-height. Menu de posicoes so se consolida no final do epico (pode precisar de opcoes intermediarias pra teste). Plano de trabalho em `docs/superpowers/plans/`.
 
-### 3. Revisao de Settings UI
+### 2. Revisao de Settings UI
 
 Apos margin panel. Renomear mirrors, usabilidade com dezenas de mirrors, layout geral da pagina.
-
-### 4. ~~Reading View DOM injection~~ ✓ (v47)
 
 ## Pre-lancamento (must-have)
 

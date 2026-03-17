@@ -6,7 +6,7 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 
 - **Dynamic Template Injection**: Automatically display templates in your notes based on YAML frontmatter
 - **Multiple Mirror Configurations**: Create custom mirrors for different types of notes
-- **Flexible Filtering**: Filter by file name, folder path, or YAML properties
+- **Flexible Filtering**: Filter by file name, folder path, or YAML properties with AND/OR logic and negation
 - **Template Variables**: Use `{{variable}}` syntax to inject frontmatter values into templates
 - **Position Control**: 9 positions across 3 engines — top/bottom (CM6), above/below title/properties/backlinks (DOM), left/right margins (panels)
 - **Per-View Setting Overrides**: Control hide properties, readable line width, and inline title per mirror — overrides Obsidian's global settings for matched notes
@@ -16,7 +16,7 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Smart Fallback Chain**: If a DOM target is hidden (e.g., properties off), the mirror automatically falls back to the next valid position
 - **Reactive Config Detection**: Mirrors reposition in real-time when you toggle Obsidian settings (inline title, properties, backlinks)
 - **Insert Command**: Right-click menu and command palette entry with file autocomplete
-- **Live Preview Support**: Works seamlessly in Obsidian's Live Preview mode
+- **Live Preview + Reading View**: Settings mirrors render in both Live Preview (CM6 widgets) and Reading View (DOM injection). Code blocks work in both modes natively
 - **Performance Optimized**: Intelligent caching, scoped invalidation, and debouncing for smooth editing
 - **Rename-Aware Settings**: Template and filter paths auto-update when you rename or move files in the vault
 
@@ -113,7 +113,7 @@ Right-click in the editor or use the command palette (`Cmd/Ctrl+P` → **Insert 
 |---|---|---|
 | **Scope** | Applied automatically to matching notes | Only where you place the block |
 | **Configuration** | Plugin settings UI | Written directly in the note |
-| **Works in** | Live Preview (CM6 widget) | Live Preview + Reading View |
+| **Works in** | Live Preview + Reading View | Live Preview + Reading View |
 | **Best for** | Consistent templates across many notes | One-off embeds, mixed layouts |
 
 Both use the same rendering engine and `{{variable}}` syntax.
@@ -163,7 +163,7 @@ Create multiple mirrors with different configurations:
 
 Mirror Notes operates in two modes with a shared rendering engine:
 
-1. **Settings mirrors** (Live Preview): CodeMirror 6 extensions inject content into the editor. A StateField parses frontmatter and matches it against configured filters. When matched, a WidgetType renders the template with `{{variable}}` substitution.
+1. **Settings mirrors** (Live Preview + Reading View): In Live Preview, CodeMirror 6 extensions inject content into the editor via StateField + WidgetType. In Reading View, DOM injection targets the `.markdown-preview-sizer` container. Both use the same template renderer.
 
 2. **Inline code blocks** (Live Preview + Reading View): A `registerMarkdownCodeBlockProcessor` handles ` ```mirror``` ` blocks, parsing `template:`, `source:`, and inline variables, then rendering through the same template engine.
 
@@ -173,9 +173,9 @@ The plugin never modifies the note's content — it only adds visual elements to
 
 Three rendering engines with a shared template renderer:
 
-- **CM6 StateField** — `top`, `bottom` positions via `Decoration.widget` (Live Preview)
-- **DOM Injector** — `above-title`, `above/below-properties`, `above/below-backlinks` via DOM manipulation
-- **Margin ViewPlugin** — `left`, `right` panels via absolute positioning in `scrollDOM`
+- **CM6 StateField** — `top`, `bottom` positions via `Decoration.widget` (Live Preview) + DOM injection in Reading View
+- **DOM Injector** — `above-title`, `above/below-properties`, `above/below-backlinks` via DOM manipulation (both modes)
+- **Margin ViewPlugin** — `left`, `right` panels via absolute positioning in `scrollDOM` (Live Preview)
 
 Smart fallback chain: if a DOM target is hidden, the mirror falls back to the next valid position (e.g., `above-title → above-properties → CM6 top`).
 
@@ -191,7 +191,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-45 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+47 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -201,27 +201,25 @@ npm run dev      # watch mode
 | Era 4: CM6 Rewrite | Jun 2025 | v20-v25 — Full CodeMirror 6 rewrite |
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
 | Era 6: Hardening | Mar 2026 | v34-v42 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache, per-view overrides |
-| Era 7: Position Refinement | Mar 2026 | v43-v45 — Position simplification, cold start fixes, config cache hardening, margin panel flush positioning + ResizeObserver |
+| Era 7: Position Refinement | Mar 2026 | v43-v47 — Position simplification, cold start fixes, config cache hardening, margin panel flush positioning + ResizeObserver, AND/OR compound filters, Reading View DOM injection |
 
 ## Known Limitations
 
-- **Settings mirrors only work in Live Preview** — CM6 widgets don't exist in Reading View. Reading View support for top/bottom positions is planned
 - **One mirror per note** — the first matching mirror wins. Multiple mirrors on the same note is not yet supported
-- **Filters are OR-only** — all filter conditions use OR logic. AND/OR compound conditions (e.g., "folder X AND property Y") are planned
-- **Margin panels** — fixed 250px width, no overlap threshold for narrow windows. Panel width control and responsive behavior are in progress
+- **Margin panels** — fixed 250px width, no overlap threshold for narrow windows. Live Preview only. Panel width control and responsive behavior are in progress
 
 ## Roadmap
 
 See [docs/roadmap.md](docs/roadmap.md) for the full roadmap.
 
-**Pre-launch (must-have):**
-- Starter configs — pre-configured templates for new users
-- Reading View DOM injection for top/bottom positions
+**Next:**
 - Margin panel refinements (width control, overlap threshold, gutters support)
+- Settings UI review (rename mirrors, usability with many mirrors)
 
-**Should-have:**
+**Pre-launch (must-have):**
+- Demo vault curation
+- Starter configs — pre-configured templates for new users
 - Import/export mirror configurations
-- AND/OR compound filter logic
 
 ## Support
 
