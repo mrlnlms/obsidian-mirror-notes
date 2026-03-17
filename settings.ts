@@ -1,14 +1,11 @@
 import MirrorUIPlugin from "./main";
-import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView } from "obsidian";
+import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting } from "obsidian";
 import { FileSuggest } from "./src/suggesters/file-suggest";
-import { forceMirrorUpdateEffect } from './src/editor/mirrorState';
-import { clearConfigCache } from './src/editor/mirrorConfig';
-import { TIMING } from './src/editor/timingConfig';
 import { Logger } from './src/dev/logger';
 import { addPathValidation } from './src/settings/pathValidator';
 import { buildConditionsSection } from './src/settings/conditionBuilder';
 import { createDefaultCustomMirror } from './src/settings/types';
-import { getEditorView, addSearchClass } from './src/utils/obsidianInternals';
+import { addSearchClass } from './src/utils/obsidianInternals';
 
 // Re-export types for backwards compatibility (consumers import from './settings')
 export type { FolderTemplate, MirrorUIPluginSettings, CustomMirror, Condition, ConditionType, ConditionLogic } from './src/settings/types';
@@ -34,29 +31,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         //@ts-ignore
         super(app, plugin);
         this.plugin = plugin;
-    }
-
-    private updateAllEditors() {
-        Logger.log('Settings changed, forcing update on all editors');
-        Logger.log('Current settings:', this.plugin.settings);
-
-        clearConfigCache();
-        this.plugin.positionOverrides.clear();
-        setTimeout(() => {
-            this.plugin.app.workspace.iterateAllLeaves(leaf => {
-                if (leaf.view instanceof MarkdownView && leaf.view.file) {
-                    const cm = getEditorView(leaf.view as MarkdownView);
-                    if (cm) {
-                        cm.dispatch({
-                            effects: forceMirrorUpdateEffect.of()
-                        });
-                        this.plugin.applyViewOverrides(leaf.view as MarkdownView);
-                        this.plugin.setupDomPosition(leaf.view as MarkdownView);
-                        Logger.log(`Updated editor for: ${(leaf.view as MarkdownView).file!.path}`);
-                    }
-                }
-            });
-        }, TIMING.SETTINGS_UPDATE_DELAY);
     }
 
     display(): void {
@@ -116,7 +90,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 button.onClick(async () => {
                     await this.plugin.resetSettings();
                     this.display();
-                    this.updateAllEditors();
                 });
             })
             .setClass("mirror-reset");
@@ -132,8 +105,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             this.plugin.settings.global_settings = value;
                             this.plugin.saveSettings();
                             this.display();
-                            this.updateAllEditors();
-                        });
+                                });
                 })
                 .setClass("toggle-header");
 
@@ -196,7 +168,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     }
                     this.plugin.settings.global_view_overrides.hideProps = value;
                     this.plugin.saveSettings();
-                    this.updateAllEditors();
                 });
             });
 
@@ -214,8 +185,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                       }
                       this.plugin.settings.global_view_overrides.readableLineLength = value === "on" ? true : value === "off" ? false : null;
                       this.plugin.saveSettings();
-                      this.updateAllEditors();
-                  });
+                    });
             });
 
         new Setting(globalMirrorSettings)
@@ -232,8 +202,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                       }
                       this.plugin.settings.global_view_overrides.showInlineTitle = value === "on" ? true : value === "off" ? false : null;
                       this.plugin.saveSettings();
-                      this.updateAllEditors();
-                  });
+                    });
             });
 
         new Setting(globalMirrorSettings)
@@ -245,7 +214,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     this.plugin.settings.global_show_container_border = value;
                     this.plugin.saveSettings();
                     this.display();
-                    this.updateAllEditors();
                 });
             })
             .setClass("toogle-header");
@@ -259,7 +227,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     this.plugin.settings.global_settings_overide = value;
                     this.plugin.saveSettings();
                     this.display();
-                    this.updateAllEditors();
                 });
             })
             .setClass("toogle-header");
@@ -297,8 +264,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         opts.onToggle(value);
                         this.plugin.saveSettings();
                         this.display();
-                        this.updateAllEditors();
-                    });
+                        });
             });
 
         if (!opts.enabled) return;
@@ -312,8 +278,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                     .onChange((value) => {
                         opts.onNoteChange(value);
                         this.plugin.saveSettings();
-                        this.updateAllEditors();
-                    });
+                        });
                 addSearchClass(cb, "full-width-input");
             })
             .addDropdown((cb: DropdownComponent) => {
@@ -322,7 +287,6 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                 cb.onChange(async (value) => {
                     opts.onPosChange(value);
                     await this.plugin.saveSettings();
-                    this.updateAllEditors();
                 });
             })
             .infoEl.remove();
@@ -403,8 +367,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors.splice(index, 1);
                             this.plugin.saveSettings();
                             this.display();
-                            this.updateAllEditors();
-                        });
+                                });
                 })
             if(!customMirrors[index].openview) return;
 
@@ -474,8 +437,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         }
                         customMirrors[index].custom_view_overrides.hideProps = value;
                         this.plugin.saveSettings();
-                        this.updateAllEditors();
-                    });
+                        });
                 });
 
             new Setting(card)
@@ -492,8 +454,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                           }
                           customMirrors[index].custom_view_overrides.readableLineLength = value === "on" ? true : value === "off" ? false : null;
                           this.plugin.saveSettings();
-                          this.updateAllEditors();
-                      });
+                            });
                 });
 
             new Setting(card)
@@ -510,8 +471,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                           }
                           customMirrors[index].custom_view_overrides.showInlineTitle = value === "on" ? true : value === "off" ? false : null;
                           this.plugin.saveSettings();
-                          this.updateAllEditors();
-                      });
+                            });
                 });
 
             new Setting(card)
@@ -523,8 +483,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                         customMirrors[index].custom_show_container_border = value;
                         this.plugin.saveSettings();
                         this.display();
-                        this.updateAllEditors();
-                    });
+                        });
                 })
                 .setClass("toogle-header");
             new Setting(card)
@@ -537,8 +496,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
                             customMirrors[index].custom_settings_overide = value;
                             this.plugin.saveSettings();
                             this.display();
-                            this.updateAllEditors();
-                        });
+                                });
                 })
                 .setClass("toogle-header");
             new Setting(card)
