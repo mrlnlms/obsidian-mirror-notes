@@ -1,5 +1,3 @@
-declare const __DEV__: boolean;
-
 import * as fs from 'fs';
 import * as path from 'path';
 

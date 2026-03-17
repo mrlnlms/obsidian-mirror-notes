@@ -1,4 +1,3 @@
-declare const __DEV__: boolean;
 import MirrorUIPlugin from "./main";
 import { App, ButtonComponent, DropdownComponent, PluginSettingTab, Setting, MarkdownView } from "obsidian";
 import { FileSuggest } from "./src/suggesters/file-suggest";

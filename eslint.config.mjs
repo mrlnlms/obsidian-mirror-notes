@@ -1,7 +1,7 @@
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['node_modules/', 'main.js', 'demo/'] },
+  { ignores: ['node_modules/', 'main.js', 'demo/', 'docs/'] },
   ...tseslint.configs.recommended,
   {
     rules: {
