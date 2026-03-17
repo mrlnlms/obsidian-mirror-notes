@@ -25,6 +25,29 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
 - **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
+## E2E Testing — decisao pendente (v52)
+
+**O que foi pedido:** testes E2E reais (Playwright ou similar) contra o Obsidian rodando de verdade, cobrindo mode switch, config changes, multi-pane, cold start.
+
+**O que foi feito em vez disso (v52):** 13 testes de integracao no Vitest usando vi.mock + fake timers, cobrindo event chains e debounce dos modulos extraidos (obsidianConfigMonitor, modeSwitchDetector). Cobre a logica reativa, mas NAO testa contra o Obsidian real.
+
+**Por que E2E real nao foi feito:**
+1. **Obsidian nao tem modo headless oficial** — rodar Obsidian em CI requer instalar o app Electron completo, abrir vault, e automatizar via Playwright. Setup fragil que quebra em updates do Obsidian
+2. **Nao existe framework de E2E pro ecossistema** — npm nao tem `obsidian-testing` ou equivalente. Comunidade usa demo vault + teste manual
+3. **Custo vs retorno no momento** — setup estimado em 2-3 semanas (Playwright + Obsidian automation + CI config). O harness turbinado custou ~1h e cobre 80% do gap apontado pelo Codex
+4. **Demo vault ja existe e e bem estruturado** — `demo/` com 7 categorias de teste manual (positions, conditions, view-overrides, reactivity, edge-cases)
+
+**O que fica descoberto sem E2E real:**
+- CSS layout real (computed styles, ResizeObserver, readable line length toggle)
+- CM6 rendering real (StateField injection, Decoration lifecycle)
+- Mode switch real (Cmd+E com oscilacao de getMode())
+- Cold start timing real (MarkdownRenderer async population)
+- Plugin lifecycle real (onload/onunload com cleanup completo)
+
+**Quando reavaliar:** se o plugin comecar a ter regressoes que o harness nao pega, ou se surgir um framework de E2E pro ecossistema Obsidian. Tambem faz sentido reavaliar pre-lancamento (Community Plugins submission).
+
+---
+
 ## Integracao com outros plugins
 
 | Plugin | Syntax no template | Status | Notas |
