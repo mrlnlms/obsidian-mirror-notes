@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractRawYaml, hashObject, generateWidgetId } from '../src/editor/mirrorUtils';
+import { extractRawYaml, hashObject, generateWidgetId, resolveVariable } from '../src/editor/mirrorUtils';
 
 // =============================================================================
 // extractRawYaml
@@ -143,5 +143,77 @@ describe('hash detection with stale cache', () => {
 
     // Duas chamadas com mesmo conteudo = mesmo hash = nenhum reprocessamento
     expect(hashObject(extractRawYaml(doc))).toBe(hashObject(extractRawYaml(doc)));
+  });
+});
+
+// =============================================================================
+// resolveVariable
+// =============================================================================
+
+describe('resolveVariable', () => {
+  it('resolves flat key', () => {
+    expect(resolveVariable('title', { title: 'My Note' })).toBe('My Note');
+  });
+
+  it('resolves flat key with dot (literal property name)', () => {
+    expect(resolveVariable('ma.miii', { 'ma.miii': 'flat value' })).toBe('flat value');
+  });
+
+  it('resolves nested path when flat key does not exist', () => {
+    const vars = { project_info: { dates: { start_date: '2025-01-01' } } };
+    expect(resolveVariable('project_info.dates.start_date', vars)).toBe('2025-01-01');
+  });
+
+  it('flat key takes priority over nested path', () => {
+    const vars = {
+      'ma.miii': 'flat wins',
+      ma: { miii: 'nested loses' },
+    };
+    expect(resolveVariable('ma.miii', vars)).toBe('flat wins');
+  });
+
+  it('returns undefined when neither flat nor nested exists', () => {
+    expect(resolveVariable('nonexistent.path', { title: 'test' })).toBeUndefined();
+  });
+
+  it('returns undefined when nested path hits null midway', () => {
+    const vars = { a: { b: null } };
+    expect(resolveVariable('a.b.c', vars as any)).toBeUndefined();
+  });
+
+  it('returns undefined when nested path hits non-object midway', () => {
+    const vars = { a: { b: 'string' } };
+    expect(resolveVariable('a.b.c', vars as any)).toBeUndefined();
+  });
+
+  it('converts falsy values to string (0, false)', () => {
+    expect(resolveVariable('count', { count: 0 })).toBe('0');
+    expect(resolveVariable('done', { done: false })).toBe('false');
+  });
+
+  it('converts nested falsy values to string', () => {
+    const vars = { stats: { count: 0, done: false } };
+    expect(resolveVariable('stats.count', vars)).toBe('0');
+    expect(resolveVariable('stats.done', vars)).toBe('false');
+  });
+
+  it('returns undefined for null/undefined values', () => {
+    expect(resolveVariable('empty', { empty: null })).toBeUndefined();
+    expect(resolveVariable('missing', { missing: undefined })).toBeUndefined();
+  });
+
+  it('handles key without dots (same as flat lookup)', () => {
+    expect(resolveVariable('title', { title: 'Test' })).toBe('Test');
+    expect(resolveVariable('title', {})).toBeUndefined();
+  });
+
+  it('handles arrays in nested path', () => {
+    const vars = { tags: ['a', 'b', 'c'] };
+    expect(resolveVariable('tags', vars)).toBe('a,b,c');
+  });
+
+  it('handles deep nesting (3+ levels)', () => {
+    const vars = { a: { b: { c: { d: 'deep' } } } };
+    expect(resolveVariable('a.b.c.d', vars)).toBe('deep');
   });
 });
