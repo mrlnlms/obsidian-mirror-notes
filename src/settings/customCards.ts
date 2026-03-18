@@ -77,18 +77,22 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
                 cb.setIcon("up-chevron-glyph")
                     .setTooltip("Move up")
                     .onClick(() => {
-                        arraymove(customMirrors, index, index - 1);
-                        onSave();
-                        onRedisplay();
+                        if (index > 0) {
+                            arraymove(customMirrors, index, index - 1);
+                            onSave();
+                            onRedisplay();
+                        }
                     });
             })
             .addExtraButton((cb) => {
                 cb.setIcon("down-chevron-glyph")
                     .setTooltip("Move down")
                     .onClick(() => {
-                        arraymove(customMirrors, index, index + 1);
-                        onSave();
-                        onRedisplay();
+                        if (index < customMirrors.length - 1) {
+                            arraymove(customMirrors, index, index + 1);
+                            onSave();
+                            onRedisplay();
+                        }
                     });
             })
             .addExtraButton((cb) => {

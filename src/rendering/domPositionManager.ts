@@ -19,6 +19,11 @@ export function positionOverrideKey(viewId: string, filePath: string): string {
 const lastSetupTime = new Map<string, number>();
 const SETUP_COOLDOWN_MS = 100;
 
+/** Clear cooldown cache (called on plugin unload) */
+export function clearSetupCooldowns(): void {
+  lastSetupTime.clear();
+}
+
 export async function setupDomPosition(
   plugin: MirrorUIPlugin, view: MarkdownView,
   isRetry = false, isMutationRecovery = false

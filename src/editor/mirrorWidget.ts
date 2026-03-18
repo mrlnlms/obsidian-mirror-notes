@@ -53,6 +53,8 @@ export class MirrorTemplateWidget extends WidgetType {
     if (this.config.showContainer) classes.push('mirror-container-styled');
     container.className = classes.join(' ');
 
+    // Fire-and-forget: toDOM must be synchronous (CM6 API), so async render
+    // runs in background. "Loading template..." placeholder handles the interim.
     this.updateContentIfNeeded(container, view);
     return container;
   }

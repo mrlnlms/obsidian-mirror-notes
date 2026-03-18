@@ -2,6 +2,37 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## Code review fixes (pos-v53)
+
+### O que mudou
+
+**Contexto:** code review completo do projeto identificou 2 issues criticos, 6 importantes e 6 sugestoes. Todos corrigidos exceto: deprecated positions no dropdown (backlog), @popperjs/core (backlog), template regex (backlog).
+
+**1. XSS no templateRenderer.ts catch block**
+O `container.innerHTML = \`Error: ${error}\`` no catch block permitia injecao de HTML se o error contivesse markup (ex: template path malicioso). Corrigido com `createEl` + `textContent`.
+
+**2. hashObject fragil com strings**
+`hashObject(extractRawYaml(...))` recebia uma string, mas `JSON.stringify(obj, Object.keys(obj).sort())` com string retorna indices de caractere (`['0','1','2',...]`) em vez de propriedades. Adicionado `typeof obj === 'string'` pra usar string direta.
+
+**3. arraymove sem bounds guard**
+`customCards.ts` chamava `arraymove(arr, 0, -1)` no "Move up" do primeiro item — `splice(-1, 0, el)` insere antes do ultimo, movendo silenciosamente o primeiro item pro final. Adicionado `if (index > 0)` e `if (index < length - 1)`.
+
+**4. Caches module-level sem cleanup**
+`lastSetupTime` (domPositionManager) e `lastConfig` (obsidianConfigMonitor) nao tinham funcao de reset. Adicionado `clearSetupCooldowns()` e `resetConfigSnapshot()` chamados no `onunload`.
+
+**5. CSS legacy removido (~93 linhas)**
+Regras `.mirror-frontmatter-hider`, `.mirror-hidden-frontmatter-line`, `.mirror-ui-anchor-line` e `.mirror-ui-injected-widget` nao tinham referencia no source code. Removidas.
+
+**6. Logger mock paths corrigidos**
+4 test files usavam `vi.mock('../src/logger')` mas o Logger real esta em `../src/dev/logger`. Funcionava por acidente (Logger e no-op sem `init()`), mas o mock era dead code.
+
+**7. tsconfig.test.json**
+Criado pra incluir arquivos de teste na validacao de tipos (antes eram excluidos pelo `tsconfig.json`).
+
+**Arquivos tocados:** templateRenderer.ts, mirrorUtils.ts, main.ts, customCards.ts, domPositionManager.ts, obsidianConfigMonitor.ts, mirrorWidget.ts, eslint.config.mjs, styles.css, tsconfig.test.json, 5 test files.
+
+---
+
 ## Versao Atual: v53 — Rename mirrors + typo migration
 
 ### O que mudou na v53

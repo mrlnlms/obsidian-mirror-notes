@@ -125,7 +125,10 @@ async function doRender(ctx: RenderContext): Promise<void> {
     Logger.log('Markdown rendered successfully');
   } catch (error) {
     Logger.error('Error rendering template:', error);
-    container.innerHTML = `<div style="color: var(--text-error);">Error: ${error}</div>`;
+    container.innerHTML = '';
+    const errDiv = container.createEl('div', { cls: 'mirror-template-error' });
+    errDiv.style.color = 'var(--text-error)';
+    errDiv.textContent = `Error: ${String(error)}`;
   }
 }
 

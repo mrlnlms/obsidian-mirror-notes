@@ -19,7 +19,8 @@ import { applyViewOverrides } from './src/editor/viewOverrides';
 import { setupDomPosition } from './src/rendering/domPositionManager';
 import { handleTemplateChange, clearTemplateChangeTimeout } from './src/rendering/templateChangeHandler';
 import { rebuildKnownTemplatePaths, checkDeletedTemplates } from './src/settings/settingsHelpers';
-import { snapshotObsidianConfig, registerConfigWatcher } from './src/utils/obsidianConfigMonitor';
+import { snapshotObsidianConfig, registerConfigWatcher, resetConfigSnapshot } from './src/utils/obsidianConfigMonitor';
+import { clearSetupCooldowns } from './src/rendering/domPositionManager';
 import { registerModeSwitchDetector } from './src/utils/modeSwitchDetector';
 
 export default class MirrorUIPlugin extends Plugin {
@@ -40,7 +41,7 @@ export default class MirrorUIPlugin extends Plugin {
 
     Logger.init(getVaultBasePath(this.app));
     Logger.setEnabled(this.settings.debug_logging);
-    Logger.log('v25 loaded');
+    Logger.log('Mirror Notes loaded');
 
     // Configurar editores ao mudar
     this.registerEvent(
@@ -366,6 +367,8 @@ export default class MirrorUIPlugin extends Plugin {
 
     cleanupAllDomMirrors();
     cleanupMirrorCaches();
+    clearSetupCooldowns();
+    resetConfigSnapshot();
 
     this.positionOverrides.clear();
     this.lastViewMode.clear();

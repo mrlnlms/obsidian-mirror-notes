@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Notice } from 'obsidian';
 import { rebuildKnownTemplatePaths, checkDeletedTemplates } from '../src/settings/settingsHelpers';
 import { createFakePlugin, createCustomMirror } from './mocks/pluginFactory';
 

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { MarkdownView } from 'obsidian';
 
 // Silence Logger
-vi.mock('../src/logger', () => ({
+vi.mock('../src/dev/logger', () => ({
   Logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), init: vi.fn(), setEnabled: vi.fn(), destroy: vi.fn() },
 }));
 

@@ -4,6 +4,19 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 
 ## Versao Atual: v53 — Rename mirrors + typo migration
 
+## Code review fixes (pos-v53)
+
+- Fix XSS: catch block no templateRenderer usava innerHTML com error interpolado → createEl + textContent
+- Fix hashObject: string inputs passavam por JSON.stringify com Object.keys (indices de caractere) → deteccao de tipo
+- Fix arraymove bounds: customCards "Move up" no index 0 movia item pro final do array silenciosamente → bounds guards
+- Fix log stale: "v25 loaded" → "Mirror Notes loaded"
+- Cleanup: caches module-level (lastSetupTime, lastConfig) agora resetam no onunload
+- ESLint: `no-explicit-any` de off → warn (81 warnings, 0 errors)
+- CSS: ~93 linhas de regras legacy removidas (frontmatter-hider, anchor-line, injected-widget)
+- Tests: logger mock paths corrigidos em 4 arquivos (../src/logger → ../src/dev/logger)
+- Tests: import nao usado (Notice) removido de settingsHelpers.test.ts
+- Adicionado tsconfig.test.json pra incluir testes na validacao de tipos
+
 - Inline rename for custom mirrors in settings UI (editable text input in card header)
 - Fix `overide` → `override` typo across codebase (types, source, UI labels, tests, data.json)
 - Fix `toogle-header` → `toggle-header` CSS class typo

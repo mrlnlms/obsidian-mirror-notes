@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v53.
+Trabalho tecnico pendente. Atualizado pos-v53 (code review).
 
 ## Epico: Margin Panel
 
@@ -13,6 +13,22 @@ Itens pendentes:
 - **Gutters / line numbers** — calculo de posicao nao considera `cm-gutters.offsetWidth`. Relevante quando line numbers estao ativados
 - **Min-height** — painel cresce com conteudo, sem min-height. Avaliar se precisa de altura minima (VN usa 528px footer, 100px above-backlinks como referencia)
 - **Menu de posicoes (consolidacao final)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado (v44), `below-properties` + `top` unificados (v42). Falta remover opcoes deprecated do dropdown (breaking change — migrar data.json). So no final do epico, porque o margin panel pode adicionar opcoes intermediarias pra teste. Inclui revisao de UX writing das labels e feedbacks na tela
+
+## Template Variables — suporte a dot notation e unicode
+
+O regex de variaveis `{{nome}}` no templateRenderer.ts so aceita `[\w-]+` (letras ASCII, numeros, underscore, hifen). Isso impede uso de propriedades YAML com pontos (`page.title`, `project.status`) e caracteres acentuados (`descrição`).
+
+- **Dot notation (prioridade alta)** — usuario ja usa YAML com pontos. `{{project.status}}` nao resolve hoje. Requer decisao: tratar como key literal `"project.status"` ou como acesso nested `project["status"]`? Nested e mais util mas exige resolver path recursivamente no objeto frontmatter
+- **Unicode/acentos** — `{{descrição}}` nao matcha. Fix simples: `\p{L}` com flag `u` no regex. Baixo risco
+- **Espacos** — `{{my property}}` — nao recomendado, parsing ambiguo. Manter fora
+
+## Suggest component — migrar de @popperjs/core para API nativa
+
+O suggest de autocomplete (`src/suggesters/suggest.ts`) usa `@popperjs/core` (19KB+, unica dep runtime) pra posicionar o popup. Obsidian tem `AbstractInputSuggest` que faz posicionamento internamente. Migrar eliminaria a dependencia e reduziria bundle.
+
+- Escopo: reescrever `TextInputSuggest` usando `AbstractInputSuggest` do Obsidian
+- Risco: edge cases de posicionamento (scroll containers, viewport boundaries) que o Popper resolve automaticamente
+- Prioridade: baixa — funciona, 19KB em plugin desktop nao e problema real
 
 ## Revisao de Settings UI
 

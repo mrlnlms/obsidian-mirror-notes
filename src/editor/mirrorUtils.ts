@@ -7,7 +7,9 @@ export function extractRawYaml(content: string): string {
 }
 
 export function hashObject(obj: any): string {
-  const str = JSON.stringify(obj, Object.keys(obj).sort());
+  const str = typeof obj === 'string'
+    ? obj
+    : JSON.stringify(obj, Object.keys(obj).sort());
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     const char = str.charCodeAt(i);

@@ -15,6 +15,13 @@ const lastConfig: ObsidianVisualConfig = {
   backlinkEnabled: false,
 };
 
+/** Reset config snapshot (called on plugin unload) */
+export function resetConfigSnapshot(): void {
+  lastConfig.showInlineTitle = true;
+  lastConfig.propertiesInDocument = 'visible';
+  lastConfig.backlinkEnabled = false;
+}
+
 /** Take initial snapshot of Obsidian's visual config values */
 export function snapshotObsidianConfig(app: App): void {
   lastConfig.showInlineTitle = !!getVaultConfig(app, "showInlineTitle");

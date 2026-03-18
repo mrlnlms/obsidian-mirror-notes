@@ -10,7 +10,7 @@ export default tseslint.config(
       '@typescript-eslint/ban-ts-comment': 'off',
       'no-prototype-builtins': 'off',
       '@typescript-eslint/no-empty-function': 'off',
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
     },
   }
 );
