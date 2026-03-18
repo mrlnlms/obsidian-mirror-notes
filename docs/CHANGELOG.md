@@ -2,7 +2,15 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## Versao Atual: v52 — Structural refactor (code review triage)
+## Versao Atual: v53 — Rename mirrors + typo migration
+
+- Inline rename for custom mirrors in settings UI (editable text input in card header)
+- Fix `overide` → `override` typo across codebase (types, source, UI labels, tests, data.json)
+- Backward-compatible data migration: old `data.json` files auto-corrected on first load
+- Fix `toogle-header` → `toggle-header` CSS class typo
+- Settings UI labels translated to English (global/custom override descriptions)
+
+## v52 — Structural refactor (code review triage)
 
 ### v52: @ts-ignore centralizados, tipagem core, split settings.ts, extracao main.ts
 

@@ -2,7 +2,31 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Versao Atual: v52 — Structural refactor (code review triage)
+## Versao Atual: v53 — Rename mirrors + typo migration
+
+### O que mudou na v53
+
+**Contexto:** backlog de Settings UI tinha dois itens de limpeza: mirrors sem opcao de rename (so deletar e recriar), e typo `overide` (sem segundo r) presente desde v1 em campos de settings e data.json.
+
+**1. Inline rename para custom mirrors**
+
+Substituicao do `.setName(customMirror.name)` estatico por text input editavel no header do card. `sanitizeMirrorName(input, index)` faz trim + fallback pra `Mirror N+1`. Save acontece no `blur` (nao per-keystroke) pra evitar disk I/O e `refreshAllEditors` excessivo. `onChange` atualiza in-memory pra search filter funcionar durante digitacao.
+
+**2. Typo migration `overide → override`**
+
+`migrateSettings()` em `src/settings/migration.ts` — funcao idempotente que roda em todo `loadSettings()`. Renomeia `global_settings_overide` → `global_settings_override` e `custom_settings_overide` → `custom_settings_override` em cada mirror. Auto-save dispara SOMENTE se campos antigos forem detectados (evita write desnecessario). Tipo `any` intencional pra compatibilidade com `loadData()`.
+
+Campos corrigidos em: interfaces (`MirrorUIPluginSettings`, `CustomMirror`), defaults, factory, source code (mirrorConfig, globalSection, customCards), todos os testes, e data.json (root, demo, old-filter-engine).
+
+**3. Fix `toogle-header → toggle-header`**
+
+Typo na CSS class em 7 ocorrencias (customCards.ts, globalSection.ts, settingsUI.ts). Nenhuma regra CSS referenciava `.toogle-header` — fix e puramente na atribuicao JS.
+
+**4. UI labels EN**
+
+Descricoes dos toggles de override traduzidas PT-BR → EN (plugin e public-facing).
+
+## v52 — Structural refactor (code review triage)
 
 ### O que mudou na v52
 

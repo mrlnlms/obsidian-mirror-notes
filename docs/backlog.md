@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado na v52.
+Trabalho tecnico pendente. Atualizado na v53.
 
 ## Epico: Margin Panel
 
@@ -18,10 +18,8 @@ Itens pendentes:
 
 Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts 545→83, split em 5 modulos). Pendente e UX/design:
 
-- **Renomear mirrors** — hoje nao tem como renomear um mirror criado, so deletar e recriar
 - **Usabilidade com muitos mirrors** — com dezenas de mirrors a lista fica dificil de navegar. Busca existe (v31) mas layout/hierarquia visual precisam de revisao
 - **Layout geral** — revisar organizacao visual, agrupamento, e hierarquia da pagina
-- **Naming inconsistencies** — typo `overide` (sem o segundo r) presente em campos do settings e data.json. Corrigir implica migration de dados existentes (breaking change pra quem ja tem configs salvas)
 - **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
 - **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
@@ -147,6 +145,9 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - [x] Tag matching — ja funciona via `filterProps` existente. `mirrorConfig.ts` faz `Array.isArray(val) ? val.some(...)` pra arrays como `tags`. Teste cobrindo (v32/v41)
 - [x] Auditar minAppVersion real — validado: CM6 (StateField, ViewPlugin, Decoration), registerMarkdownCodeBlockProcessor, APIs internas (getConfig, internalPlugins), Live Preview/Reading View. Floor real e `1.0.0` (finalizacao da migracao CM6). manifest.json e versions.json atualizados de `0.15.0` → `1.0.0` (v51)
 - [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
+- [x] Renomear mirrors — inline rename com text input no card header, `sanitizeMirrorName` helper, save on blur (v53)
+- [x] Naming inconsistencies (typo `overide`) — `migrateSettings()` com auto-save, campos corrigidos em types/source/tests/data.json (v53)
+- [x] `toogle-header` CSS class typo — corrigido em 7 ocorrencias (3 arquivos settings) (v53)
 - [x] hideProperties CSS — seletor funciona no Obsidian atual. Bug era falso positivo — `.metadata-container` continua descendente de `.view-content` (parent mudou pra `.cm-sizer` mas CSS descendant selector cobre). Diagnosticado v42
 - [x] Per-view Obsidian setting overrides — ViewOverrides (hideProps, readableLineLength, showInlineTitle) com CSS per-view e class nativa `is-readable-line-width` (v42)
 - [x] Unificar bottom + above-backlinks — dropdown unificado, `above-backlinks` primario (DOM), `bottom` deprecated (CM6 fallback) (v43)

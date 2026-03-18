@@ -10,7 +10,7 @@ Proximo bloco de trabalho. Base tecnica pronta (v45: flush positioning + ResizeO
 
 ### 2. Revisao de Settings UI
 
-Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). Foco: UX/design — renomear mirrors, padronizar textos, limpar opcoes deprecated, migration do typo `overide`. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
+Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e migration do typo `overide`. Pendente: padronizar textos PT→EN, limpar opcoes deprecated, layout/hierarquia visual. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 
 ## Pre-lancamento (must-have)
 
@@ -34,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v53 | Rename mirrors + typo migration | Inline rename, `overide→override` migration com auto-save, `toogle→toggle` fix, UI labels EN |
 | v52 | Structural refactor (code review) | @ts-ignore centralizados (14 wrappers), tipagem core, main.ts 449→386, settings.ts 545→83 (5 modulos), view overrides dedup |
 | v51 | Codex audit fixes + minAppVersion | Per-template debounce, RenderChild cleanup, minAppVersion 0.15.0→1.0.0 |
 | v50 | MutationObserver auto-recovery | Observer detecta container destruido pelo Obsidian, re-injeta automaticamente, cooldown 100ms, isMutationRecovery bypass |
