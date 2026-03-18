@@ -11,7 +11,7 @@ describe('plugin lifecycle', () => {
   });
 
   it('plugin unload cleans all DOM mirrors', async () => {
-    await openFile(NOTES.allPositions);
+    await openFile(NOTES.posAboveTitle);
     await waitForElement(S.aboveTitle, 15000);
     await browser.pause(3000);
     const beforeCount = await countMirrorWidgets();
@@ -30,7 +30,7 @@ describe('plugin lifecycle', () => {
     await enablePlugin();
     await openFile(NOTES.basic);
     await browser.pause(1000);
-    await openFile(NOTES.allPositions);
+    await openFile(NOTES.posAboveTitle);
     await waitForElement(S.aboveTitle, 15000);
     await browser.pause(3000);
     const count = await countMirrorWidgets();
@@ -38,7 +38,7 @@ describe('plugin lifecycle', () => {
   });
 
   it('no orphan widgets after navigating between files', async () => {
-    await openFile(NOTES.allPositions);
+    await openFile(NOTES.posAboveTitle);
     await waitForElement(S.aboveTitle, 10000);
     await browser.pause(2000);
     await openFile(NOTES.noMirror);

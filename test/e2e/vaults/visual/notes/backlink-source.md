@@ -1,8 +1,8 @@
 ---
 title: Backlink Source
-type: e2e-backlink
+type: backlink-source
 ---
 
-# Backlink Source
-
-This note creates a backlink to [[all-positions]] so the backlinks plugin has data to render.
+Links to position test notes:
+- [[pos-above-backlinks]]
+- [[pos-below-backlinks]]

@@ -22,7 +22,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "above-title" }],
       "conditionLogic": "all"
     },
     {
@@ -34,7 +34,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "above-properties" }],
       "conditionLogic": "all"
     },
     {
@@ -46,7 +46,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "below-properties" }],
       "conditionLogic": "all"
     },
     {
@@ -58,7 +58,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "above-backlinks" }],
       "conditionLogic": "all"
     },
     {
@@ -70,7 +70,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "below-backlinks" }],
       "conditionLogic": "all"
     },
     {
@@ -82,7 +82,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "top" }],
       "conditionLogic": "all"
     },
     {
@@ -94,7 +94,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-positions" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "bottom" }],
       "conditionLogic": "all"
     },
     {
@@ -106,7 +106,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-cm6" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "cm6-top" }],
       "conditionLogic": "all"
     },
     {
@@ -118,7 +118,7 @@
       "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
-      "conditions": [{ "type": "property", "negated": false, "propertyName": "type", "propertyValue": "e2e-cm6" }],
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "cm6-bottom" }],
       "conditionLogic": "all"
     },
     {

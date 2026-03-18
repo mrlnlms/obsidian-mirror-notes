@@ -26,8 +26,13 @@ export const S = {
 
 export const NOTES = {
   basic: 'notes/basic.md',
-  allPositions: 'notes/all-positions.md',
-  topBottom: 'notes/top-bottom.md',
+  posAboveTitle: 'notes/pos-above-title.md',
+  posAboveProperties: 'notes/pos-above-properties.md',
+  posBelowProperties: 'notes/pos-below-properties.md',
+  posAboveBacklinks: 'notes/pos-above-backlinks.md',
+  posBelowBacklinks: 'notes/pos-below-backlinks.md',
+  posCm6Top: 'notes/pos-cm6-top.md',
+  posCm6Bottom: 'notes/pos-cm6-bottom.md',
   dualTemplate: 'notes/dual-template.md',
   noMirror: 'notes/no-mirror.md',
 } as const;
