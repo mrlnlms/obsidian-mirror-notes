@@ -331,7 +331,7 @@ describe('getApplicableConfig', () => {
 
   it('global override active + custom without override → global wins', () => {
     const mirror = createCustomMirror({
-      custom_settings_overide: false,
+      custom_settings_override: false,
       conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
     const plugin = createFakePlugin({
@@ -340,7 +340,7 @@ describe('getApplicableConfig', () => {
         global_settings: true,
         enable_global_live_preview_mode: true,
         global_settings_live_preview_note: 'templates/global.md',
-        global_settings_overide: true,
+        global_settings_override: true,
         customMirrors: [mirror],
       },
     });
@@ -352,7 +352,7 @@ describe('getApplicableConfig', () => {
 
   it('global override active + custom with override → custom wins', () => {
     const mirror = createCustomMirror({
-      custom_settings_overide: true,
+      custom_settings_override: true,
       custom_settings_live_preview_note: 'templates/custom.md',
       conditions: [{ type: 'file', negated: false, fileName: 'nota.md' }],
     });
@@ -362,7 +362,7 @@ describe('getApplicableConfig', () => {
         global_settings: true,
         enable_global_live_preview_mode: true,
         global_settings_live_preview_note: 'templates/global.md',
-        global_settings_overide: true,
+        global_settings_override: true,
         customMirrors: [mirror],
       },
     });
