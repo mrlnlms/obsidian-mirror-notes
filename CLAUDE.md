@@ -18,7 +18,7 @@
 Comandos e requisitos pra rodar o projeto. Qualquer LLM ou dev que abrir o repo precisa saber isso.
 
 ### Requisitos
-- Node 18+ (20+ recomendado)
+- **Node >= 20.19.0 ou >= 22.12.0** (obrigatorio — jsdom@28+ exige via html-encoding-sniffer@6, vite@8 exige via rolldown). Node 20.11 e inferior QUEBRA no bootstrap do vitest com ERR_REQUIRE_ESM. Nao e problema do projeto, e incompatibilidade de runtime.
 - `npm install --legacy-peer-deps` (conflitos de peer deps entre pacotes wdio)
 
 ### Comandos
@@ -31,6 +31,8 @@ Comandos e requisitos pra rodar o projeto. Qualquer LLM ou dev que abrir o repo 
 
 ### Vitest + ESM
 O `package.json` tem `"type": "module"`. Todos os configs (vitest, esbuild, eslint, wdio) usam ESM nativo. NAO rodar com `node vitest.config.ts` direto — usar `npm test` ou `npx vitest run`.
+
+**Se `npm test` falhar com `ERR_REQUIRE_ESM` antes de rodar qualquer teste:** o Node esta abaixo de 20.19.0. A toolchain (jsdom → html-encoding-sniffer@6) exige Node ^20.19.0 || ^22.12.0 || >=24.0.0. Fix: `nvm install 20.19.0 && nvm use 20.19.0 && rm -rf node_modules && npm install --legacy-peer-deps`.
 
 ### E2E
 - Pacote: `obsidian-e2e-visual-test-kit` (github:mrlnlms/obsidian-e2e-visual-test-kit)
