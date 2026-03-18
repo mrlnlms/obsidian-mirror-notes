@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { extractRawYaml, hashObject } from '../src/editor/mirrorUtils';
+import { extractRawYaml, hashObject, generateWidgetId } from '../src/editor/mirrorUtils';
 
 // =============================================================================
 // extractRawYaml
@@ -81,6 +81,30 @@ describe('hashObject', () => {
 
   it('produces different hashes for different strings', () => {
     expect(hashObject('title: A')).not.toBe(hashObject('title: B'));
+  });
+});
+
+// =============================================================================
+// generateWidgetId
+// =============================================================================
+
+describe('generateWidgetId', () => {
+  it('starts with mirror-widget- prefix', () => {
+    expect(generateWidgetId()).toMatch(/^mirror-widget-/);
+  });
+
+  it('generates unique ids on successive calls', () => {
+    const ids = new Set(Array.from({ length: 100 }, () => generateWidgetId()));
+    expect(ids.size).toBe(100);
+  });
+
+  it('contains timestamp and random suffix', () => {
+    const id = generateWidgetId();
+    const parts = id.split('-');
+    // mirror-widget-<timestamp>-<random>
+    expect(parts.length).toBe(4);
+    expect(Number(parts[2])).toBeGreaterThan(0);
+    expect(parts[3].length).toBe(9);
   });
 });
 
