@@ -8,7 +8,7 @@
   "enable_global_preview_mode": true,
   "global_settings_preview_note": "samples/templates/mirror/test-template.md",
   "global_settings_preview_pos": "top",
-  "global_settings_overide": true,
+  "global_settings_override": true,
   "global_settings_hide_props": false,
   "global_view_overrides": {
     "hideProps": false,
@@ -28,7 +28,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "samples/templates/mirror/meta-bind-test.md",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": true,
+      "custom_settings_override": true,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [],
@@ -51,7 +51,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -73,7 +73,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -95,7 +95,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -117,7 +117,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -139,7 +139,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -161,7 +161,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -183,7 +183,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -205,7 +205,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -227,7 +227,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -249,7 +249,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -271,7 +271,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -293,7 +293,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [],
@@ -315,7 +315,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [],
@@ -337,7 +337,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -359,7 +359,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -381,7 +381,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -403,7 +403,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -425,7 +425,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -447,7 +447,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -469,7 +469,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -491,7 +491,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -513,7 +513,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -535,7 +535,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -558,7 +558,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -580,7 +580,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -602,7 +602,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -624,7 +624,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -646,7 +646,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -669,7 +669,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -691,7 +691,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [],
@@ -714,7 +714,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [],
@@ -737,7 +737,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -759,7 +759,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -782,7 +782,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -810,7 +810,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -838,7 +838,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -866,7 +866,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -894,7 +894,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -922,7 +922,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -950,7 +950,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": true,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -978,7 +978,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1006,7 +1006,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1029,7 +1029,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1052,7 +1052,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1075,7 +1075,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1098,7 +1098,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [
@@ -1121,7 +1121,7 @@
       "enable_custom_preview_mode": false,
       "custom_settings_preview_note": "",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_settings_hide_props": false,
       "custom_auto_update_paths": true,
       "filterFiles": [

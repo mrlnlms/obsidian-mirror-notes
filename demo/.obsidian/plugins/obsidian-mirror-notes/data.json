@@ -8,7 +8,7 @@
   "enable_global_preview_mode": false,
   "global_settings_preview_note": "",
   "global_settings_preview_pos": "top",
-  "global_settings_overide": false,
+  "global_settings_override": false,
   "global_settings_hide_props": false,
   "global_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
   "global_show_container_border": false,
@@ -21,7 +21,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-01-file-match.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -36,7 +36,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-02-folder-match.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -51,7 +51,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-03-prop-string.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -66,7 +66,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-04-prop-boolean.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -81,7 +81,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-05-prop-number.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -96,7 +96,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-06-prop-array.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -111,7 +111,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-07-prop-exists.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -126,7 +126,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-08-negated.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -142,7 +142,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-09-or-logic.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -158,7 +158,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-10-and-logic.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -174,7 +174,7 @@
       "custom_settings_live_preview_note": "samples/templates/conditions/cond-11-and-negation.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -190,7 +190,7 @@
       "custom_settings_live_preview_note": "samples/templates/positions/rv-top.md",
       "custom_settings_live_preview_pos": "top",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -207,7 +207,7 @@
       "custom_settings_live_preview_note": "samples/templates/positions/rv-bottom.md",
       "custom_settings_live_preview_pos": "bottom",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -224,7 +224,7 @@
       "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
       "custom_settings_live_preview_pos": "above-title",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -241,7 +241,7 @@
       "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
       "custom_settings_live_preview_pos": "above-properties",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -258,7 +258,7 @@
       "custom_settings_live_preview_note": "samples/templates/positions/rv-dom-position.md",
       "custom_settings_live_preview_pos": "below-properties",
       "enable_custom_preview_mode": false, "custom_settings_preview_note": "", "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false, "custom_settings_hide_props": false,
+      "custom_settings_override": false, "custom_settings_hide_props": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -277,7 +277,7 @@
       "enable_custom_preview_mode": true,
       "custom_settings_preview_note": "samples/templates/positions/rv-dual-preview.md",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": false, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
@@ -294,7 +294,7 @@
       "enable_custom_preview_mode": true,
       "custom_settings_preview_note": "samples/templates/mirror/rv-only-hide-props.md",
       "custom_settings_preview_pos": "top",
-      "custom_settings_overide": false,
+      "custom_settings_override": false,
       "custom_view_overrides": { "hideProps": true, "readableLineLength": null, "showInlineTitle": null },
       "custom_show_container_border": true, "custom_auto_update_paths": true,
       "conditions": [
