@@ -1,5 +1,10 @@
-import { describe, it, expect } from 'vitest';
-import { extractRawYaml, hashObject, generateWidgetId, resolveVariable } from '../src/editor/mirrorUtils';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { extractRawYaml, hashObject, generateWidgetId, resolveVariable, traceMirrorDecision } from '../src/editor/mirrorUtils';
+
+vi.mock('../src/dev/logger', () => ({
+  Logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), init: vi.fn(), setEnabled: vi.fn(), destroy: vi.fn() },
+}));
+import { Logger } from '../src/dev/logger';
 
 // =============================================================================
 // extractRawYaml
@@ -215,5 +220,90 @@ describe('resolveVariable', () => {
   it('handles deep nesting (3+ levels)', () => {
     const vars = { a: { b: { c: { d: 'deep' } } } };
     expect(resolveVariable('a.b.c.d', vars)).toBe('deep');
+  });
+});
+
+// =============================================================================
+// traceMirrorDecision
+// =============================================================================
+
+describe('traceMirrorDecision', () => {
+  beforeEach(() => {
+    vi.mocked(Logger.log).mockClear();
+  });
+
+  it('logs match with mirror name and position', () => {
+    traceMirrorDecision({
+      file: 'notes/project.md',
+      viewId: 'v0',
+      event: 'file-open',
+      mirror: 'Project Card',
+      position: { requested: 'above-title' },
+      engine: 'dom',
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/project.md [v0] file-open → mirror="Project Card" pos=above-title engine=dom'
+    );
+  });
+
+  it('logs no match', () => {
+    traceMirrorDecision({
+      file: 'notes/empty.md',
+      viewId: 'v1',
+      event: 'file-open',
+      mirror: null,
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/empty.md [v1] file-open → no match'
+    );
+  });
+
+  it('logs fallback with position change', () => {
+    traceMirrorDecision({
+      file: 'notes/test.md',
+      viewId: 'v0',
+      event: 'dom-injection',
+      mirror: 'Test Mirror',
+      position: { requested: 'above-backlinks', actual: 'bottom' },
+      engine: 'cm6',
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/test.md [v0] dom-injection → mirror="Test Mirror" pos=above-backlinks→bottom (fallback) engine=cm6'
+    );
+  });
+
+  it('logs with reason', () => {
+    traceMirrorDecision({
+      file: 'notes/test.md',
+      event: 'cooldown-skip',
+      reason: '45ms ago',
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/test.md cooldown-skip [45ms ago]'
+    );
+  });
+
+  it('logs without viewId', () => {
+    traceMirrorDecision({
+      file: 'notes/test.md',
+      event: 'render-skip',
+      reason: 'content unchanged',
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/test.md render-skip [content unchanged]'
+    );
+  });
+
+  it('logs forced update with changed fields', () => {
+    traceMirrorDecision({
+      file: 'notes/test.md',
+      viewId: 'v0',
+      event: 'forced-update',
+      mirror: 'Test',
+      reason: 'config changed: position, templatePath',
+    });
+    expect(Logger.log).toHaveBeenCalledWith(
+      '[trace] notes/test.md [v0] forced-update → mirror="Test" [config changed: position, templatePath]'
+    );
   });
 });

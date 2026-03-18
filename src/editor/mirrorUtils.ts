@@ -1,4 +1,5 @@
 // Utilitários para frontmatter, hash e geração de IDs
+import { Logger } from '../dev/logger';
 
 /** Extrai o bloco YAML bruto (sem delimitadores ---) pra hashing rapido */
 export function extractRawYaml(content: string): string {
@@ -43,4 +44,43 @@ export function resolveVariable(key: string, variables: Record<string, any>): st
   }
 
   return undefined;
+}
+
+export interface TraceDecision {
+  file: string;
+  viewId?: string;
+  event: string;
+  mirror?: string | null;
+  position?: { requested: string; actual?: string };
+  engine?: 'dom' | 'cm6' | 'margin' | 'none';
+  reason?: string;
+}
+
+/** Log a mirror runtime decision with [trace] prefix for filtering.
+ *  Usage: grep '[trace]' debug.log */
+export function traceMirrorDecision(d: TraceDecision): void {
+  const view = d.viewId ? ` [${d.viewId}]` : '';
+  let msg = `[trace] ${d.file}${view} ${d.event}`;
+
+  if (d.mirror !== undefined) {
+    if (d.mirror === null) {
+      msg += ' → no match';
+    } else {
+      msg += ` → mirror="${d.mirror}"`;
+    }
+  }
+
+  if (d.position) {
+    const { requested, actual } = d.position;
+    if (actual && actual !== requested) {
+      msg += ` pos=${requested}→${actual} (fallback)`;
+    } else {
+      msg += ` pos=${requested}`;
+    }
+  }
+
+  if (d.engine) msg += ` engine=${d.engine}`;
+  if (d.reason) msg += ` [${d.reason}]`;
+
+  Logger.log(msg);
 }
