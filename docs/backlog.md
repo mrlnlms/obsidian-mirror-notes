@@ -146,7 +146,7 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - [x] Auditar minAppVersion real — validado: CM6 (StateField, ViewPlugin, Decoration), registerMarkdownCodeBlockProcessor, APIs internas (getConfig, internalPlugins), Live Preview/Reading View. Floor real e `1.0.0` (finalizacao da migracao CM6). manifest.json e versions.json atualizados de `0.15.0` → `1.0.0` (v51)
 - [x] MutationObserver pra backlinks — problema coberto por `vault.on('raw')` + `refreshAllEditors` (v39/v40). Gap restante (`backlinkInDocument` toggle sem fechar aba) e limitacao do Obsidian
 - [x] Renomear mirrors — inline rename com text input no card header, `sanitizeMirrorName` helper, save on blur (v53)
-- [x] Naming inconsistencies (typo `overide`) — `migrateSettings()` com auto-save, campos corrigidos em types/source/tests/data.json (v53)
+- [x] Naming inconsistencies (typo `overide`) — correcao direta em types/source/tests/data.json (v53)
 - [x] `toogle-header` CSS class typo — corrigido em 7 ocorrencias (3 arquivos settings) (v53)
 - [x] hideProperties CSS — seletor funciona no Obsidian atual. Bug era falso positivo — `.metadata-container` continua descendente de `.view-content` (parent mudou pra `.cm-sizer` mas CSS descendant selector cobre). Diagnosticado v42
 - [x] Per-view Obsidian setting overrides — ViewOverrides (hideProps, readableLineLength, showInlineTitle) com CSS per-view e class nativa `is-readable-line-width` (v42)

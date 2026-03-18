@@ -12,11 +12,9 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 
 Substituicao do `.setName(customMirror.name)` estatico por text input editavel no header do card. `sanitizeMirrorName(input, index)` faz trim + fallback pra `Mirror N+1`. Save acontece no `blur` (nao per-keystroke) pra evitar disk I/O e `refreshAllEditors` excessivo. `onChange` atualiza in-memory pra search filter funcionar durante digitacao.
 
-**2. Typo migration `overide → override`**
+**2. Typo fix `overide → override`**
 
-`migrateSettings()` em `src/settings/migration.ts` — funcao idempotente que roda em todo `loadSettings()`. Renomeia `global_settings_overide` → `global_settings_override` e `custom_settings_overide` → `custom_settings_override` em cada mirror. Auto-save dispara SOMENTE se campos antigos forem detectados (evita write desnecessario). Tipo `any` intencional pra compatibilidade com `loadData()`.
-
-Campos corrigidos em: interfaces (`MirrorUIPluginSettings`, `CustomMirror`), defaults, factory, source code (mirrorConfig, globalSection, customCards), todos os testes, e data.json (root, demo, old-filter-engine).
+Correcao direta em todos os campos: interfaces (`MirrorUIPluginSettings`, `CustomMirror`), defaults, factory, source code (mirrorConfig, globalSection, customCards), todos os testes, e data.json (root, demo, old-filter-engine). Sem migration function — plugin ainda nao foi publicado, nao existe data.json legado pra migrar.
 
 **3. Fix `toogle-header → toggle-header`**
 
