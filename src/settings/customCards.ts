@@ -179,13 +179,13 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
             })
             .setClass("toogle-header");
         new Setting(card)
-            .setName("Replace global mirror overide")
-            .setDesc("Se o global mirror estiver com a opcao de sobrescrever as custom mirrors, este botao se habilitado ignora a substituicao para este mirror.")
+            .setName("Override global replacement")
+            .setDesc("When the global mirror is set to replace custom mirrors, enabling this lets this mirror keep its own configuration.")
             .addToggle((cb) => {
                 cb
-                    .setValue(customMirrors[index].custom_settings_overide)
+                    .setValue(customMirrors[index].custom_settings_override)
                     .onChange((value) => {
-                        customMirrors[index].custom_settings_overide = value;
+                        customMirrors[index].custom_settings_override = value;
                         onSave();
                         onRedisplay();
                     });

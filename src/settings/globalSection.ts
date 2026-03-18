@@ -94,11 +94,11 @@ export function buildGlobalSection(options: GlobalSectionOptions): void {
 
     new Setting(globalMirrorSettings)
         .setName("Replace custom Mirrors")
-        .setDesc("Por padrao, custom Mirrors sobrescrevem o global Mirror. Com esta opcao, o plugin ira sobrescrever os custom Mirros, a menos que estes estejam setados para sobrecrever esta funcao.")
+        .setDesc("By default, custom mirrors take priority over the global mirror. Enable this to let the global mirror override custom mirrors, unless a custom mirror explicitly opts out.")
         .addToggle((cb) => {
-            cb.setValue(settings.global_settings_overide)
+            cb.setValue(settings.global_settings_override)
             .onChange((value) => {
-                settings.global_settings_overide = value;
+                settings.global_settings_override = value;
                 onSave();
                 onRedisplay();
             });

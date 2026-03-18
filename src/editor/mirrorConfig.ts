@@ -125,10 +125,10 @@ export function getApplicableConfig(
   let result: ApplicableMirrorConfig | null = null;
 
   if (matchedMirror) {
-    if (!globalMirrorActive || !settings.global_settings_overide) {
+    if (!globalMirrorActive || !settings.global_settings_override) {
       // Global desabilitado OU sem "Replace custom Mirrors" → Custom sempre vence
       result = configFromMirror(matchedMirror, viewMode);
-    } else if (matchedMirror.custom_settings_overide) {
+    } else if (matchedMirror.custom_settings_override) {
       // Global ativo COM override, mas custom tambem tem override → Custom vence
       result = configFromMirror(matchedMirror, viewMode);
     }
