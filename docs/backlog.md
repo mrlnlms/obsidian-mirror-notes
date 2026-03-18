@@ -22,6 +22,33 @@ O regex de variaveis `{{nome}}` no templateRenderer.ts so aceita `[\w-]+` (letra
 - **Unicode/acentos** — `{{descrição}}` nao matcha. Fix simples: `\p{L}` com flag `u` no regex. Baixo risco
 - **Espacos** — `{{my property}}` — nao recomendado, parsing ambiguo. Manter fora
 
+## Observabilidade e decisao centralizada (teto de qualidade de codigo)
+
+Identificado via analise de carga cognitiva (Codex, 2026-03-18). O codigo esta limpo e modular, mas o **fluxo de decisao de runtime** (qual engine? qual posicao? fallback? por que?) fica espalhado em 4-5 modulos. Debugar "por que esse mirror sumiu?" exige juntar pecas de main.ts, mirrorConfig, domInjector, domPositionManager e templateRenderer. Este e o limite maximo de melhoria estrutural — depois disso, so E2E testing acrescenta algo.
+
+**Nivel 1 — Logs orientados a decisao (maior retorno, menor esforco)**
+Trocar logs de evento por logs de decisao. Em vez de "layout-change fired" / "DOM fallback: X -> Y" espalhados, logar o fluxo completo de decisao num ponto so:
+- `mode-switch detected: source -> preview`
+- `config resolved: template=X position=above-properties`
+- `dom target unavailable: above-properties (hidden by setting)`
+- `fallback applied: top (engine: DOM)`
+Helper tipo `traceMirrorDecision(...)` padroniza formato e concentra o trace.
+
+**Nivel 2 — Funcao central de decisao (`computeMirrorRuntimeDecision`)**
+Extrair uma funcao pura que recebe (plugin, view, file, frontmatter) e retorna um objeto declarativo:
+```
+{ viewMode, config, engine (cm6|dom|margin|none), requestedPosition, finalPosition, fallbackApplied, reason }
+```
+O resto do codigo passa a executar a decisao em vez de descobrir no caminho. Reduz branching espalhado, facilita testes unitarios da logica de decisao isolada. `domPositionManager.setupDomPosition` ja faz parte disso mas mistura decisao com execucao.
+
+**Nivel 3 — Documentar fluxos canonicos no architecture.md**
+2-3 fluxos criticos com: evento de entrada → funcao central → saidas possiveis → fallback esperado:
+- Mode switch (Cmd+E): layout-change → debounce 50ms → detectar modo → re-setup DOM + CM6
+- Metadata change: metadataCache.on('changed') → branch ativo vs cross-note vs template
+- Template change: vault.on('modify') + metadataCache → handleTemplateChange → re-render dependentes
+
+**O que NAO fazer:** nao abstrair demais, nao criar framework interno, nao refatorar so porque e complexo. Complexidade atual e quase toda inevitavel dado o escopo do plugin (paridade LP/RV, 7 posicoes, multi-pane, fallback chain, reatividade) num host sem APIs publicas completas.
+
 ## Suggest component — migrar de @popperjs/core para API nativa
 
 O suggest de autocomplete (`src/suggesters/suggest.ts`) usa `@popperjs/core` (19KB+, unica dep runtime) pra posicionar o popup. Obsidian tem `AbstractInputSuggest` que faz posicionamento internamente. Migrar eliminaria a dependencia e reduziria bundle.
