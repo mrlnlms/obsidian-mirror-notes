@@ -220,6 +220,23 @@
     padding-bottom: 0px; */
 }
 
+/* Rename input in mirror card header */
+.mirror-card-name-input {
+    font-weight: var(--font-semibold);
+    font-size: var(--font-ui-medium);
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 2px 6px;
+    border-radius: var(--radius-s);
+}
+.mirror-card-name-input:hover {
+    border-color: var(--background-modifier-border);
+}
+.mirror-card-name-input:focus {
+    border-color: var(--interactive-accent);
+    background: var(--background-primary);
+}
+
 .mirror-card {
     padding: 20px;
     padding-top: 10px;
