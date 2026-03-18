@@ -101,3 +101,9 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         conditionLogic: 'any',
     };
 }
+
+/** Sanitize mirror name input: trim whitespace, fallback to default if empty */
+export function sanitizeMirrorName(input: string, index: number): string {
+    const trimmed = input.trim();
+    return trimmed.length > 0 ? trimmed : `Mirror ${index + 1}`;
+}
