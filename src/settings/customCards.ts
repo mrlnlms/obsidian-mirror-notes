@@ -1,5 +1,5 @@
 import { App, ButtonComponent, Setting } from 'obsidian';
-import { createDefaultCustomMirror, DEFAULT_VIEW_OVERRIDES } from './types';
+import { createDefaultCustomMirror, DEFAULT_VIEW_OVERRIDES, sanitizeMirrorName } from './types';
 import { addModeToggle } from './settingsUI';
 import { addViewOverridesSection } from './viewOverridesUI';
 import { buildConditionsSection } from './conditionBuilder';
@@ -60,7 +60,19 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
         const dynamicIcon = customMirrors[index].openview ? "chevrons-down-up" : "chevrons-up-down";
 
         new Setting(card)
-            .setName(customMirror.name)
+            .addText((text) => {
+                text.setValue(customMirror.name)
+                    .setPlaceholder(`Mirror ${index + 1}`)
+                    .onChange((value) => {
+                        customMirrors[index].name = sanitizeMirrorName(value, index);
+                    });
+                text.inputEl.addClass('mirror-card-name-input');
+                text.inputEl.addEventListener('blur', () => {
+                    customMirrors[index].name = sanitizeMirrorName(text.inputEl.value, index);
+                    text.inputEl.value = customMirrors[index].name;
+                    onSave();
+                });
+            })
             .addExtraButton((cb) => {
                 cb.setIcon("up-chevron-glyph")
                     .setTooltip("Move up")
