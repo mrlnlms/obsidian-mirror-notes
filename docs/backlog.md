@@ -76,11 +76,14 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 
 Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baselines: `npm run test:visual:update`.
 
+**CI:** smoke E2E roda no GitHub Actions (ubuntu + xvfb). Visual comparison so local (screenshots sao machine-dependent). Pacote: `obsidian-e2e-visual-test-kit` via `github:mrlnlms/obsidian-e2e-visual-test-kit`.
+
 **Learnings importantes pro harness:**
 - `wdio-obsidian-service` copia `data.json` do pluginDir — injetar config via `before` hook no wdio.conf
 - `editor:toggle-source` NAO funciona no sandbox — usar `markdown:toggle-preview`
 - First-match-wins: uma nota por posicao nos testes
 - Viewport screenshots variam 4-10% entre runs — tolerancia alta necessaria
+- Screenshots no CI (Linux) tem 60%+ mismatch vs baselines macOS — rodar visual comparison so local
 
 ---
 

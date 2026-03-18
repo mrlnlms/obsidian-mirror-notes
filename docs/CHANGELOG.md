@@ -2,6 +2,12 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## CI + package migration (pos-v53)
+
+- Migrado de `obsidian-plugin-e2e` (local) para `obsidian-e2e-visual-test-kit` (github:mrlnlms)
+- CI atualizado: job `e2e-tests` com xvfb roda smoke E2E no ubuntu-latest
+- Visual comparison continua local-only (screenshots sao machine-dependent)
+
 ## Dot notation + unicode template variables (pos-v53)
 
 - Template variables agora suportam dot notation: `{{project_info.dates.start_date}}`
