@@ -14,13 +14,9 @@ Itens pendentes:
 - **Min-height** — painel cresce com conteudo, sem min-height. Avaliar se precisa de altura minima (VN usa 528px footer, 100px above-backlinks como referencia)
 - **Menu de posicoes (consolidacao final)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado (v44), `below-properties` + `top` unificados (v42). Falta remover opcoes deprecated do dropdown (breaking change — migrar data.json). So no final do epico, porque o margin panel pode adicionar opcoes intermediarias pra teste. Inclui revisao de UX writing das labels e feedbacks na tela
 
-## Template Variables — suporte a dot notation e unicode
+## Template Variables — concluido (pos-v53)
 
-O regex de variaveis `{{nome}}` no templateRenderer.ts so aceita `[\w-]+` (letras ASCII, numeros, underscore, hifen). Isso impede uso de propriedades YAML com pontos (`page.title`, `project.status`) e caracteres acentuados (`descrição`).
-
-- **Dot notation (prioridade alta)** — usuario ja usa YAML com pontos. `{{project.status}}` nao resolve hoje. Requer decisao: tratar como key literal `"project.status"` ou como acesso nested `project["status"]`? Nested e mais util mas exige resolver path recursivamente no objeto frontmatter
-- **Unicode/acentos** — `{{descrição}}` nao matcha. Fix simples: `\p{L}` com flag `u` no regex. Baixo risco
-- **Espacos** — `{{my property}}` — nao recomendado, parsing ambiguo. Manter fora
+Dot notation + unicode implementados. Regex expandido de `[\w-]+` pra `[\w\p{L}\p{N}.-]+` com flag `u`. Funcao `resolveVariable(key, variables)` em mirrorUtils.ts com estrategia flat-first, nested-fallback. 17 testes novos (13 resolveVariable + 4 templateRenderer).
 
 ## Observabilidade e decisao centralizada (teto de qualidade de codigo)
 

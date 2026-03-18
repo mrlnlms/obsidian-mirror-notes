@@ -2,6 +2,26 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## Dot notation + unicode template variables (pos-v53)
+
+### O que mudou
+
+**Contexto:** regex `[\w-]+` no templateRenderer impedia `{{project.status}}` (dot notation) e `{{descrição}}` (unicode). Backlog de prioridade alta — usuario ja usa YAML nested no vault de projetos.
+
+**Regex expandido:** `[\w\p{L}\p{N}.-]+` com flag `u`. Aceita letras unicode, numeros unicode, pontos e hifens.
+
+**`resolveVariable(key, variables)` em mirrorUtils.ts:**
+Estrategia flat-first, nested-fallback:
+1. Tenta chave literal (`frontmatter["ma.miii"]`) — respeita propriedades com ponto do Obsidian
+2. Se nao encontrar, tenta path nested (`frontmatter["ma"]["miii"]`) — como Dataview faz
+3. Se nenhum, retorna undefined (template mantem `{{key}}` intacto)
+
+**Por que flat-first:** Obsidian aceita chaves com pontos como propriedades validas (testado empiricamente: `ma.miii: valor` vira property real no vault). Se o usuario criou uma property `ma.miii`, ela deve ter prioridade sobre acesso nested `ma: { miii: ... }`.
+
+**Arquivos:** `mirrorUtils.ts` (+resolveVariable), `templateRenderer.ts` (regex + import). 17 testes novos (13 resolveVariable + 4 templateRenderer). Total: 284 unit tests.
+
+---
+
 ## E2E test suite (pos-v53)
 
 ### O que mudou

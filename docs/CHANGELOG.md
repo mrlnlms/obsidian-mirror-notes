@@ -2,6 +2,14 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## Dot notation + unicode template variables (pos-v53)
+
+- Template variables agora suportam dot notation: `{{project_info.dates.start_date}}`
+- Suporte a unicode: `{{descrição}}`, `{{título}}`
+- Chaves flat com ponto (`ma.miii`) tem prioridade sobre acesso nested
+- Regex expandido de `[\w-]+` para `[\w\p{L}\p{N}.-]+` com flag unicode
+- 17 testes novos (284 total)
+
 ## E2E test suite (pos-v53)
 
 - 25 E2E specs contra Obsidian real via obsidian-plugin-e2e harness (WebdriverIO + wdio-obsidian-service)
