@@ -22,13 +22,8 @@ Dot notation + unicode implementados. Regex expandido de `[\w-]+` pra `[\w\p{L}\
 
 Identificado via analise de carga cognitiva (Codex, 2026-03-18). O codigo esta limpo e modular, mas o **fluxo de decisao de runtime** (qual engine? qual posicao? fallback? por que?) fica espalhado em 4-5 modulos. Debugar "por que esse mirror sumiu?" exige juntar pecas de main.ts, mirrorConfig, domInjector, domPositionManager e templateRenderer. Este e o limite maximo de melhoria estrutural — depois disso, so E2E testing acrescenta algo.
 
-**Nivel 1 — Logs orientados a decisao (maior retorno, menor esforco)**
-Trocar logs de evento por logs de decisao. Em vez de "layout-change fired" / "DOM fallback: X -> Y" espalhados, logar o fluxo completo de decisao num ponto so:
-- `mode-switch detected: source -> preview`
-- `config resolved: template=X position=above-properties`
-- `dom target unavailable: above-properties (hidden by setting)`
-- `fallback applied: top (engine: DOM)`
-Helper tipo `traceMirrorDecision(...)` padroniza formato e concentra o trace.
+**Nivel 1 — Logs orientados a decisao — CONCLUIDO (pos-v53)**
+`traceMirrorDecision()` implementado em mirrorUtils.ts com prefixo `[trace]` filtravel. 5 pontos de insercao: config-resolve (mirrorConfig), cooldown-skip e dom-injection (domPositionManager), forced-update (mirrorState), render-skip (templateRenderer). Filtrar: `grep '[trace]' debug.log`. 6 testes unitarios.
 
 **Nivel 2 — Funcao central de decisao (`computeMirrorRuntimeDecision`)**
 Extrair uma funcao pura que recebe (plugin, view, file, frontmatter) e retorna um objeto declarativo:

@@ -2,6 +2,34 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## Observability level 1: decision trace logs (pos-v53)
+
+### O que mudou
+
+**Contexto:** fluxo de decisao de runtime espalhado em 5 arquivos com 11 pontos de decisao. Logs existentes eram operacionais ("Loading template: X") — nao mostravam o fluxo de decisao completo. Identificado via analise de carga cognitiva (Codex).
+
+**`traceMirrorDecision()` em mirrorUtils.ts** — funcao que formata e loga decisoes com prefixo `[trace]`:
+```
+[trace] notes/project.md [v0] config-resolve → mirror="Project Card" pos=above-title
+[trace] notes/project.md [v0] dom-injection → mirror="above-title.md" pos=above-title engine=dom
+[trace] notes/project.md [v0] cooldown-skip [45ms ago]
+[trace] notes/project.md [v0] forced-update → mirror="top.md" [config changed: position, templatePath]
+[trace] notes/project.md render-skip [content unchanged]
+```
+
+**5 pontos de insercao:**
+1. `mirrorConfig.ts` — apos `getApplicableConfig()` resolver qual mirror matcha
+2. `domPositionManager.ts` — cooldown skip (substituiu Logger.log existente)
+3. `domPositionManager.ts` — apos injecao DOM, com posicao pedida vs real
+4. `mirrorState.ts` — forced update quando config muda, com campos alterados
+5. `templateRenderer.ts` — cache hit (render skipped)
+
+**Filtrar:** `grep '[trace]' src/dev/debug.log` — mostra so decisoes, sem poluicao dos logs operacionais.
+
+**Publico-alvo:** LLM (Claude, Codex) em sessoes de debug + humano durante desenvolvimento.
+
+---
+
 ## Dot notation + unicode template variables (pos-v53)
 
 ### O que mudou

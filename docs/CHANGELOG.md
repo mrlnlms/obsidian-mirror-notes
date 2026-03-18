@@ -2,6 +2,13 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## Observability level 1: decision trace logs (pos-v53)
+
+- `traceMirrorDecision()` com prefixo `[trace]` filtravel via grep
+- 5 pontos de trace: config-resolve, cooldown-skip, dom-injection, forced-update, render-skip
+- Filtrar: `grep '[trace]' debug.log`
+- 6 testes unitarios (290 total)
+
 ## CI + package migration (pos-v53)
 
 - Migrado de `obsidian-plugin-e2e` (local) para `obsidian-e2e-visual-test-kit` (github:mrlnlms)
