@@ -1,7 +1,7 @@
 import MirrorUIPlugin from "../../main";
 import { TFile } from "obsidian";
 import { ApplicableMirrorConfig, MirrorPosition } from "./mirrorTypes";
-import { hashObject } from "./mirrorUtils";
+import { hashObject, traceMirrorDecision } from "./mirrorUtils";
 import { Condition, ConditionLogic, CustomMirror, DEFAULT_VIEW_OVERRIDES } from "../settings/types";
 import { Logger } from '../dev/logger';
 
@@ -155,6 +155,13 @@ export function getApplicableConfig(
   }
 
   // Cachear config base (sem override — override e estado runtime, nao deve poluir cache)
+  traceMirrorDecision({
+    file: file.path,
+    viewId,
+    event: 'config-resolve',
+    mirror: result ? (matchedMirror?.name ?? 'Global') : null,
+    position: result ? { requested: result.position } : undefined,
+  });
   configCache.set(cacheKey, { config: result, frontmatterHash: fmHash });
 
   // Apply position override (DOM fallback → CM6) — depois do cache

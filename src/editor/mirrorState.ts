@@ -7,7 +7,7 @@ import { clearRenderCache } from "../rendering/templateRenderer";
 import { buildDecorations } from "./decorationBuilder";
 import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
-import { extractRawYaml, hashObject, generateWidgetId } from "./mirrorUtils";
+import { extractRawYaml, hashObject, generateWidgetId, traceMirrorDecision } from "./mirrorUtils";
 import { TFile } from "obsidian";
 import { Logger } from '../dev/logger';
 
@@ -95,6 +95,25 @@ function handleForcedUpdate(
     freshConfig?.showContainer !== value.config?.showContainer ||
     freshConfig?.viewOverrides?.readableLineLength !== value.config?.viewOverrides?.readableLineLength ||
     freshConfig?.viewOverrides?.showInlineTitle !== value.config?.viewOverrides?.showInlineTitle;
+
+  if (configChanged) {
+    const changedFields = [
+      (!!freshConfig) !== value.enabled ? 'enabled' : '',
+      freshConfig?.position !== value.config?.position ? 'position' : '',
+      freshConfig?.templatePath !== value.config?.templatePath ? 'templatePath' : '',
+      freshConfig?.hideProps !== value.config?.hideProps ? 'hideProps' : '',
+      freshConfig?.showContainer !== value.config?.showContainer ? 'showContainer' : '',
+    ].filter(Boolean).join(', ');
+
+    traceMirrorDecision({
+      file: value.filePath,
+      viewId,
+      event: 'forced-update',
+      mirror: freshConfig?.templatePath?.split('/').pop() ?? null,
+      position: freshConfig ? { requested: freshConfig.position, actual: value.config?.position } : undefined,
+      reason: `config changed: ${changedFields}`,
+    });
+  }
 
   if (!configChanged) {
     Logger.log('Forced update — config unchanged, rebuilding with fresh content');

@@ -4,6 +4,7 @@ import { getApplicableConfig } from '../editor/mirrorConfig';
 import { CM6_POSITIONS } from '../editor/mirrorTypes';
 import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, getViewId, disconnectObserversByPrefix } from './domInjector';
 import { Logger } from '../dev/logger';
+import { traceMirrorDecision } from '../editor/mirrorUtils';
 import { getEditorView, getViewMode } from '../utils/obsidianInternals';
 import type MirrorUIPlugin from '../../main';
 
@@ -40,7 +41,12 @@ export async function setupDomPosition(
     const now = Date.now();
     const last = lastSetupTime.get(overrideKey);
     if (last && (now - last) < SETUP_COOLDOWN_MS) {
-      Logger.log(`setupDomPosition cooldown skip for ${file.path} [${viewId}] (${now - last}ms ago)`);
+      traceMirrorDecision({
+        file: file.path,
+        viewId,
+        event: 'cooldown-skip',
+        reason: `${now - last}ms ago`,
+      });
       return;
     }
   }
@@ -97,6 +103,15 @@ export async function setupDomPosition(
     if (pos !== config.position && isDomPosition(pos)) {
       pos = await injectDomMirror(plugin, view, { ...config, position: pos }, fm, reInject);
     }
+  });
+
+  traceMirrorDecision({
+    file: file.path,
+    viewId,
+    event: 'dom-injection',
+    mirror: config.templatePath.split('/').pop() ?? config.templatePath,
+    position: { requested: config.position, actual: actualPos },
+    engine: actualPos !== config.position ? 'cm6' : 'dom',
   });
 
   if (actualPos !== config.position) {

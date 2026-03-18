@@ -1,7 +1,7 @@
 import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../dev/logger';
-import { resolveVariable } from '../editor/mirrorUtils';
+import { resolveVariable, traceMirrorDecision } from '../editor/mirrorUtils';
 
 export interface RenderContext {
   plugin: MirrorUIPlugin;
@@ -90,6 +90,11 @@ async function doRender(ctx: RenderContext): Promise<void> {
     const lastContent = lastRenderedContent.get(cacheKey);
     // Cache de hash so para CM6 widgets (container reusado). Code blocks (com component) sempre renderizam.
     if (!ctx.component && lastContent === contentHash && container.children.length > 0) {
+      traceMirrorDecision({
+        file: ctx.sourcePath,
+        event: 'render-skip',
+        reason: 'content unchanged',
+      });
       Logger.log('Content unchanged and container has content, skipping render');
       return;
     }
