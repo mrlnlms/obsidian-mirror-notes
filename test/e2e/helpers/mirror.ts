@@ -44,6 +44,22 @@ export const MARKERS = {
   rvDual: 'E2E-RV-TEMPLATE',
 } as const;
 
+/**
+ * Replace plugin settings entirely (not merge).
+ * Needed because wdio-obsidian-service copies data.json from pluginDir,
+ * overwriting the vault's pre-baked config with the workbench's.
+ */
+export async function loadE2EConfig(settings: Record<string, unknown>): Promise<void> {
+  await waitForPlugin(PLUGIN_ID);
+  await browser.execute((pluginId: string, cfg: Record<string, unknown>) => {
+    const plugin = (window as any).app.plugins.plugins[pluginId];
+    if (!plugin) throw new Error(`Plugin ${pluginId} not found`);
+    plugin.settings = cfg;
+    plugin.saveSettings();
+  }, PLUGIN_ID, settings);
+  await browser.pause(3000);
+}
+
 export async function injectMirrorConfig(overrides: Record<string, unknown>): Promise<void> {
   await waitForPlugin(PLUGIN_ID);
   await browser.execute((pluginId: string, cfg: Record<string, unknown>) => {
