@@ -377,3 +377,100 @@ describe('renderMirrorTemplate', () => {
     removeChildSpy.mockRestore();
   });
 });
+
+describe('dot notation and unicode variables', () => {
+  let container: HTMLElement;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    clearRenderCache();
+  });
+
+  it('resolves nested YAML path via dot notation', async () => {
+    const plugin = createFakePlugin();
+    plugin.app.vault.getAbstractFileByPath = () => {
+      const f = new TFile();
+      f.path = 'templates/test.md';
+      f.name = 'test.md';
+      return f;
+    };
+    plugin.app.vault.cachedRead = async () => 'Start: {{project.start_date}}';
+
+    await renderMirrorTemplate({
+      plugin: plugin as any,
+      templatePath: 'templates/test.md',
+      variables: { project: { start_date: '2025-01-01' } } as any,
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-nested',
+    });
+
+    expect(container.innerHTML).toContain('Start: 2025-01-01');
+  });
+
+  it('resolves flat key with dot over nested', async () => {
+    const plugin = createFakePlugin();
+    plugin.app.vault.getAbstractFileByPath = () => {
+      const f = new TFile();
+      f.path = 'templates/test.md';
+      f.name = 'test.md';
+      return f;
+    };
+    plugin.app.vault.cachedRead = async () => 'Value: {{ma.miii}}';
+
+    await renderMirrorTemplate({
+      plugin: plugin as any,
+      templatePath: 'templates/test.md',
+      variables: { 'ma.miii': 'flat wins', ma: { miii: 'nested' } } as any,
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-flat-priority',
+    });
+
+    expect(container.innerHTML).toContain('Value: flat wins');
+  });
+
+  it('resolves unicode variable names', async () => {
+    const plugin = createFakePlugin();
+    plugin.app.vault.getAbstractFileByPath = () => {
+      const f = new TFile();
+      f.path = 'templates/test.md';
+      f.name = 'test.md';
+      return f;
+    };
+    plugin.app.vault.cachedRead = async () => 'Desc: {{descrição}}';
+
+    await renderMirrorTemplate({
+      plugin: plugin as any,
+      templatePath: 'templates/test.md',
+      variables: { descrição: 'texto em português' } as any,
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-unicode',
+    });
+
+    expect(container.innerHTML).toContain('Desc: texto em português');
+  });
+
+  it('keeps unresolved dot notation variable intact', async () => {
+    const plugin = createFakePlugin();
+    plugin.app.vault.getAbstractFileByPath = () => {
+      const f = new TFile();
+      f.path = 'templates/test.md';
+      f.name = 'test.md';
+      return f;
+    };
+    plugin.app.vault.cachedRead = async () => 'Missing: {{nonexistent.path}}';
+
+    await renderMirrorTemplate({
+      plugin: plugin as any,
+      templatePath: 'templates/test.md',
+      variables: { title: 'test' } as any,
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-unresolved',
+    });
+
+    expect(container.innerHTML).toContain('Missing: {{nonexistent.path}}');
+  });
+});

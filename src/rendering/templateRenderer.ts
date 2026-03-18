@@ -1,6 +1,7 @@
 import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../dev/logger';
+import { resolveVariable } from '../editor/mirrorUtils';
 
 export interface RenderContext {
   plugin: MirrorUIPlugin;
@@ -79,9 +80,9 @@ async function doRender(ctx: RenderContext): Promise<void> {
 
     let processedContent = templateContent;
     if (variables && Object.keys(variables).length > 0) {
-      processedContent = templateContent.replace(/\{\{([\w-]+)\}\}/g, (match, key) => {
-        const val = variables[key];
-        return val != null ? String(val) : match;
+      processedContent = templateContent.replace(/\{\{([\w\p{L}\p{N}.-]+)\}\}/gu, (match, key) => {
+        const val = resolveVariable(key, variables);
+        return val !== undefined ? val : match;
       });
     }
 
