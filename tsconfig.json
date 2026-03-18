@@ -21,6 +21,7 @@
   ],
   "exclude": [
     "tests/**",
+    "test/e2e/**",
     "vitest.config.ts"
   ]
 }

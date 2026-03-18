@@ -39,3 +39,7 @@ docs/superpowers/
 # Debug log
 **/debug.log
 *.log.old
+
+# E2E tests
+.obsidian-cache/
+test/e2e/screenshots/

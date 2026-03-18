@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["@wdio/globals/types", "mocha", "@wdio/visual-service"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist-e2e",
+    "lib": ["DOM", "ES2020"]
+  },
+  "include": ["test/e2e/**/*.ts"]
+}
