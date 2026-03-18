@@ -13,6 +13,37 @@
 - Docs do projeto em PT-BR
 - README.md em ingles (public-facing).
 
+## Build e Testes
+
+Comandos e requisitos pra rodar o projeto. Qualquer LLM ou dev que abrir o repo precisa saber isso.
+
+### Requisitos
+- Node 18+ (20+ recomendado)
+- `npm install --legacy-peer-deps` (conflitos de peer deps entre pacotes wdio)
+
+### Comandos
+- `node esbuild.config.mjs` — dev build (com Logger ativo via `__DEV__=true`)
+- `npm run build` — prod build (`tsc --noEmit` + esbuild, `__DEV__=false`, Logger silenciado)
+- `npm test` — 290 unit tests (Vitest + jsdom)
+- `npm run test:e2e` — 25 E2E specs contra Obsidian real (WebdriverIO, primeira vez baixa ~200MB)
+- `npm run lint` — ESLint (0 errors, 81 warnings de no-explicit-any)
+- `npx tsc --noEmit --skipLibCheck` — type check sem build
+
+### Vitest + ESM
+O `vitest.config.ts` usa `import` (ESM) mas o `package.json` NAO tem `"type": "module"`. Vitest resolve ESM via seu proprio loader. NAO rodar os testes com `node vitest.config.ts` direto — usar `npm test` ou `npx vitest run`. Se o ambiente reportar `ERR_REQUIRE_ESM`, o problema e do runner, nao do projeto.
+
+### E2E
+- Pacote: `obsidian-e2e-visual-test-kit` (github:mrlnlms/obsidian-e2e-visual-test-kit)
+- CI roda so smoke (3 specs) no ubuntu + xvfb. Visual comparison e local-only (screenshots sao machine-dependent)
+- `npm run test:visual:update` — atualiza baselines de screenshot
+- Configuracao em `wdio.conf.mts`. O `before` hook injeta config E2E porque wdio-obsidian-service copia `data.json` do pluginDir
+
+### Debug
+- Ativar `debug_logging` no settings do plugin OU usar dev build
+- Logs em `src/dev/debug.log`
+- `grep '[trace]' src/dev/debug.log` — mostra so decisoes de runtime (config resolve, DOM injection, fallback, cache hit)
+- `src/dev/clear-log.sh` — limpa debug.log (aceita `--tail N`)
+
 ## Fluxo de trabalho
 
 1. Desenvolver (codigo, docs, etc)
