@@ -30,7 +30,7 @@ Comandos e requisitos pra rodar o projeto. Qualquer LLM ou dev que abrir o repo 
 - `npx tsc --noEmit --skipLibCheck` — type check sem build
 
 ### Vitest + ESM
-O `vitest.config.ts` usa `import` (ESM) mas o `package.json` NAO tem `"type": "module"`. Vitest resolve ESM via seu proprio loader. NAO rodar os testes com `node vitest.config.ts` direto — usar `npm test` ou `npx vitest run`. Se o ambiente reportar `ERR_REQUIRE_ESM`, o problema e do runner, nao do projeto.
+O `package.json` tem `"type": "module"`. Todos os configs (vitest, esbuild, eslint, wdio) usam ESM nativo. NAO rodar com `node vitest.config.ts` direto — usar `npm test` ou `npx vitest run`.
 
 ### E2E
 - Pacote: `obsidian-e2e-visual-test-kit` (github:mrlnlms/obsidian-e2e-visual-test-kit)
