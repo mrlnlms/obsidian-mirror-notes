@@ -19,6 +19,7 @@ import { applyViewOverrides } from './src/editor/viewOverrides';
 import { setupDomPosition } from './src/rendering/domPositionManager';
 import { handleTemplateChange, clearTemplateChangeTimeout } from './src/rendering/templateChangeHandler';
 import { rebuildKnownTemplatePaths, checkDeletedTemplates } from './src/settings/settingsHelpers';
+import { migrateSettings } from './src/settings/migration';
 import { snapshotObsidianConfig, registerConfigWatcher } from './src/utils/obsidianConfigMonitor';
 import { registerModeSwitchDetector } from './src/utils/modeSwitchDetector';
 
@@ -236,8 +237,18 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   async loadSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    const raw = await this.loadData();
+    const migrated = migrateSettings(raw ?? {});
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, migrated);
     rebuildKnownTemplatePaths(this);
+
+    // Persist migrated data so old field names are cleaned up on first load
+    if (raw && ('global_settings_overide' in raw ||
+        (Array.isArray(raw.customMirrors) && raw.customMirrors.some(
+            (m: Record<string, unknown>) => 'custom_settings_overide' in m
+        )))) {
+        await this.saveData(this.settings);
+    }
   }
 
   async saveSettings() {
