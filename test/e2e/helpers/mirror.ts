@@ -86,8 +86,12 @@ export async function toggleReadingView(): Promise<void> {
 
 export async function getViewMode(): Promise<string> {
   return browser.execute(() => {
-    const view = (window as any).app.workspace.getActiveViewOfType((window as any).obsidian.MarkdownView);
-    return view?.getMode?.() ?? 'unknown';
+    const leaf = document.querySelector('.workspace-leaf.mod-active');
+    if (!leaf) return 'unknown';
+    // In Reading View, .markdown-reading-view is visible (no display:none)
+    const rv = leaf.querySelector('.markdown-reading-view');
+    if (rv && (rv as HTMLElement).offsetParent !== null) return 'preview';
+    return 'source';
   });
 }
 
