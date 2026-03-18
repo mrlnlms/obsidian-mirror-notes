@@ -2,6 +2,30 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## E2E test suite (pos-v53)
+
+### O que mudou
+
+**Contexto:** 267 unit tests (Vitest+jsdom) cobriam logica mas nao DOM/CSS/timing reais. 5 gaps documentados no backlog desde v52: CSS layout, CM6 rendering, mode switch, cold start, plugin lifecycle. O harness `obsidian-plugin-e2e` (projeto separado) foi finalizado e integrado.
+
+**25 E2E specs em 5 suites** rodando contra Obsidian v1.12.4 real via WebdriverIO + wdio-obsidian-service.
+
+**Infraestrutura:**
+- `wdio.conf.mts` com `createConfig()` do harness + `before` hook que injeta config E2E (wdio-obsidian-service copia `data.json` do pluginDir, sobrescrevendo a config curada)
+- Test vault minimo em `test/e2e/vaults/visual/` com 9 templates (callouts E2E-prefixed), 8 notas (uma por posicao + smoke/dual/no-mirror), e `data.json` com 11 mirrors
+- Helper em `test/e2e/helpers/mirror.ts` com selectors, markers, e funcoes de navegacao/assertion
+
+**Decisoes tecnicas:**
+- **Uma nota por posicao** — first-match-wins impede multiplos mirrors na mesma nota. Cada nota tem frontmatter `mirror: <position>` que matcha exatamente um mirror
+- **`markdown:toggle-preview`** em vez de `editor:toggle-source` — o segundo nao funciona no sandbox do wdio-obsidian-service
+- **Config injection via `before` hook** — `wdio-obsidian-service` copia tudo de `pluginDir` incluindo `data.json` do workbench. Hook substitui settings no runtime
+- **Viewport tolerance 10%** — screenshots de viewport variam por cursor, timing, e subpixel rendering. Component screenshots usam 1.5%
+- **Fallback-resilient specs** — posicoes DOM (properties, backlinks) testam DOM injection OU CM6 fallback, refletindo o comportamento real do plugin
+
+**Arquivos:** `wdio.conf.mts`, `tsconfig.e2e.json`, `test/e2e/` (helpers, specs, vaults)
+
+---
+
 ## Code review fixes (pos-v53)
 
 ### O que mudou

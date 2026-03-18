@@ -66,26 +66,25 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
 - **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
-## E2E Testing — em construcao
+## E2E Testing — concluido (pos-v53)
 
-**Historico:** E2E real era pendente desde v52. Blockers eram: sem modo headless, sem framework no ecossistema, custo estimado 2-3 semanas. Vitest+jsdom cobria logica mas nao DOM/CSS/timing reais.
+25 E2E specs passando contra Obsidian real via `obsidian-plugin-e2e` harness (`~/Desktop/obsidian-plugin-e2e`). Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
 
-**Solucao em andamento: `obsidian-plugin-e2e`** (`~/Desktop/obsidian-plugin-e2e`)
-Harness reutilizavel para E2E de plugins Obsidian. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service. Obsidian roda como app Electron real.
+| Suite | Specs | Cobertura |
+|-------|-------|-----------|
+| smoke | 3 | Plugin carrega, arquivo abre, mirror renderiza |
+| positions | 8 | 5 DOM injection + 2 CM6 widgets + negative test |
+| mode-switch | 4 | LP→RV→LP, dual templates, sem classes vazadas |
+| lifecycle | 4 | Cold start, unload cleanup, re-enable, sem orphans |
+| visual-baselines | 6 | Screenshots: above-title, viewport, CM6, RV, roundtrip |
 
-API pronta (v0.1.0): config em 3 linhas, 11 helpers de navegacao, 6 funcoes de assertion (screenshot baselines + DOM state). Potencial de ferramenta open-source pra comunidade de plugin devs.
+Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baselines: `npm run test:visual:update`.
 
-**Gaps do Mirror Notes que o harness cobre:**
-
-| Gap | Como testar |
-|-----|------------|
-| CSS layout real | `checkComponent('.mirror-margin-panel', 'baseline')` — screenshot comparison |
-| CM6 rendering real | `assertDomState('.mirror-ui-widget', { visible: true, childCount: { min: 1 } })` |
-| Mode switch (Cmd+E) | `executeCommand('editor:toggle-source')` + assertDomState pos-switch |
-| Cold start timing | `waitForPlugin('obsidian-mirror-notes')` + validar DOM apos load |
-| Plugin lifecycle | `resetVault()` entre specs, verificar cleanup no DOM |
-
-**Proximo passo:** finalizar harness, depois escrever specs pro Mirror Notes cobrindo os 5 gaps acima. Demo vault existente (`demo/`) serve como base pro test vault.
+**Learnings importantes pro harness:**
+- `wdio-obsidian-service` copia `data.json` do pluginDir — injetar config via `before` hook no wdio.conf
+- `editor:toggle-source` NAO funciona no sandbox — usar `markdown:toggle-preview`
+- First-match-wins: uma nota por posicao nos testes
+- Viewport screenshots variam 4-10% entre runs — tolerancia alta necessaria
 
 ---
 

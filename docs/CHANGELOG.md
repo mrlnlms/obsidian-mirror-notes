@@ -2,6 +2,25 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## E2E test suite (pos-v53)
+
+- 25 E2E specs contra Obsidian real via obsidian-plugin-e2e harness (WebdriverIO + wdio-obsidian-service)
+- 5 suites: smoke (3), positions (8), mode-switch (4), lifecycle (4), visual-baselines (6)
+- Test vault minimo com 9 templates, 8 notas, 11 mirrors pre-configurados
+- Screenshot baselines para above-title, CM6 top/bottom, RV template, viewport
+- Cobre os 5 gaps: CSS layout, CM6 rendering, mode switch, cold start, plugin lifecycle
+
+## Code review fixes (pos-v53)
+
+- Fix XSS: catch block no templateRenderer usava innerHTML com error interpolado
+- Fix hashObject: string inputs passavam por JSON.stringify incorreto
+- Fix arraymove bounds: Move up no index 0 movia item pro final silenciosamente
+- Cleanup: caches module-level resetam no onunload
+- ESLint: no-explicit-any de off para warn
+- CSS: ~93 linhas de regras legacy removidas
+- Tests: logger mock paths corrigidos, import nao usado removido
+- tsconfig.test.json para incluir testes na validacao de tipos
+
 ## Versao Atual: v53 — Rename mirrors + typo migration
 
 ## Code review fixes (pos-v53)
