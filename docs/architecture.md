@@ -3,7 +3,7 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (v52)
+## File Map (pos-v53)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup) — 386 linhas
@@ -18,22 +18,22 @@ src/settings/pathValidator.ts              — addPathValidation() — inline wa
 src/settings/settingsHelpers.ts            — rebuildKnownTemplatePaths() + checkDeletedTemplates()
 src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
 src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
-src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block)
+src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block), dot notation + unicode
 src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
 src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
-src/rendering/domPositionManager.ts        — setupDomPosition() + positionOverrideKey() — orchestracao DOM injection
+src/rendering/domPositionManager.ts        — setupDomPosition() + positionOverrideKey() + [trace] logs — orchestracao DOM injection
 src/rendering/templateChangeHandler.ts     — handleTemplateChange() + clearTemplateChangeTimeout() — template reactivity
 src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
 src/rendering/templateDependencyRegistry.ts — TemplateDependencyRegistry (template change reactivity)
-src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + helpers extraidos
+src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + [trace] logs + helpers extraidos
 src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
 src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)
 src/editor/viewOverrides.ts               — applyViewOverrides() — per-view CSS overrides (hideProps, readableLineLength, inlineTitle)
 src/editor/timingConfig.ts                 — TIMING object (constantes centralizadas de debounce/delay)
-src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + evaluateCondition/evaluateConditions
+src/editor/mirrorConfig.ts                 — getApplicableConfig() + configCache + evaluateCondition/evaluateConditions + [trace] logs
 src/editor/mirrorTypes.ts                  — Interfaces compartilhadas (MirrorPosition, ApplicableMirrorConfig, etc)
-src/editor/mirrorUtils.ts                  — extractRawYaml, hashObject, generateWidgetId
+src/editor/mirrorUtils.ts                  — extractRawYaml, hashObject, generateWidgetId, resolveVariable, traceMirrorDecision
 src/editor/marginPanelExtension.ts         — Left/right margin panels (ViewPlugin)
 src/utils/obsidianInternals.ts             — Wrappers tipados pra TODAS as APIs internas do Obsidian (14 wrappers)
 src/utils/obsidianConfigMonitor.ts         — snapshotObsidianConfig() + registerConfigWatcher() — detecta mudancas visuais do Obsidian
@@ -43,6 +43,8 @@ src/utils/array.ts                         — arraymove() — utilitario compar
 src/dev/logger.ts                          — Logger dev-only (no-op em prod via __DEV__ flag)
 src/dev/clear-log.sh                       — Script pra limpar debug.log
 styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
+wdio.conf.mts                             — WebdriverIO config pra E2E (obsidian-e2e-visual-test-kit)
+test/e2e/                                  — 25 E2E specs (smoke, positions, mode-switch, lifecycle, visual-baselines)
 ```
 
 ## Dois modos de operacao
