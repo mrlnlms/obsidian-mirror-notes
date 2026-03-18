@@ -8,6 +8,7 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix `overide` → `override` typo across codebase (types, source, UI labels, tests, data.json)
 - Fix `toogle-header` → `toggle-header` CSS class typo
 - Settings UI labels translated to English (global/custom override descriptions)
+- Test coverage: +33 tests (blockParser, arraymove, generateWidgetId, settingsHelpers) — 234 → 267 total
 
 ## v52 — Structural refactor (code review triage)
 

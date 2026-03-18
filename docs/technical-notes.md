@@ -24,6 +24,16 @@ Typo na CSS class em 7 ocorrencias (customCards.ts, globalSection.ts, settingsUI
 
 Descricoes dos toggles de override traduzidas PT-BR → EN (plugin e public-facing).
 
+**5. Cobertura de testes (+33, 234 → 267)**
+
+Rodada de auditoria de cobertura. 4 novos arquivos de teste:
+- `blockParser.test.ts` (13): parsing de code blocks — template, source, inline vars, erros de sintaxe, edge cases (URLs com colon, linhas vazias)
+- `arraymove.test.ts` (7): reordenacao de arrays (forward, backward, same index, mutacao in-place)
+- `mirrorUtils.test.ts` (+3): `generateWidgetId` — prefixo, unicidade (100 ids), formato timestamp+random
+- `settingsHelpers.test.ts` (10): `rebuildKnownTemplatePaths` (4 cenarios: global, custom, clear, empty) + `checkDeletedTemplates` (6 cenarios: Notice spy, click handler com openSettingsToField, multiplos matches)
+
+Zona cinza documentada (5 arquivos com mock pesado): mirrorState, decorationBuilder, mirrorWidget, codeBlockProcessor, domPositionManager. Decisao: reavaliar com E2E.
+
 ## v52 — Structural refactor (code review triage)
 
 ### O que mudou na v52
