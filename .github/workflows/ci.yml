@@ -7,19 +7,45 @@ on:
     branches: [main]
 
 jobs:
-  build:
+  unit-tests:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
+          cache: npm
 
-      - run: npm install --legacy-peer-deps
+      - run: npm ci --legacy-peer-deps
 
       - run: npm run build
 
       - run: npm run lint
 
-      - run: npm run test
+      - run: npm test
+
+  e2e-tests:
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci --legacy-peer-deps
+
+      - run: npm run build
+
+      - uses: actions/cache@v4
+        with:
+          path: .obsidian-cache
+          key: obsidian-${{ runner.os }}
+
+      - name: E2E smoke test
+        uses: coactions/setup-xvfb@v1
+        with:
+          run: npx wdio run wdio.conf.mts --spec test/e2e/specs/smoke.e2e.ts

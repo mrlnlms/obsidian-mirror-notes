@@ -34,7 +34,7 @@
 		"eslint": "^9.39.4",
 		"jsdom": "^28.1.0",
 		"obsidian": "^1.12.3",
-		"obsidian-plugin-e2e": "file:../../../../obsidian-plugin-e2e",
+		"obsidian-e2e-visual-test-kit": "github:mrlnlms/obsidian-e2e-visual-test-kit",
 		"tslib": "^2.8.1",
 		"typescript": "^5.9.3",
 		"typescript-eslint": "^8.57.0",

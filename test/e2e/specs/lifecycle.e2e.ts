@@ -1,4 +1,4 @@
-import { waitForPlugin, openFile, waitForElement } from 'obsidian-plugin-e2e';
+import { waitForPlugin, openFile, waitForElement } from 'obsidian-e2e-visual-test-kit';
 import { S, NOTES, MARKERS, countMirrorWidgets, disablePlugin, enablePlugin } from '../helpers/mirror.js';
 
 describe('plugin lifecycle', () => {

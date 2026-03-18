@@ -1,4 +1,4 @@
-import { createConfig } from 'obsidian-plugin-e2e';
+import { createConfig } from 'obsidian-e2e-visual-test-kit';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 

@@ -1,4 +1,4 @@
-import { openFile, waitForElement, assertDomState, captureDomState } from 'obsidian-plugin-e2e';
+import { openFile, waitForElement, assertDomState, captureDomState } from 'obsidian-e2e-visual-test-kit';
 import { S, NOTES, MARKERS } from '../helpers/mirror.js';
 
 describe('DOM injection positions', () => {

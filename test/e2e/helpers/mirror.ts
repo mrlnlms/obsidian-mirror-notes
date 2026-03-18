@@ -1,4 +1,4 @@
-import { waitForPlugin } from 'obsidian-plugin-e2e';
+import { waitForPlugin } from 'obsidian-e2e-visual-test-kit';
 
 const PLUGIN_ID = 'mirror-notes';
 

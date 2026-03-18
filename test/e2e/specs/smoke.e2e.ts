@@ -1,4 +1,4 @@
-import { waitForPlugin, openFile, getActiveFile, waitForElement } from 'obsidian-plugin-e2e';
+import { waitForPlugin, openFile, getActiveFile, waitForElement } from 'obsidian-e2e-visual-test-kit';
 import { S, NOTES, MARKERS } from '../helpers/mirror.js';
 
 describe('smoke', () => {

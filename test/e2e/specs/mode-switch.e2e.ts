@@ -1,4 +1,4 @@
-import { openFile, waitForElement, assertDomState } from 'obsidian-plugin-e2e';
+import { openFile, waitForElement, assertDomState } from 'obsidian-e2e-visual-test-kit';
 import { S, NOTES, MARKERS, toggleReadingView, getViewMode } from '../helpers/mirror.js';
 
 describe('mode switch (LP ↔ RV)', () => {

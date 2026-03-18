@@ -1,4 +1,4 @@
-import { openFile, waitForElement, checkComponent, checkViewport, scrollTo } from 'obsidian-plugin-e2e';
+import { openFile, waitForElement, checkComponent, checkViewport, scrollTo } from 'obsidian-e2e-visual-test-kit';
 import { S, NOTES, toggleReadingView } from '../helpers/mirror.js';
 
 describe('visual baselines', () => {
