@@ -40,7 +40,7 @@ export interface MirrorUIPluginSettings {
     enable_global_preview_mode: boolean;
     global_settings_preview_note: string;
     global_settings_preview_pos: string;
-    global_settings_overide: boolean;
+    global_settings_override: boolean;
     global_view_overrides: ViewOverrides;
     global_show_container_border: boolean;
     auto_update_paths: boolean;
@@ -57,7 +57,7 @@ export interface CustomMirror {
     enable_custom_preview_mode: boolean;
     custom_settings_preview_note: string;
     custom_settings_preview_pos: string;
-    custom_settings_overide: boolean;
+    custom_settings_override: boolean;
     custom_view_overrides: ViewOverrides;
     custom_show_container_border: boolean;
     custom_auto_update_paths: boolean;
@@ -75,7 +75,7 @@ export const DEFAULT_SETTINGS: MirrorUIPluginSettings = {
     enable_global_preview_mode: false,
     global_settings_preview_note: "",
     global_settings_preview_pos: "top",
-    global_settings_overide: false,
+    global_settings_override: false,
     global_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
     global_show_container_border: true,
     auto_update_paths: true,
@@ -93,7 +93,7 @@ export function createDefaultCustomMirror(index: number): CustomMirror {
         enable_custom_preview_mode: false,
         custom_settings_preview_note: "",
         custom_settings_preview_pos: "top",
-        custom_settings_overide: false,
+        custom_settings_override: false,
         custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
         custom_show_container_border: true,
         custom_auto_update_paths: true,
