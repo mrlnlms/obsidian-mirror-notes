@@ -177,7 +177,7 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
                     onRedisplay();
                 });
             })
-            .setClass("toogle-header");
+            .setClass("toggle-header");
         new Setting(card)
             .setName("Override global replacement")
             .setDesc("When the global mirror is set to replace custom mirrors, enabling this lets this mirror keep its own configuration.")
@@ -190,7 +190,7 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
                         onRedisplay();
                     });
             })
-            .setClass("toogle-header");
+            .setClass("toggle-header");
         new Setting(card)
             .setName("Auto-update paths on rename")
             .setDesc("Override the global setting for this mirror. If OFF, paths won't be updated when files are renamed.")
@@ -201,7 +201,7 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
                     onSave();
                 });
             })
-            .setClass("toogle-header");
+            .setClass("toggle-header");
     });
 }
 

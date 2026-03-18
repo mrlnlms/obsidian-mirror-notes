@@ -90,7 +90,7 @@ export function buildGlobalSection(options: GlobalSectionOptions): void {
                 onRedisplay();
             });
         })
-        .setClass("toogle-header");
+        .setClass("toggle-header");
 
     new Setting(globalMirrorSettings)
         .setName("Replace custom Mirrors")
@@ -103,7 +103,7 @@ export function buildGlobalSection(options: GlobalSectionOptions): void {
                 onRedisplay();
             });
         })
-        .setClass("toogle-header");
+        .setClass("toggle-header");
 
     new Setting(globalMirrorSettings)
         .setName("Auto-update paths on rename")
@@ -115,5 +115,5 @@ export function buildGlobalSection(options: GlobalSectionOptions): void {
                 onSave();
             });
         })
-        .setClass("toogle-header");
+        .setClass("toggle-header");
 }

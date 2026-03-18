@@ -38,7 +38,7 @@ export function addModeToggle(opts: ModeToggleOptions): void {
     new Setting(opts.container)
         .setName(opts.name)
         .setDesc(opts.desc)
-        .setClass("toogle-header")
+        .setClass("toggle-header")
         .addToggle((cb) => {
             cb.setValue(opts.enabled)
                 .onChange((value) => {
