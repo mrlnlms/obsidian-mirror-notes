@@ -85,8 +85,12 @@ export async function countWidgetsByPosition(position: string): Promise<number> 
 }
 
 export async function toggleReadingView(): Promise<void> {
-  await browser.executeObsidianCommand('editor:toggle-source');
-  await browser.pause(2000);
+  // markdown:toggle-preview is the correct command for LP↔RV.
+  // editor:toggle-source does NOT work in wdio-obsidian-service sandbox.
+  await browser.execute(() => {
+    (window as any).app.commands.executeCommandById('markdown:toggle-preview');
+  });
+  await browser.pause(3000);
 }
 
 export async function getViewMode(): Promise<string> {

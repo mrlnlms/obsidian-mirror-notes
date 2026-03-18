@@ -56,15 +56,14 @@ describe('visual baselines', () => {
     });
 
     it('RV template container baseline', async () => {
-      // In RV, mirror renders via DOM injection — find any mirror container with position top
-      const rvSelector = '.mirror-dom-injection[data-position="top"], .mirror-ui-widget[data-position="top"], .mirror-position-top';
+      // In RV, mirror renders via DOM injection (not CM6 widget which is 0x0)
+      const rvSelector = '.mirror-dom-injection[data-position="top"]';
       const el = await browser.$(rvSelector);
       const exists = await el.isExisting();
       if (!exists) {
-        console.log('RV top container not found — skipping baseline');
+        console.log('RV DOM injection not found — skipping baseline');
         return;
       }
-      await el.waitForExist({ timeout: 10000 });
       const mismatch = await checkComponent(rvSelector, 'rv-dual-template-top');
       expect(mismatch).toBeLessThan(1.5);
     });

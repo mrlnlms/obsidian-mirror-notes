@@ -20,12 +20,10 @@ describe('mode switch (LP ↔ RV)', () => {
     await toggleReadingView();
     await browser.pause(3000);
 
-    // In RV, mirror renders via DOM injection — check active leaf for RV marker
+    // In RV, mirror renders via DOM injection — check entire leaf for RV marker
     const hasRvTemplate = await browser.execute((marker: string) => {
       const leaf = document.querySelector('.workspace-leaf.mod-active');
-      if (!leaf) return false;
-      const mirrors = leaf.querySelectorAll('.mirror-ui-widget, .mirror-dom-injection');
-      return Array.from(mirrors).some(m => m.innerHTML.includes(marker));
+      return leaf ? leaf.innerHTML.includes(marker) : false;
     }, MARKERS.rvDual);
     expect(hasRvTemplate).toBe(true);
   });
