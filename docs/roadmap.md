@@ -38,6 +38,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v54 | Runtime correctness + pane isolation | Stale callbacks, multi-pane frontmatter, memory leak, code block pane isolation, type safety, DRY. Audit Claude+Codex. 359 unit + 37 E2E |
 | v53 | Rename mirrors + typo migration | Inline rename, `overide→override` migration com auto-save, `toogle→toggle` fix, UI labels EN |
 | v52 | Structural refactor (code review) | @ts-ignore centralizados (14 wrappers), tipagem core, main.ts 449→386, settings.ts 545→83 (5 modulos), view overrides dedup |
 | v51 | Codex audit fixes + minAppVersion | Per-template debounce, RenderChild cleanup, minAppVersion 0.15.0→1.0.0 |
