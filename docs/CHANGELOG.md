@@ -10,7 +10,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Refactor: trace logging integrado na decision function (`runtime-decision` events)
 - Docs: 3 fluxos canonicos em architecture.md (mode switch, metadata change, template change)
 - Backlog: observabilidade niveis 2-3 concluidos
-- 370 testes (+11)
+- Fix: render concurrency race com 3+ callers no mesmo cacheKey (`if` → `while` loop guard)
+- Fix: margin panel ResizeObserver sobrevive ciclo de mudanca de posicao (`destroy` → `removePanel` em update)
+- Fix: margin positions retornam `engine:none` em Reading View (CM6 ViewPlugin invisivel em RV)
+- Fix: todos fire-and-forget timers rastreados via `scheduleTimer()` e cancelados no onunload (backlinks retries 3s, cold-start 1s, mode switch 50ms)
+- 372 testes (+13)
 
 ## v54 — Runtime correctness + type safety + DRY
 

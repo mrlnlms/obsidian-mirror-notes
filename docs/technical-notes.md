@@ -2,6 +2,24 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## Codex review v55 — 4 bug fixes
+
+Analise estatica por Codex encontrou 4 bugs que sobreviveram a 4 rodadas anteriores de review.
+
+**Bug 1 — Render concurrency com 3+ callers (templateRenderer.ts)**
+`renderMirrorTemplate` usava `if (renderingPromises.has(cacheKey))` pra serializar renders. Com 2 callers funciona (A roda, B espera, B roda). Com 3+: A completa → B e C resumem do `await` simultaneamente → ambos chamam `doRender()` em paralelo, disputando `container.innerHTML`. Fix: `if` → `while` — cada waiter re-checa o lock apos resumir. Teste com `maxActiveRenders` tracking e `setTimeout(10ms)` no mock do `renderMarkdown` pra simular trabalho async. `component` no ctx necessario pra bypass do hash dedup (linha 83).
+
+**Bug 2 — ResizeObserver perdido apos destroy/rebuild (marginPanelExtension.ts)**
+`update()` chamava `this.destroy()` quando config mudava pra nao-margin, desconectando o ResizeObserver permanentemente. Se config voltasse pra left/right, `checkAndBuild()` recriava o panel mas sem observer — panel nao reposicionava em resize/split. Fix: `update()` chama `removePanel()` (preserva observer). `destroy()` so e chamado pelo CM6 no teardown do ViewPlugin. Observer monitora `scrollDOM` (sempre presente), nao o panel — funciona mesmo sem panel montado.
+
+**Bug 3 — Margin positions silenciosamente quebradas em Reading View (mirrorDecision.ts)**
+`resolveEngine('left', 'preview')` retornava `margin`, mas o margin panel e um CM6 ViewPlugin dentro de `.markdown-source-view` que o Obsidian esconde em RV. Mirror sumia sem fallback nem aviso. UI dropdown oferecia left/right pra ambos os modos. Fix: `resolveEngine` retorna `none` pra margin positions em preview. Decisao: nao renderizar e melhor que renderizar invisivel.
+
+**Bug 4 — Timers nao cancelados no onunload (main.ts, modeSwitchDetector.ts, domPositionManager.ts)**
+6 setTimeouts fire-and-forget nao eram rastreados: file-open (25ms), active-leaf-change (25ms), cold-start-retry (1000ms), mode switch debounce (50ms), hideProps delay (100ms), backlinks retries (500/1500/3000ms). Se plugin desabilitado durante backlinks retry de 3s, timer disparava contra estado descarregado. Fix: `scheduleTimer()` no plugin com auto-cleanup via `Set<NodeJS.Timeout>`. `modeSwitchDetector` expoe funcao de cleanup. Todos cancelados no `onunload`.
+
+**Testes:** +2 (1 concurrency 3-callers, 1 margin RV guard). 372 total.
+
 ## O que mudou na v55
 
 ### Central decision function + canonical flows
