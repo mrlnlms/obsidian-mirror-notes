@@ -6,6 +6,7 @@ import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirr
 import { Logger } from '../dev/logger';
 import { traceMirrorDecision } from '../editor/mirrorUtils';
 import { getEditorView, getViewMode } from '../utils/obsidianInternals';
+import { TIMING } from '../editor/timingConfig';
 import type MirrorUIPlugin from '../../main';
 
 /** Helper to build positionOverrides key (per-view isolation) */
@@ -13,12 +14,11 @@ export function positionOverrideKey(viewId: string, filePath: string): string {
   return `${viewId}:${filePath}`;
 }
 
-/** Cooldown: skip redundant setupDomPosition calls within 100ms for the same view+file.
+/** Cooldown: skip redundant setupDomPosition calls within SETUP_COOLDOWN ms for the same view+file.
  *  Observer re-injection fires instantly; event handlers (file-open, active-leaf-change)
  *  fire 25-50ms later for the same view — the second call is wasted work.
  *  Observer callbacks (isMutationRecovery) bypass the cooldown but reset the timer. */
 const lastSetupTime = new Map<string, number>();
-const SETUP_COOLDOWN_MS = 100;
 
 /** Clear cooldown cache (called on plugin unload) */
 export function clearSetupCooldowns(): void {
@@ -40,7 +40,7 @@ export async function setupDomPosition(
   if (!isRetry && !isMutationRecovery) {
     const now = Date.now();
     const last = lastSetupTime.get(overrideKey);
-    if (last && (now - last) < SETUP_COOLDOWN_MS) {
+    if (last && (now - last) < TIMING.SETUP_COOLDOWN) {
       traceMirrorDecision({
         file: file.path,
         viewId,

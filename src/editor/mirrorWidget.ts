@@ -24,8 +24,6 @@ export class MirrorTemplateWidget extends WidgetType {
   }
 
   toDOM(view: EditorView): HTMLElement {
-    // cleanOrphanWidgets removido (v33) — nunca era chamado
-
     const cacheKey = this.getCacheKey();
     let container = MirrorTemplateWidget.domCache.get(cacheKey);
 

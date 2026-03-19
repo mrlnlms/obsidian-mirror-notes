@@ -21,7 +21,7 @@ export function hashObject(obj: any): string {
 }
 
 export function generateWidgetId(): string {
-  return `mirror-widget-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `mirror-widget-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 }
 
 /** Resolve a template variable key against a frontmatter object.
