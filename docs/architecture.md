@@ -3,10 +3,10 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (pos-v54)
+## File Map (pos-v55)
 
 ```
-main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup) — 386 linhas
+main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, scheduleTimer) — 415 linhas
 settings.ts                                — MirrorUISettingsTab (classe shell, banner, routing) — 83 linhas
 src/settings/types.ts                      — Interfaces, defaults, CustomMirror, Condition, ViewOverrides, createDefaultCustomMirror()
 src/settings/globalSection.ts              — buildGlobalSection() — secao global mirror do settings
@@ -26,6 +26,7 @@ src/rendering/domPositionManager.ts        — setupDomPosition() + positionOver
 src/rendering/templateChangeHandler.ts     — handleTemplateChange() + clearTemplateChangeTimeout() — template reactivity
 src/rendering/sourceDependencyRegistry.ts  — SourceDependencyRegistry (cross-note reactivity)
 src/rendering/templateDependencyRegistry.ts — TemplateDependencyRegistry (template change reactivity)
+src/editor/mirrorDecision.ts               — computeMirrorRuntimeDecision() + resolveEngine() — decisao central de engine/posicao (v55)
 src/editor/mirrorState.ts                  — CM6 StateField + StateEffects + [trace] logs + helpers extraidos
 src/editor/decorationBuilder.ts            — buildDecorations() — CM6 Decoration builder
 src/editor/mirrorWidget.ts                 — CM6 WidgetType (delega para templateRenderer)

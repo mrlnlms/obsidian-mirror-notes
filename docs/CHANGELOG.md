@@ -17,7 +17,8 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: `renderingPromises` limpo no onunload — previne hot-reload ficar preso em promise de instancia morta
 - Docs: architecture.md corrigido (metadata flow, `resolveViewOverrides` removido, test counts)
 - Backlog: nivel 4 — migrar mirrorState + marginPanelExtension pra `computeMirrorRuntimeDecision`
-- 372 testes (+13)
+- Fix: templateDeps limpo no rename/delete de template (previne acumulo de callbacks stale)
+- 374 testes (+15)
 
 ## v54 — Runtime correctness + type safety + DRY
 

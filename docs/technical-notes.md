@@ -48,10 +48,18 @@ Funcao pura que recebe (plugin, file, frontmatter, viewId, viewMode) e retorna `
 - Citava `resolveViewOverrides()` que nao existe — corrigido pra `applyViewOverrides()` em viewOverrides.ts
 - Test counts desatualizados (359/23 → 372/25)
 
+**Bug 6 — templateDeps stale no rename/delete (templateDependencyRegistry.ts, main.ts)**
+`templateDeps` (TemplateDependencyRegistry) nao era limpo quando template era renomeado ou deletado. `vault.on('rename')` atualizava settings via `updateSettingsPaths` mas callbacks ficavam registrados sob o path antigo — memory leak se renames frequentes. `vault.on('delete')` so notificava usuario via Notice, sem limpar registry. Fix: `unregisterTemplate(path)` adicionado ao registry, chamado em ambos os handlers.
+
 **Backlog — Nivel 4 adicionado:** migrar mirrorState + marginPanelExtension pra `computeMirrorRuntimeDecision` (sem impacto runtime atual, CM6 escondido em RV)
 
-**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, architecture.md, backlog.md
-**Testes:** +13 (372 total, 25 suites)
+**Edge cases investigados e descartados (Codex review #6, 2026-03-19):**
+- *External frontmatter sync:* seguro — per-file debounce cancela timeouts anteriores, dados sempre fresh (re-query de metadataCache dentro do setTimeout), forceMirrorUpdateEffect bypassa per-view debounce. Nenhuma closure stale encontrada.
+- *Split LP+RV mesmo arquivo:* seguro — RV nao tem CM6 StateField (sem CodeMirror em Reading View). Toda renderizacao RV e via DOM injection (`setupDomPosition`), que passa viewMode corretamente. positionOverrides isolados por viewId. Config cache mode-aware.
+- *Template delete durante render:* graceful — try-catch no `doRender` captura erro, mostra "Template not found" com link pro settings. In-flight render falha mas nao crasheia. Settings atualizados automaticamente no rename, manualmente no delete.
+
+**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, templateDependencyRegistry.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, architecture.md, backlog.md
+**Testes:** +15 (374 total, 25 suites)
 
 ## O que mudou na v54
 
