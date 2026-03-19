@@ -3,7 +3,7 @@ import { EditorView, DecorationSet } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
 import { MirrorFieldState, MirrorState, ApplicableMirrorConfig } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
-import { clearRenderCache, clearAllRenderChildren } from "../rendering/templateRenderer";
+import { clearRenderCache, clearAllRenderChildren, clearRenderingPromises } from "../rendering/templateRenderer";
 import { buildDecorations } from "./decorationBuilder";
 import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
 import { TIMING } from "./timingConfig";
@@ -346,6 +346,7 @@ export function cleanupMirrorCaches() {
   MirrorTemplateWidget.domCache.clear();
   clearRenderCache();
   clearAllRenderChildren();
+  clearRenderingPromises();
   fileDebounceMap.clear();
   lastForcedUpdateMap.clear();
 }

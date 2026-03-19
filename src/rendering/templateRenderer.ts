@@ -152,3 +152,9 @@ export function clearAllRenderChildren(): void {
 export function clearRenderChild(cacheKey: string): void {
   lastRenderChildren.delete(cacheKey);
 }
+
+/** Clear in-flight render promises. Call on plugin unload to prevent
+ *  a reloaded instance from waiting on promises from the dead instance. */
+export function clearRenderingPromises(): void {
+  renderingPromises.clear();
+}
