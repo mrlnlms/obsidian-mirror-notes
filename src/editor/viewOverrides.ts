@@ -1,7 +1,6 @@
 import { MarkdownView } from 'obsidian';
 import { mirrorStateField } from './mirrorState';
-import { getApplicableConfig } from './mirrorConfig';
-import { resolveEngine } from './mirrorDecision';
+import { computeMirrorRuntimeDecision } from './mirrorDecision';
 import { Logger } from '../dev/logger';
 import { getEditorView, getViewMode, getVaultConfig } from '../utils/obsidianInternals';
 import { getViewId } from '../rendering/domInjector';
@@ -27,12 +26,12 @@ export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
   if (!overrides && viewMode === 'preview' && view.file && plugin.app?.metadataCache) {
     const viewId = getViewId(view.containerEl);
     const frontmatter = plugin.app.metadataCache.getFileCache(view.file)?.frontmatter || {};
-    const rvConfig = getApplicableConfig(plugin, view.file, frontmatter, viewId, viewMode);
+    const decision = computeMirrorRuntimeDecision(plugin, view.file, frontmatter, viewId, viewMode);
     // Only apply overrides if the mirror can actually render in this mode.
     // left/right positions return engine:'none' in RV — applying overrides without a visible
     // mirror would confuse the user (e.g. properties hidden but no mirror shown).
-    if (rvConfig && resolveEngine(rvConfig.position, viewMode) !== 'none') {
-      overrides = rvConfig.viewOverrides ?? null;
+    if (decision.config && decision.engine !== 'none') {
+      overrides = decision.config.viewOverrides ?? null;
     }
   }
 
