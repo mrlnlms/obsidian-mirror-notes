@@ -1,5 +1,5 @@
 import { openFile, waitForElement } from 'obsidian-e2e-visual-test-kit';
-import { S, NOTES, MARKERS, countMirrorWidgets } from '../helpers/mirror.js';
+import { S, NOTES, MARKERS } from '../helpers/mirror.js';
 
 describe('multi-pane isolation', () => {
   it('two panes with different notes show correct mirrors', async () => {

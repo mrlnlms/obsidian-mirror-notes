@@ -1,5 +1,5 @@
-import { openFile, waitForElement } from 'obsidian-e2e-visual-test-kit';
-import { S, NOTES, MARKERS, toggleReadingView, getViewMode } from '../helpers/mirror.js';
+import { openFile } from 'obsidian-e2e-visual-test-kit';
+import { NOTES, MARKERS, toggleReadingView, getViewMode } from '../helpers/mirror.js';
 
 describe('code block processor', () => {
   it('renders mirror code block with correct template content', async () => {

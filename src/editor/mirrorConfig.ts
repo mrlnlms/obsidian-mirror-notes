@@ -95,7 +95,9 @@ export function getApplicableConfig(
   const cacheKey = `${file.path}:${viewMode ?? 'source'}`;
   const cached = configCache.get(cacheKey);
   if (cached && cached.frontmatterHash === fmHash) {
-    return cached.config;
+    // Apply position override even on cache hit — override is per-view runtime state,
+    // not part of the cached base config. Without this, DOM→CM6 fallback breaks on cache hit.
+    return applyPositionOverride(plugin, cached.config, file.path, viewId);
   }
 
   const settings = plugin.settings;
@@ -164,14 +166,22 @@ export function getApplicableConfig(
   });
   configCache.set(cacheKey, { config: result, frontmatterHash: fmHash });
 
-  // Apply position override (DOM fallback → CM6) — depois do cache
-  // Key includes viewId when available (per-view override isolation)
-  const overrideKey = viewId ? `${viewId}:${file.path}` : file.path;
-  if (result && plugin.positionOverrides.has(overrideKey)) {
-    const override = plugin.positionOverrides.get(overrideKey)!;
-    Logger.log(`Applying position override for ${file.path} [${viewId ?? 'no-view'}]: ${result.position} → ${override}`);
-    result = { ...result, position: override };
-  }
+  return applyPositionOverride(plugin, result, file.path, viewId);
+}
 
-  return result;
+/** Apply per-view position override (DOM fallback → CM6). Called on both cache hit and miss. */
+function applyPositionOverride(
+  plugin: MirrorUIPlugin,
+  config: ApplicableMirrorConfig | null,
+  filePath: string,
+  viewId?: string
+): ApplicableMirrorConfig | null {
+  if (!config) return null;
+  const overrideKey = viewId ? `${viewId}:${filePath}` : filePath;
+  if (plugin.positionOverrides.has(overrideKey)) {
+    const override = plugin.positionOverrides.get(overrideKey)!;
+    Logger.log(`Applying position override for ${filePath} [${viewId ?? 'no-view'}]: ${config.position} → ${override}`);
+    return { ...config, position: override };
+  }
+  return config;
 }

@@ -44,7 +44,7 @@ src/dev/logger.ts                          — Logger dev-only (no-op em prod vi
 src/dev/clear-log.sh                       — Script pra limpar debug.log
 styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
 wdio.conf.mts                             — WebdriverIO config pra E2E (obsidian-e2e-visual-test-kit)
-test/e2e/                                  — 35 E2E specs (smoke, positions, mode-switch, lifecycle, visual-baselines, code-blocks, advanced-behaviors)
+test/e2e/                                  — 37 E2E specs (smoke, positions, mode-switch, lifecycle, visual-baselines, code-blocks, advanced-behaviors)
 ```
 
 ## Dois modos de operacao
@@ -291,7 +291,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (351 testes, 23 suites)
+npm test         # vitest (359 testes, 23 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

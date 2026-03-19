@@ -268,21 +268,25 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // que pode ser outro arquivo (ex: template sendo editado em outro painel)
     const file = plugin?.app.vault.getAbstractFileByPath(value.filePath) as TFile | null;
     const filePath = value.filePath || 'unknown';
+    const viewId = tr.state.facet(viewIdFacet);
+    // Per-view key: multi-pane dispatch (v54) sends forceMirrorUpdateEffect to ALL views
+    // of the same file. Per-file throttle would block all but the first pane.
+    const viewKey = `${viewId}:${filePath}`;
     const docText = tr.state.doc.toString();
     const now = Date.now();
 
-    // Throttle forced updates (max 1/sec)
+    // Throttle forced updates per view (max 1/sec per pane)
     if (forcedUpdate) {
-      const lastForcedUpdate = lastForcedUpdateMap.get(filePath) || 0;
+      const lastForcedUpdate = lastForcedUpdateMap.get(viewKey) || 0;
       if (now - lastForcedUpdate < TIMING.FORCED_UPDATE_THROTTLE) {
         Logger.log(`Forced update ignored - too frequent (${now - lastForcedUpdate}ms ago)`);
         return { mirrorState: value, decorations };
       }
-      lastForcedUpdateMap.set(filePath, now);
+      lastForcedUpdateMap.set(viewKey, now);
     }
 
-    // Per-file debounce
-    const lastFileUpdate = fileDebounceMap.get(filePath) || 0;
+    // Per-view debounce
+    const lastFileUpdate = fileDebounceMap.get(viewKey) || 0;
     if (!forcedUpdate && now - lastFileUpdate < TIMING.UPDATE_DEBOUNCE) {
       return { mirrorState: value, decorations };
     }
@@ -304,7 +308,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     // Valores do frontmatter via metadataCache (fonte unica de verdade)
     const newFrontmatter = getMetadataCacheFrontmatter(plugin, filePath);
 
-    fileDebounceMap.set(filePath, now);
+    fileDebounceMap.set(viewKey, now);
 
     // Forced update path
     if (forcedUpdate) {
