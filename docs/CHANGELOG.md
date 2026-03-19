@@ -9,7 +9,11 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: lastRenderChildren memory leak (clearRenderChild no block destroy)
 - Fix: clearRenderCache() global nao orfana mais lifecycle de blocos vivos (Codex review)
 - Fix: metadataUpdateTimeout per-file — mudancas em arquivos diferentes nao cancelam refresh (Codex review)
-- Fix: code blocks per-pane isolation via `getBlockViewId` — split view da mesma nota nao colide mais (Codex review)
+- Fix: code blocks per-pane isolation via `getBlockViewId` — split view da mesma nota nao colide mais (Codex review #2)
+- Fix: throttle/debounce per-view — panes secundarios nao sao mais bloqueados (Codex review #4)
+- Fix: positionOverrides aplicado em cache hit — DOM→CM6 fallback funciona com cache quente (Codex review #4)
+- Fix: renderingPromises re-render com contexto fresco em vez de reusar promise velha (Codex review #4)
+- Fix: 3 lint errors (imports nao usados em E2E specs) (Codex review #4)
 - Refactor: frontmatter types padronizados pra `Record<string, unknown>` (6 arquivos)
 - Refactor: hash function deduplicada, buildContainerClasses extraido, cooldown centralizado
 - 359 testes (+8)

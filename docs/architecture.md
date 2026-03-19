@@ -256,7 +256,9 @@ Todos os 3 caminhos (CM6, code block, DOM) usam `metadataCache.getFileCache()` c
 
 - **Hash cache** (`templateRenderer.ts`): `lastRenderedContent` por cacheKey. Previne `MarkdownRenderer.renderMarkdown()` se conteudo nao mudou
 - **DOM cache** (`mirrorWidget.ts`): `domCache` por cacheKey. Reusa container DOM existente
-- **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path + frontmatterHash`. Evita iterar mirrors a cada keystroke. Cache guarda config BASE (sem positionOverride) — override e aplicado dinamicamente apos cache hit (v44)
+- **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path:viewMode + frontmatterHash`. Evita iterar mirrors a cada keystroke. Cache guarda config BASE (sem positionOverride) — `applyPositionOverride()` aplica override per-view em ambos os paths (cache hit e miss) (v54)
+- **Render concurrency** (`templateRenderer.ts`): `renderingPromises` por cacheKey. Se um segundo render chega durante o primeiro, aguarda conclusao e re-renderiza com contexto fresco (v54). Nao reusa a promise velha pra evitar dados stale
+- **Throttle/debounce per-view** (`mirrorState.ts`): `lastForcedUpdateMap` e `fileDebounceMap` indexados por `viewId:filePath` (v54). Multi-pane dispatch nao bloqueia panes secundarios
 - **Scoped invalidation** (v41): `clearRenderCache(cacheKey)` + `domCache.delete(cacheKey)` — so o widget atualizado perde cache
 - **Per-source timeout** (v41): `crossNoteTimeouts = Map<string, Timeout>` — cada source tem debounce independente
 

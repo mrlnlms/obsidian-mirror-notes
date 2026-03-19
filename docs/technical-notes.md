@@ -35,6 +35,18 @@ Unico timeout para Branch 1 do metadataCache handler — mudanca em A.md dentro 
 **Fix 6 (Codex review) — code blocks sem isolamento por pane em split view**
 Duas panes da mesma nota com `\`\`\`mirror` colidiam em `cacheKey` (`block-note.md-5`) e `blockKey` (`note.md::5`), causando: registry overwrite (pane 1 perde reatividade), lastRenderChildren cruzado, renderingPromises compartilhado, hash cache falso-positivo. Fix: `getBlockViewId(el)` em domInjector.ts — `el.closest('.workspace-leaf-content')` → `getViewId()`, fallback `'default'` pra testes. viewId prepended a ambas as keys: `block-${viewId}-${sourcePath}-${lineStart}`, `${viewId}:${sourcePath}::${lineStart}`. Tambem adicionado `clearRenderCache(cacheKey)` no destroy handler pra limpar `lastRenderedContent`.
 
+**Fix 7 (Codex review #4) — throttle/debounce indexado por filePath bloqueava panes secundarios**
+`lastForcedUpdateMap` e `fileDebounceMap` em mirrorState.ts usavam `filePath` como key. Com o dispatch multi-pane (v54), pane 1 setava timestamp e pane 2 era throttled. Fix: indexar por `viewId:filePath` via `tr.state.facet(viewIdFacet)`.
+
+**Fix 8 (Codex review #4) — positionOverrides nao aplicado em cache hit**
+`getApplicableConfig` retornava early no cache hit sem aplicar `positionOverrides`. DOM→CM6 fallback quebrava com cache quente. Fix: extrair `applyPositionOverride()` e chamar em ambos os paths (hit e miss).
+
+**Fix 9 (Codex review #4) — renderingPromises descartava contexto mais recente**
+Se um segundo render chegava durante o primeiro (mesmo cacheKey), `renderMirrorTemplate` reusava a promise velha e perdia os dados novos. Fix: aguardar a promise antiga completar e re-renderizar com contexto fresco em vez de retornar a promise.
+
+**Fix 10 (Codex review #4) — lint errors + docs desatualizados**
+3 imports nao usados em E2E specs. architecture.md com counts antigos (351→359 unit, 35→37 E2E).
+
 **Arquivos tocados:** main.ts, mirrorConfig.ts, mirrorState.ts, mirrorTypes.ts, mirrorUtils.ts, mirrorWidget.ts, timingConfig.ts, codeBlockProcessor.ts, domInjector.ts, domPositionManager.ts, templateChangeHandler.ts, templateRenderer.ts
 **Testes:** 351 → 359 (+8)
 
