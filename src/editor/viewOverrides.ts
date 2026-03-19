@@ -1,6 +1,7 @@
 import { MarkdownView } from 'obsidian';
 import { mirrorStateField } from './mirrorState';
 import { getApplicableConfig } from './mirrorConfig';
+import { resolveEngine } from './mirrorDecision';
 import { Logger } from '../dev/logger';
 import { getEditorView, getViewMode, getVaultConfig } from '../utils/obsidianInternals';
 import { getViewId } from '../rendering/domInjector';
@@ -27,7 +28,12 @@ export function applyViewOverrides(plugin: MirrorUIPlugin, view: MarkdownView) {
     const viewId = getViewId(view.containerEl);
     const frontmatter = plugin.app.metadataCache.getFileCache(view.file)?.frontmatter || {};
     const rvConfig = getApplicableConfig(plugin, view.file, frontmatter, viewId, viewMode);
-    overrides = rvConfig?.viewOverrides ?? null;
+    // Only apply overrides if the mirror can actually render in this mode.
+    // left/right positions return engine:'none' in RV — applying overrides without a visible
+    // mirror would confuse the user (e.g. properties hidden but no mirror shown).
+    if (rvConfig && resolveEngine(rvConfig.position, viewMode) !== 'none') {
+      overrides = rvConfig.viewOverrides ?? null;
+    }
   }
 
   const viewContent = view.containerEl.querySelector('.view-content');

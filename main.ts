@@ -143,15 +143,18 @@ export default class MirrorUIPlugin extends Plugin {
             const view = leaf.view as MarkdownView;
 
             setupDomPosition(this, view);
-            applyViewOverrides(this, view);
 
             Logger.log('Metadata changed, forcing CM6 update');
             const cm = getEditorView(view);
             if (cm) {
+              // Dispatch first — cm.dispatch is synchronous, updates StateField immediately.
+              // applyViewOverrides reads from StateField, so it must run AFTER dispatch
+              // to get the fresh config (avoids stale hideProps/inlineTitle from previous mirror).
               cm.dispatch({
                 effects: forceMirrorUpdateEffect.of()
               });
             }
+            applyViewOverrides(this, view);
           });
         }, TIMING.METADATA_CHANGE_DEBOUNCE));
 
