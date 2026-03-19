@@ -91,6 +91,83 @@ describe('multi-pane isolation', () => {
     });
     await browser.pause(2000);
   });
+
+  it('same note with code block renders in both split panes', async () => {
+    // Open note with code block in first pane
+    await openFile(NOTES.codeBlock);
+    await browser.pause(5000);
+
+    // Verify code block rendered in first pane
+    const firstPaneHasBlock = await browser.execute((marker: string) => {
+      const active = document.querySelector('.workspace-leaf.mod-active');
+      return active ? active.innerHTML.includes(marker) : false;
+    }, MARKERS.codeBlock);
+    expect(firstPaneHasBlock).toBe(true);
+
+    // Create split pane
+    await browser.execute(() => {
+      (window as any).app.workspace.getLeaf('split');
+    });
+    await browser.pause(2000);
+
+    // Open SAME note in new pane
+    await openFile(NOTES.codeBlock);
+    await browser.pause(5000);
+
+    // Count total code blocks across all panes — should be 2
+    const totalBlocks = await browser.execute(() =>
+      document.querySelectorAll('.mirror-code-block').length
+    );
+    expect(totalBlocks).toBeGreaterThanOrEqual(2);
+
+    // Verify both panes have the code block marker
+    const allLeavesHaveMarker = await browser.execute((marker: string) => {
+      const leaves = document.querySelectorAll('.workspace-leaf');
+      let count = 0;
+      for (const leaf of leaves) {
+        if (leaf.innerHTML.includes(marker)) count++;
+      }
+      return count;
+    }, MARKERS.codeBlock);
+    expect(allLeavesHaveMarker).toBeGreaterThanOrEqual(2);
+
+    // Cleanup: close extra panes
+    await browser.execute(() => {
+      const workspace = (window as any).app.workspace;
+      const leaves = workspace.getLeavesOfType('markdown');
+      for (let i = leaves.length - 1; i > 0; i--) {
+        leaves[i].detach();
+      }
+    });
+    await browser.pause(2000);
+  });
+
+  it('closing one pane preserves code block in the other', async () => {
+    // Open note with code block
+    await openFile(NOTES.codeBlock);
+    await browser.pause(5000);
+
+    // Create split and open same note
+    await browser.execute(() => {
+      (window as any).app.workspace.getLeaf('split');
+    });
+    await browser.pause(2000);
+    await openFile(NOTES.codeBlock);
+    await browser.pause(5000);
+
+    // Close active (second) pane
+    await browser.execute(() => {
+      (window as any).app.workspace.activeLeaf.detach();
+    });
+    await browser.pause(3000);
+
+    // Remaining pane should still have code block
+    const remainingHasBlock = await browser.execute((marker: string) => {
+      const active = document.querySelector('.workspace-leaf.mod-active');
+      return active ? active.innerHTML.includes(marker) : false;
+    }, MARKERS.codeBlock);
+    expect(remainingHasBlock).toBe(true);
+  });
 });
 
 describe('MutationObserver recovery', () => {
