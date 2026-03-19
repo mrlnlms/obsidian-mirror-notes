@@ -36,9 +36,14 @@ describe('resolveEngine', () => {
     expect(resolveEngine('bottom', 'preview')).toBe('dom');
   });
 
-  it('margin positions → margin engine', () => {
+  it('margin positions in Live Preview → margin engine', () => {
     expect(resolveEngine('left', 'source')).toBe('margin');
     expect(resolveEngine('right', 'source')).toBe('margin');
+  });
+
+  it('margin positions in Reading View → none (no CM6 margin renderer in RV)', () => {
+    expect(resolveEngine('left', 'preview')).toBe('none');
+    expect(resolveEngine('right', 'preview')).toBe('none');
   });
 });
 

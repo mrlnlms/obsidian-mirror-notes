@@ -22,7 +22,11 @@ export interface MirrorRuntimeDecision {
 /** Determine engine from position + viewMode. Reading View has no CM6 editor,
  *  so top/bottom positions use DOM injection instead of CM6 widgets. */
 export function resolveEngine(position: MirrorPosition, viewMode: string): MirrorEngine {
-  if (MARGIN_POSITIONS.includes(position)) return 'margin';
+  if (MARGIN_POSITIONS.includes(position)) {
+    // Margin panel is a CM6 ViewPlugin — only works in Live Preview.
+    // In Reading View, CM6 editor is hidden, so margin panel would be invisible.
+    return viewMode === 'preview' ? 'none' : 'margin';
+  }
   if (DOM_POSITIONS.includes(position)) return 'dom';
   if ((CM6_POSITIONS as readonly string[]).includes(position)) {
     return viewMode === 'preview' ? 'dom' : 'cm6';
