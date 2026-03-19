@@ -8,7 +8,7 @@ import type MirrorUIPlugin from '../../main';
 
 /** Register layout-change listener to detect LP <-> RV mode switches.
  *  Uses trailing debounce (50ms) because getMode() can oscillate during transition. */
-export function registerModeSwitchDetector(plugin: MirrorUIPlugin): void {
+export function registerModeSwitchDetector(plugin: MirrorUIPlugin): () => void {
   let layoutDebounce: NodeJS.Timeout | null = null;
   plugin.registerEvent(
     plugin.app.workspace.on('layout-change', () => {
@@ -34,4 +34,7 @@ export function registerModeSwitchDetector(plugin: MirrorUIPlugin): void {
       }, 50);
     })
   );
+  return () => {
+    if (layoutDebounce) clearTimeout(layoutDebounce);
+  };
 }

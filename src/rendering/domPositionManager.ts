@@ -121,7 +121,7 @@ export async function setupDomPosition(
     // isRetry guard prevents exponential cascade: retries don't schedule more retries.
     if (!isRetry && (config.position === 'above-backlinks' || config.position === 'below-backlinks')) {
       for (const delay of [500, 1500, 3000]) {
-        setTimeout(async () => {
+        plugin.scheduleTimer(async () => {
           // Only retry if override is still active (not yet resolved by an earlier retry)
           if (plugin.positionOverrides.has(overrideKey)) {
             Logger.log(`Retrying DOM position ${config.position} for ${file.path} [${viewId}] (${delay}ms)`);

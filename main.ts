@@ -36,6 +36,9 @@ export default class MirrorUIPlugin extends Plugin {
   knownTemplatePaths = new Set<string>();
   /** Track last known view mode per view — keyed by viewId:filePath for per-pane isolation */
   lastViewMode = new Map<string, string>();
+  /** Track fire-and-forget timers for cleanup on unload */
+  pendingTimers = new Set<NodeJS.Timeout>();
+  private cleanupModeSwitch: (() => void) | null = null;
 
   async onload() {
     await this.loadSettings();
@@ -58,7 +61,7 @@ export default class MirrorUIPlugin extends Plugin {
       this.app.workspace.on('file-open', (file) => {
         Logger.log(`[event] file-open: ${file?.path ?? '(null)'}`);
         if (file) {
-          setTimeout(() => {
+          this.scheduleTimer(() => {
             const view = this.app.workspace.getActiveViewOfType(MarkdownView);
             if (view) {
               const vid = getViewId(view.containerEl);
@@ -77,7 +80,7 @@ export default class MirrorUIPlugin extends Plugin {
         const viewFile = (leaf?.view instanceof MarkdownView) ? (leaf.view as MarkdownView).file?.path : null;
         Logger.log(`[event] active-leaf-change: ${viewFile ?? '(non-markdown or null)'}`);
         if (leaf?.view instanceof MarkdownView) {
-          setTimeout(() => {
+          this.scheduleTimer(() => {
             this.setupEditor(leaf.view as MarkdownView);
             setupDomPosition(this, leaf.view as MarkdownView);
           }, TIMING.EDITOR_SETUP_DELAY);
@@ -90,7 +93,7 @@ export default class MirrorUIPlugin extends Plugin {
     registerConfigWatcher(this, () => this.refreshAllEditors());
 
     // Detectar mode switch (LP ↔ RV) — layout-change com trailing debounce 50ms
-    registerModeSwitchDetector(this);
+    this.cleanupModeSwitch = registerModeSwitchDetector(this);
 
     // Registrar code block processor (```mirror ... ```)
     registerMirrorCodeBlock(this);
@@ -112,7 +115,7 @@ export default class MirrorUIPlugin extends Plugin {
       Logger.log(`[event] onLayoutReady: ${leaves.length} markdown leaves [${leaves.join(', ')}]`);
       // Cold start retry: MarkdownRenderer pode não popular o DOM na primeira tentativa.
       // Backlinks também podem não ter children ainda. Re-renderiza DOM mirrors após delay.
-      setTimeout(() => {
+      this.scheduleTimer(() => {
         Logger.log('[event] cold-start-retry (1s)');
         this.app.workspace.iterateAllLeaves(leaf => {
           if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -236,6 +239,16 @@ export default class MirrorUIPlugin extends Plugin {
 
   }
 
+  /** Schedule a timeout and track it for cleanup. Auto-removes on completion. */
+  scheduleTimer(fn: () => void, delay: number): NodeJS.Timeout {
+    const timer = setTimeout(() => {
+      this.pendingTimers.delete(timer);
+      fn();
+    }, delay);
+    this.pendingTimers.add(timer);
+    return timer;
+  }
+
   async loadSettings() {
     const raw = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, raw ?? {});
@@ -291,7 +304,7 @@ export default class MirrorUIPlugin extends Plugin {
     openSettings(this.app);
     openSettingsTab(this.app, this.manifest.id);
 
-    setTimeout(() => {
+    this.scheduleTimer(() => {
       const container = document.querySelector('.mirror-settings_main');
       if (!container) return;
       for (const input of Array.from(container.querySelectorAll('input'))) {
@@ -341,7 +354,7 @@ export default class MirrorUIPlugin extends Plugin {
       return; // StateField already present, nothing to do
     }
 
-    setTimeout(() => {
+    this.scheduleTimer(() => {
       applyViewOverrides(this, view);
     }, TIMING.HIDE_PROPS_DELAY);
   }
@@ -383,6 +396,11 @@ export default class MirrorUIPlugin extends Plugin {
     for (const t of this.crossNoteTimeouts.values()) clearTimeout(t);
     this.crossNoteTimeouts.clear();
     clearTemplateChangeTimeout();
+
+    // Cancel all fire-and-forget timers (backlinks retries, file-open, cold-start, etc.)
+    for (const t of this.pendingTimers) clearTimeout(t);
+    this.pendingTimers.clear();
+    if (this.cleanupModeSwitch) this.cleanupModeSwitch();
 
     Logger.log('Plugin unloaded successfully');
     Logger.destroy();
