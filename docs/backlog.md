@@ -57,11 +57,9 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
 - **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
-## E2E Testing — proximo
+## E2E Testing — concluido (pos-v54)
 
-- **E2E multi-pane code blocks** — split view da mesma nota com `\`\`\`mirror` em duas panes. Validar que ambas renderizam e reagem independentemente. Motivacao: fix de isolamento per-pane (v54) nao tem cobertura E2E — so unit tests em jsdom (onde `el.closest` cai no fallback `'default'`). Suite sugerida: `advanced-behaviors` (ja tem multi-pane isolation pra DOM mirrors)
-
-35 E2E specs passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
+37 E2E specs passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
 
 | Suite | Specs | Cobertura |
 |-------|-------|-----------|
@@ -71,7 +69,7 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 | lifecycle | 4 | Cold start, unload cleanup, re-enable, sem orphans |
 | visual-baselines | 6 | Screenshots: above-title, viewport, CM6, RV, roundtrip |
 | code-blocks | 5 | Render, variavel frontmatter, RV, source reference, border |
-| advanced-behaviors | 5 | Multi-pane isolation (3), MutationObserver recovery (2) |
+| advanced-behaviors | 7 | Multi-pane isolation (3), code block multi-pane (2), MutationObserver recovery (2) |
 
 Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baselines: `npm run test:visual:update`.
 
