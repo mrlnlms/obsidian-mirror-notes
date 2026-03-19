@@ -278,9 +278,9 @@ Funcao central: `computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId,
 ### Metadata change (frontmatter editado)
 1. `metadataCache.on('changed')` → per-file debounce 500ms
 2. `iterateAllLeaves` dentro do setTimeout (multi-pane aware)
-3. Para cada pane: `setupDomPosition` + `applyViewOverrides` + `forceMirrorUpdateEffect`
+3. Para cada pane: `setupDomPosition` (usa `computeMirrorRuntimeDecision`) + `applyViewOverrides` + `forceMirrorUpdateEffect`
 4. CM6 StateField `update()` → per-view throttle 500ms → `handleForcedUpdate`
-5. `clearConfigCache` → `computeMirrorRuntimeDecision` com frontmatter fresco
+5. `clearConfigCache` → `getApplicableConfig` com frontmatter fresco (StateField ainda nao migrado pra decision function)
 6. `buildDecorations` → novo widget com dados atualizados
 
 ### Template change (template file editado)
@@ -304,7 +304,7 @@ Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescreve
 - Multi-pane: cada view aplica overrides independentes (CSS scoped, class toggle por elemento)
 - `applyViewOverrides()` chamado em 5 hooks (metadataCache.changed, refreshAllEditors, setupEditor, file-open, active-leaf-change)
 - Onunload: remove classes CSS + restaura `is-readable-line-width` pro valor global
-- Config: `ViewOverrides` em `types.ts`, resolvido por `resolveViewOverrides()` em `mirrorConfig.ts`
+- Config: `ViewOverrides` em `types.ts`, resolvido inline por `applyViewOverrides()` em `viewOverrides.ts`
 
 ## Notas tecnicas
 
@@ -321,7 +321,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (359 testes, 23 suites)
+npm test         # vitest (372 testes, 25 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

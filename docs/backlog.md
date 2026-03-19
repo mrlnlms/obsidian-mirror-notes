@@ -31,6 +31,9 @@ Identificado via analise de carga cognitiva (Codex, 2026-03-18). O codigo esta l
 **Nivel 3 — Documentar fluxos canonicos no architecture.md — CONCLUIDO (v55)**
 3 fluxos canonicos documentados em architecture.md: mode switch (Cmd+E), metadata change, template change. Cada fluxo com evento de entrada → funcao central → saidas possiveis.
 
+**Nivel 4 — Migrar callers restantes pra `computeMirrorRuntimeDecision`**
+`mirrorState.ts` (linhas 99, 184, 237) e `marginPanelExtension.ts` (linha 48) ainda chamam `getApplicableConfig` direto, sem `viewMode`. Em RV, o StateField recebe config de LP (sem impacto visual porque CM6 esta escondido), mas a inconsistencia dificulta raciocinar sobre o fluxo. Identificado via Codex review #6 (2026-03-19). Refator coordenado — requer que `computeMirrorRuntimeDecision` seja acessivel no contexto do StateField (hoje o StateField nao tem acesso a `viewMode` via Facet).
+
 **O que NAO fazer:** nao abstrair demais, nao criar framework interno, nao refatorar so porque e complexo. Complexidade atual e quase toda inevitavel dado o escopo do plugin (paridade LP/RV, 7 posicoes, multi-pane, fallback chain, reatividade) num host sem APIs publicas completas.
 
 ## Suggest component — migrar de @popperjs/core para API nativa
