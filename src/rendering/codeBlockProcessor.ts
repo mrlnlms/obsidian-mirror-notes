@@ -83,7 +83,7 @@ export async function resolveVariables(
   inlineVars: Record<string, string>,
   sourcePath: string | undefined,
   currentPath: string
-): Promise<Record<string, string>> {
+): Promise<Record<string, unknown>> {
   // Frontmatter da nota atual
   const currentFile = plugin.app.vault.getAbstractFileByPath(currentPath);
   const currentFm = (currentFile instanceof TFile)
@@ -91,7 +91,7 @@ export async function resolveVariables(
     : {};
 
   // Frontmatter da nota source (se especificada)
-  let sourceFm: Record<string, any> = {};
+  let sourceFm: Record<string, unknown> = {};
   if (sourcePath) {
     const sourceFile = plugin.app.vault.getAbstractFileByPath(sourcePath);
     if (sourceFile instanceof TFile) {

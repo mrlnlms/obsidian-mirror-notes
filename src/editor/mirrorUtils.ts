@@ -27,7 +27,7 @@ export function generateWidgetId(): string {
 /** Resolve a template variable key against a frontmatter object.
  *  Strategy: flat key first (respects Obsidian literal property names like "ma.miii"),
  *  then nested path fallback (like Dataview: "project_info.dates.start_date"). */
-export function resolveVariable(key: string, variables: Record<string, any>): string | undefined {
+export function resolveVariable(key: string, variables: Record<string, unknown>): string | undefined {
   // 1. Flat first — literal key lookup
   const flat = variables[key];
   if (flat != null) return String(flat);
@@ -35,10 +35,10 @@ export function resolveVariable(key: string, variables: Record<string, any>): st
   // 2. Nested fallback — split on dots and traverse
   if (key.includes('.')) {
     const segments = key.split('.');
-    let current: any = variables;
+    let current: unknown = variables;
     for (const seg of segments) {
       if (current == null || typeof current !== 'object') return undefined;
-      current = current[seg];
+      current = (current as Record<string, unknown>)[seg];
     }
     if (current != null) return String(current);
   }

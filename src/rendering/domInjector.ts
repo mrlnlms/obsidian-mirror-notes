@@ -200,7 +200,7 @@ export async function injectDomMirror(
   plugin: MirrorUIPlugin,
   view: MarkdownView,
   config: ApplicableMirrorConfig,
-  frontmatter: Record<string, string>,
+  frontmatter: Record<string, unknown>,
   onContainerRemoved?: () => void
 ): Promise<MirrorPosition> {
   const file = view.file;

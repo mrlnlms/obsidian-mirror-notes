@@ -38,7 +38,7 @@ export const forceMirrorUpdateEffect = StateEffect.define<void>();
 // STATE FIELD — HELPERS
 // =================================================================================
 /** Busca frontmatter do metadataCache do Obsidian (fonte unica de verdade) */
-function getMetadataCacheFrontmatter(plugin: MirrorUIPlugin, filePath: string): Record<string, any> {
+function getMetadataCacheFrontmatter(plugin: MirrorUIPlugin, filePath: string): Record<string, unknown> {
   const file = plugin.app.vault.getAbstractFileByPath(filePath);
   if (!file || !(file instanceof TFile)) return {};
   return plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
@@ -80,7 +80,7 @@ export function handleForcedUpdate(
   plugin: MirrorUIPlugin,
   file: TFile | null,
   docText: string,
-  newFrontmatter: Record<string, any>,
+  newFrontmatter: Record<string, unknown>,
   newFrontmatterHash: string
 ): MirrorFieldState {
   clearConfigCache();
@@ -173,7 +173,7 @@ export function handleConfigChange(
   plugin: MirrorUIPlugin,
   file: TFile | null,
   docText: string,
-  newFrontmatter: Record<string, any>,
+  newFrontmatter: Record<string, unknown>,
   newFrontmatterHash: string
 ): MirrorFieldState | null {
   const viewId = tr.state.facet(viewIdFacet);

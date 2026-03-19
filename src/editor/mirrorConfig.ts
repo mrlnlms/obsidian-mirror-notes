@@ -23,7 +23,7 @@ export function clearConfigCache(): void {
 export function evaluateCondition(
   condition: Condition,
   file: TFile,
-  frontmatter: any
+  frontmatter: Record<string, unknown>
 ): boolean {
   let result = false;
   switch (condition.type) {
@@ -55,7 +55,7 @@ export function evaluateConditions(
   conditions: Condition[],
   logic: ConditionLogic,
   file: TFile,
-  frontmatter: any
+  frontmatter: Record<string, unknown>
 ): boolean {
   if (conditions.length === 0) return false;
   const check = (c: Condition) => evaluateCondition(c, file, frontmatter);

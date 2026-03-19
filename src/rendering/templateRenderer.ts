@@ -6,7 +6,7 @@ import { resolveVariable, traceMirrorDecision } from '../editor/mirrorUtils';
 export interface RenderContext {
   plugin: MirrorUIPlugin;
   templatePath: string;
-  variables: Record<string, string>;
+  variables: Record<string, unknown>;
   sourcePath: string;
   container: HTMLElement;
   cacheKey: string;
