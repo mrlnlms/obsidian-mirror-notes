@@ -227,6 +227,42 @@ describe('renderMirrorTemplate', () => {
     renderMarkdownSpy.mockRestore();
   });
 
+  it('concurrent renders with 3 callers — no parallel doRender execution', async () => {
+    const { MarkdownRenderer, Component } = await import('obsidian');
+    let activeRenders = 0;
+    let maxActiveRenders = 0;
+    const originalRender = MarkdownRenderer.renderMarkdown;
+    vi.spyOn(MarkdownRenderer, 'renderMarkdown').mockImplementation(async (...args) => {
+      activeRenders++;
+      maxActiveRenders = Math.max(maxActiveRenders, activeRenders);
+      await new Promise(r => setTimeout(r, 10));
+      activeRenders--;
+      return originalRender.call(MarkdownRenderer, ...args);
+    });
+
+    const plugin = createFakePlugin();
+    const fakeComponent = new Component();
+    const ctx = {
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: { title: 'Triple' },
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-triple-concurrent',
+      component: fakeComponent,
+    };
+
+    await Promise.all([
+      renderMirrorTemplate(ctx),
+      renderMirrorTemplate(ctx),
+      renderMirrorTemplate(ctx),
+    ]);
+
+    // With while-loop: renders serialized, never more than 1 active at a time
+    expect(maxActiveRenders).toBe(1);
+    vi.mocked(MarkdownRenderer.renderMarkdown).mockRestore();
+  });
+
   it('different cacheKeys render independently (no cross-cache)', async () => {
     const plugin = createFakePlugin();
 

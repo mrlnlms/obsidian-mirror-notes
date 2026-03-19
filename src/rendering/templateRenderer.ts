@@ -24,9 +24,10 @@ const lastRenderChildren = new Map<string, MarkdownRenderChild>();
 export async function renderMirrorTemplate(ctx: RenderContext): Promise<void> {
   const { cacheKey } = ctx;
 
-  // Guard: if already rendering this cache key, wait for it to finish
-  // then re-render with fresh context (don't reuse the old promise — data may have changed)
-  if (renderingPromises.has(cacheKey)) {
+  // Guard: wait for any in-progress render on this cache key to finish.
+  // while (not if) — with 3+ concurrent callers, the first waiter starts a new render
+  // which the remaining waiters must also wait for to avoid parallel doRender() calls.
+  while (renderingPromises.has(cacheKey)) {
     await renderingPromises.get(cacheKey);
   }
 
