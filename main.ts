@@ -129,32 +129,29 @@ export default class MirrorUIPlugin extends Plugin {
     let metadataUpdateTimeout: NodeJS.Timeout | null = null;
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
-        // Branch 1: arquivo ativo — atualizar mirrors da nota sendo editada
-        const activeView = this.app.workspace.getActiveViewOfType(MarkdownView);
-        if (activeView && activeView.file && file.path === activeView.file.path) {
-          if (metadataUpdateTimeout) {
-            clearTimeout(metadataUpdateTimeout);
-          }
+        // Branch 1: atualizar TODOS os views da nota que mudou (multi-pane aware)
+        // iterateAllLeaves inside setTimeout — query live workspace state inside debounce
+        if (metadataUpdateTimeout) {
+          clearTimeout(metadataUpdateTimeout);
+        }
+        metadataUpdateTimeout = setTimeout(() => {
+          this.app.workspace.iterateAllLeaves(leaf => {
+            if (!(leaf.view instanceof MarkdownView) || leaf.view.file?.path !== file.path) return;
+            const view = leaf.view as MarkdownView;
 
-          metadataUpdateTimeout = setTimeout(() => {
-            // DOM injection + hideProps: sempre seguro (nao toca no CM6)
-            setupDomPosition(this, activeView);
-            applyViewOverrides(this, activeView);
+            setupDomPosition(this, view);
+            applyViewOverrides(this, view);
 
-            // CM6 forced update: sempre dispatchar (Properties UI edita YAML sem gerar
-            // CM6 transactions, entao o StateField nao auto-detecta. O proprio StateField
-            // ja tem throttle 1/sec e debounce 500ms internos)
             Logger.log('Metadata changed, forcing CM6 update');
-            const cm = getEditorView(activeView);
+            const cm = getEditorView(view);
             if (cm) {
               cm.dispatch({
                 effects: forceMirrorUpdateEffect.of()
               });
             }
-
-            metadataUpdateTimeout = null;
-          }, TIMING.METADATA_CHANGE_DEBOUNCE);
-        }
+          });
+          metadataUpdateTimeout = null;
+        }, TIMING.METADATA_CHANGE_DEBOUNCE);
 
         // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
         // Check at event time to decide if we need a timeout at all
