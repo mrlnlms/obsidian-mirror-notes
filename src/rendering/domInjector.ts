@@ -36,6 +36,14 @@ export function getViewId(containerEl: HTMLElement): string {
   return id;
 }
 
+/** Get viewId for a code block element by traversing up to the pane container.
+ *  Falls back to 'default' when DOM traversal fails (tests, detached elements). */
+export function getBlockViewId(el: HTMLElement): string {
+  const leafContent = el.closest('.workspace-leaf-content') as HTMLElement | null;
+  if (leafContent) return getViewId(leafContent);
+  return 'default';
+}
+
 /** Reset viewId counter (for tests only) */
 export function resetViewIdCounter(): void {
   viewIdCounter = 0;

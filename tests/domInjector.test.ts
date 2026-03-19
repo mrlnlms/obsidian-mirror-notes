@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   isDomPosition, isDomTargetVisible, resolveTarget, getFallbackPosition,
   injectDomMirror, removeDomMirror, removeAllDomMirrors, removeOtherDomMirrors,
-  cleanupAllDomMirrors, getViewId, resetViewIdCounter,
+  cleanupAllDomMirrors, getViewId, getBlockViewId, resetViewIdCounter,
   setupContainerObserver, disconnectObserver, disconnectObserversByPrefix,
 } from '../src/rendering/domInjector';
 import { renderMirrorTemplate } from '../src/rendering/templateRenderer';
@@ -964,5 +964,54 @@ describe('injectDomMirror with onContainerRemoved', () => {
     expect(onRemoved).not.toHaveBeenCalled();
 
     document.body.removeChild(view.containerEl);
+  });
+});
+
+describe('getBlockViewId', () => {
+  beforeEach(() => {
+    resetViewIdCounter();
+  });
+
+  it('returns viewId when el is inside .workspace-leaf-content', () => {
+    const leafContent = document.createElement('div');
+    leafContent.className = 'workspace-leaf-content';
+    const viewContent = document.createElement('div');
+    viewContent.className = 'view-content';
+    leafContent.appendChild(viewContent);
+    const el = document.createElement('div');
+    viewContent.appendChild(el);
+
+    const id = getBlockViewId(el);
+    expect(id).toMatch(/^v\d+$/);
+  });
+
+  it('returns same viewId for elements in the same pane', () => {
+    const leafContent = document.createElement('div');
+    leafContent.className = 'workspace-leaf-content';
+    const el1 = document.createElement('div');
+    const el2 = document.createElement('div');
+    leafContent.appendChild(el1);
+    leafContent.appendChild(el2);
+
+    expect(getBlockViewId(el1)).toBe(getBlockViewId(el2));
+  });
+
+  it('returns different viewIds for elements in different panes', () => {
+    const leaf1 = document.createElement('div');
+    leaf1.className = 'workspace-leaf-content';
+    const el1 = document.createElement('div');
+    leaf1.appendChild(el1);
+
+    const leaf2 = document.createElement('div');
+    leaf2.className = 'workspace-leaf-content';
+    const el2 = document.createElement('div');
+    leaf2.appendChild(el2);
+
+    expect(getBlockViewId(el1)).not.toBe(getBlockViewId(el2));
+  });
+
+  it('returns "default" when el is not inside .workspace-leaf-content', () => {
+    const el = document.createElement('div');
+    expect(getBlockViewId(el)).toBe('default');
   });
 });
