@@ -1,7 +1,8 @@
 import { TFile, MarkdownRenderChild } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { parseBlockContent } from './blockParser';
-import { renderMirrorTemplate, clearRenderChild } from './templateRenderer';
+import { renderMirrorTemplate, clearRenderChild, clearRenderCache } from './templateRenderer';
+import { getBlockViewId } from './domInjector';
 import { Logger } from '../dev/logger';
 
 export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
@@ -25,10 +26,14 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     const child = new MarkdownRenderChild(container);
     ctx.addChild(child);
 
-    // Cache key unico por bloco (path da nota + posicao no documento)
+    // Per-pane viewId: traverse DOM from el to find pane container.
+    // Falls back to 'default' in tests/detached DOM (preserves single-pane behavior).
+    const viewId = getBlockViewId(el);
+
+    // Cache key unico por bloco PER PANE (viewId + path + posicao)
     const sectionInfo = ctx.getSectionInfo(el);
     const lineStart = sectionInfo?.lineStart ?? 0;
-    const cacheKey = `block-${ctx.sourcePath}-${lineStart}`;
+    const cacheKey = `block-${viewId}-${ctx.sourcePath}-${lineStart}`;
 
     // Funcao de render (reusada no re-render cross-note)
     const doRender = async () => {
@@ -44,8 +49,8 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       });
     };
 
-    // Chave unica por bloco (usada em ambos registries)
-    const blockKey = `${ctx.sourcePath}::${lineStart}`;
+    // Chave unica por bloco PER PANE (usada em ambos registries)
+    const blockKey = `${viewId}:${ctx.sourcePath}::${lineStart}`;
 
     // Template dependency (todos os code blocks — re-render quando template muda)
     plugin.templateDeps.register(config.templatePath, blockKey, doRender);
@@ -53,9 +58,10 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
       plugin.templateDeps.unregisterBlock(blockKey);
     });
 
-    // Clean up lastRenderChildren entry when block is destroyed (prevents memory leak)
+    // Clean up render caches when block is destroyed (prevents memory leak)
     child.register(() => {
       clearRenderChild(cacheKey);
+      clearRenderCache(cacheKey);
     });
 
     // Source dependency (so se tem source externo — re-render quando source muda)
