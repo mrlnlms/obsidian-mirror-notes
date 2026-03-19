@@ -2,6 +2,16 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## v55 — Central decision function + canonical flows
+
+- Feat: `computeMirrorRuntimeDecision()` em `mirrorDecision.ts` — funcao pura central de decisao de runtime (engine, posicao, fallback)
+- Feat: `resolveEngine()` centraliza decisao de engine (CM6 positions em RV → DOM) num unico lugar
+- Refactor: `domPositionManager.setupDomPosition` usa decision function (remove `shouldInjectDom` espalhado)
+- Refactor: trace logging integrado na decision function (`runtime-decision` events)
+- Docs: 3 fluxos canonicos em architecture.md (mode switch, metadata change, template change)
+- Backlog: observabilidade niveis 2-3 concluidos
+- 370 testes (+11)
+
 ## v54 — Runtime correctness + type safety + DRY
 
 - Fix: stale callbacks em debounce de cross-note e template (re-query dentro do setTimeout)

@@ -12,10 +12,6 @@ Proximo bloco de trabalho. Base tecnica pronta (v45: flush positioning + ResizeO
 
 Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e fix do typo `overide`. Pendente: padronizar textos PT→EN, limpar opcoes deprecated, layout/hierarquia visual. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 
-### 3. Observabilidade e decisao centralizada
-
-Teto de qualidade de codigo. Logs orientados a decisao (nivel 1), funcao central `computeMirrorRuntimeDecision` (nivel 2), documentacao de fluxos canonicos (nivel 3). Pode ser feito incrementalmente — nivel 1 e independente e da retorno imediato. Itens granulares no [backlog](backlog.md#observabilidade-e-decisao-centralizada-teto-de-qualidade-de-codigo).
-
 ## Pre-lancamento (must-have)
 
 - [ ] **Curadoria do demo vault** — revisar notas e exemplos em `demo/samples/`, selecionar os melhores, organizar pra publicacao. Hoje o vault acumula tudo que foi portado via `copy-to-demo` durante o dev — precisa de uma passada final
@@ -38,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v55 | Central decision function | `computeMirrorRuntimeDecision`, `resolveEngine`, domPositionManager refactor, canonical flows docs. 370 unit + 37 E2E |
 | v54 | Runtime correctness + pane isolation | Stale callbacks, multi-pane frontmatter, memory leak, code block pane isolation, type safety, DRY. Audit Claude+Codex. 359 unit + 37 E2E |
 | v53 | Rename mirrors + typo migration | Inline rename, `overide→override` migration com auto-save, `toogle→toggle` fix, UI labels EN |
 | v52 | Structural refactor (code review) | @ts-ignore centralizados (14 wrappers), tipagem core, main.ts 449→386, settings.ts 545→83 (5 modulos), view overrides dedup |

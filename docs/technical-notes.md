@@ -2,6 +2,29 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## O que mudou na v55
+
+### Central decision function + canonical flows
+
+**Contexto:** backlog de observabilidade (niveis 2-3) identificado via analise de carga cognitiva com Codex. Decisao de runtime (qual engine? qual posicao? fallback?) ficava espalhada em 4-5 modulos. Debugar "por que esse mirror sumiu?" exigia juntar pecas de mirrorConfig, domPositionManager, decorationBuilder e marginPanelExtension.
+
+**`computeMirrorRuntimeDecision` (mirrorDecision.ts)**
+Funcao pura que recebe (plugin, file, frontmatter, viewId, viewMode) e retorna `{ config, engine, requestedPosition, resolvedPosition, fallbackApplied, reason }`. `resolveEngine()` centraliza a decisao de engine — inclui o caso especial de Reading View (CM6 positions usam DOM em RV) num unico lugar, substituindo checks espalhados em 3 arquivos.
+
+**Refactor domPositionManager**
+`setupDomPosition` substituiu o bloco `shouldInjectDom` (3 linhas com isDomPosition + CM6_POSITIONS + isReadingView) por `decision.engine !== 'dom'`. Imports `getApplicableConfig` e `CM6_POSITIONS` removidos.
+
+**Trace logging**
+`traceMirrorDecision` com event `runtime-decision` agora e chamado dentro da decision function (antes do return). Trace no domPositionManager simplificado pra Logger.log do resultado da injecao DOM.
+
+**Docs**
+3 fluxos canonicos documentados em architecture.md: mode switch (Cmd+E), metadata change (frontmatter editado), template change (template file editado). Cada fluxo com cadeia completa de evento → funcao central → saidas.
+
+**Nota sobre override double-apply:** `getApplicableConfig` ja aplica `positionOverrides` internamente, e `computeMirrorRuntimeDecision` tambem le overrides. No escopo atual (so `domPositionManager` chama, que limpa override antes), nao ha double-apply. Considerar ao migrar outros callers futuramente.
+
+**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, architecture.md, backlog.md
+**Testes:** +11 (370 total, 25 suites)
+
 ## O que mudou na v54
 
 ### Runtime correctness + type safety + DRY
