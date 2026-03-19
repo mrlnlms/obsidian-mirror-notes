@@ -1,5 +1,5 @@
 import { WidgetType, EditorView } from "@codemirror/view";
-import { MirrorState, ApplicableMirrorConfig } from "./mirrorTypes";
+import { MirrorState, ApplicableMirrorConfig, buildContainerClasses } from "./mirrorTypes";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../dev/logger';
 import { renderMirrorTemplate } from '../rendering/templateRenderer';
@@ -49,9 +49,7 @@ export class MirrorTemplateWidget extends WidgetType {
     }
 
     // Atualizar classes sempre (showContainer pode mudar via settings)
-    const classes = ['mirror-ui-widget', `mirror-position-${this.config.position}`];
-    if (this.config.showContainer) classes.push('mirror-container-styled');
-    container.className = classes.join(' ');
+    container.className = buildContainerClasses(this.config.position, this.config.showContainer);
 
     // Fire-and-forget: toDOM must be synchronous (CM6 API), so async render
     // runs in background. "Loading template..." placeholder handles the interim.

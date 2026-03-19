@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { extractRawYaml, hashObject, generateWidgetId, resolveVariable, traceMirrorDecision } from '../src/editor/mirrorUtils';
+import { buildContainerClasses } from '../src/editor/mirrorTypes';
 
 vi.mock('../src/dev/logger', () => ({
   Logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), init: vi.fn(), setEnabled: vi.fn(), destroy: vi.fn() },
@@ -305,5 +306,18 @@ describe('traceMirrorDecision', () => {
     expect(Logger.log).toHaveBeenCalledWith(
       '[trace] notes/test.md [v0] forced-update → mirror="Test" [config changed: position, templatePath]'
     );
+  });
+});
+
+// =============================================================================
+// buildContainerClasses
+// =============================================================================
+describe('buildContainerClasses', () => {
+  it('includes base class and position class', () => {
+    expect(buildContainerClasses('top', false)).toBe('mirror-ui-widget mirror-position-top');
+  });
+
+  it('includes styled class when showContainer is true', () => {
+    expect(buildContainerClasses('bottom', true)).toBe('mirror-ui-widget mirror-position-bottom mirror-container-styled');
   });
 });

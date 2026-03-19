@@ -1,6 +1,6 @@
 import { MarkdownView, App } from "obsidian";
 import MirrorUIPlugin from "../../main";
-import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS } from "../editor/mirrorTypes";
+import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS, buildContainerClasses } from "../editor/mirrorTypes";
 import { renderMirrorTemplate } from "./templateRenderer";
 import { Logger } from "../dev/logger";
 import { getVaultConfig, getBacklinkPlugin } from "../utils/obsidianInternals";
@@ -233,9 +233,7 @@ export async function injectDomMirror(
   }
 
   // Atualizar classes sempre (showContainer pode mudar via settings)
-  const classes = ['mirror-ui-widget', 'mirror-dom-injection', `mirror-position-${config.position}`];
-  if (config.showContainer) classes.push('mirror-container-styled');
-  container.className = classes.join(' ');
+  container.className = `${buildContainerClasses(config.position, config.showContainer)} mirror-dom-injection`;
 
   // Insert at the right position
   const { target, method } = resolved;

@@ -45,4 +45,11 @@ export interface MirrorState {
 export interface MirrorFieldState {
   mirrorState: MirrorState;
   decorations: import("@codemirror/view").DecorationSet;
-} 
+}
+
+/** Build CSS class string for mirror containers (shared between CM6 widget and DOM injection) */
+export function buildContainerClasses(position: MirrorPosition, showContainer: boolean): string {
+  const classes = ['mirror-ui-widget', `mirror-position-${position}`];
+  if (showContainer) classes.push('mirror-container-styled');
+  return classes.join(' ');
+}
