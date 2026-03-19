@@ -143,8 +143,12 @@ export function clearRenderCache(cacheKey?: string): void {
     lastRenderedContent.delete(cacheKey);
   } else {
     lastRenderedContent.clear();
+    lastRenderChildren.clear(); // Full clear: plugin unload, cold-start retry
   }
-  // lastRenderChildren is NOT cleared here — it tracks Component lifecycle,
-  // not content cache. Clearing it would lose the reference needed for
-  // removeChild(prev) on the next re-render, causing orphan accumulation.
+}
+
+/** Remove a specific entry from the lastRenderChildren map.
+ *  Call this when a code block is destroyed to prevent memory leaks. */
+export function clearRenderChild(cacheKey: string): void {
+  lastRenderChildren.delete(cacheKey);
 }

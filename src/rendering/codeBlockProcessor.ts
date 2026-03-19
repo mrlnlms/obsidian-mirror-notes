@@ -1,7 +1,7 @@
 import { TFile, MarkdownRenderChild } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { parseBlockContent } from './blockParser';
-import { renderMirrorTemplate } from './templateRenderer';
+import { renderMirrorTemplate, clearRenderChild } from './templateRenderer';
 import { Logger } from '../dev/logger';
 
 export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
@@ -51,6 +51,11 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     plugin.templateDeps.register(config.templatePath, blockKey, doRender);
     child.register(() => {
       plugin.templateDeps.unregisterBlock(blockKey);
+    });
+
+    // Clean up lastRenderChildren entry when block is destroyed (prevents memory leak)
+    child.register(() => {
+      clearRenderChild(cacheKey);
     });
 
     // Source dependency (so se tem source externo — re-render quando source muda)

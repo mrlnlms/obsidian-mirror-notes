@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderMirrorTemplate, clearRenderCache } from '../src/rendering/templateRenderer';
+import { renderMirrorTemplate, clearRenderCache, clearRenderChild } from '../src/rendering/templateRenderer';
 import { createFakePlugin } from './mocks/pluginFactory';
 import { TFile } from 'obsidian';
 
@@ -328,7 +328,7 @@ describe('renderMirrorTemplate', () => {
     removeChildSpy.mockRestore();
   });
 
-  it('clearRenderCache does not break child cleanup on next re-render', async () => {
+  it('clearRenderCache (full) also clears lastRenderChildren — no stale removeChild', async () => {
     const { Component } = await import('obsidian');
     const fakeComponent = new Component();
     const addChildSpy = vi.spyOn(fakeComponent, 'addChild');
@@ -364,16 +364,55 @@ describe('renderMirrorTemplate', () => {
     await renderMirrorTemplate(ctx);
     expect(addChildSpy).toHaveBeenCalledTimes(1);
 
-    // Global cache clear (simulates cold-start retry)
+    // Global cache clear (simulates plugin unload / cold-start retry)
+    // Full clear now also clears lastRenderChildren
     clearRenderCache();
 
-    // Re-render after cache clear — should still clean up previous child
+    // Re-render after full clear — removeChild should NOT be called
+    // (the previous child reference was wiped by the full clear)
     version = 2;
     await renderMirrorTemplate(ctx);
     expect(addChildSpy).toHaveBeenCalledTimes(2);
-    expect(removeChildSpy).toHaveBeenCalledTimes(1); // prev cleaned up despite cache clear
+    expect(removeChildSpy).not.toHaveBeenCalled();
 
     addChildSpy.mockRestore();
+    removeChildSpy.mockRestore();
+  });
+
+  it('clearRenderChild removes stale entry — re-render does not call removeChild', async () => {
+    const { Component } = await import('obsidian');
+    const fakeComponent = new Component();
+    const plugin = createFakePlugin();
+
+    // First render populates lastRenderChildren
+    await renderMirrorTemplate({
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: { title: 'Leak' },
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-leak',
+      component: fakeComponent,
+    });
+
+    // Simulate block destruction — clear the entry
+    clearRenderChild('test-leak');
+
+    // Spy AFTER clearRenderChild so we only observe the re-render behavior
+    const removeChildSpy = vi.spyOn(fakeComponent, 'removeChild');
+
+    // Re-render with same cacheKey — should NOT call removeChild (entry was cleared)
+    await renderMirrorTemplate({
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: { title: 'Leak' },
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-leak',
+      component: fakeComponent,
+    });
+
+    expect(removeChildSpy).not.toHaveBeenCalled();
     removeChildSpy.mockRestore();
   });
 });
