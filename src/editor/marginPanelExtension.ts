@@ -46,7 +46,10 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     const config = fieldState?.mirrorState?.config;
 
     if (!config || !MARGIN_POSITIONS.includes(config.position)) {
-      this.destroy();
+      // removePanel (not destroy) — preserve ResizeObserver across position changes.
+      // If config changes back to margin later, checkAndBuild() recreates the panel
+      // and the observer (still watching scrollDOM) repositions it on next resize.
+      this.removePanel();
       return;
     }
 
