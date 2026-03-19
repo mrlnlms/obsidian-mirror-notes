@@ -34,7 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
-| v55 | Central decision + Codex review | `computeMirrorRuntimeDecision`, canonical flows, 4 Codex fixes (render concurrency, ResizeObserver, margin RV, timer tracking). 372 unit + 37 E2E |
+| v55 | Central decision + Codex review | `computeMirrorRuntimeDecision`, canonical flows, 5 Codex fixes (render concurrency, ResizeObserver, margin RV, timer tracking, renderingPromises). 372 unit + 37 E2E |
 | v54 | Runtime correctness + pane isolation | Stale callbacks, multi-pane frontmatter, memory leak, code block pane isolation, type safety, DRY. Audit Claude+Codex. 359 unit + 37 E2E |
 | v53 | Rename mirrors + typo migration | Inline rename, `overide→override` migration com auto-save, `toogle→toggle` fix, UI labels EN |
 | v52 | Structural refactor (code review) | @ts-ignore centralizados (14 wrappers), tipagem core, main.ts 449→386, settings.ts 545→83 (5 modulos), view overrides dedup |

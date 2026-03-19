@@ -2,9 +2,9 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
-## Codex review v55 — 4 bug fixes
+## Codex review v55 — 5 bug fixes + docs
 
-Analise estatica por Codex encontrou 4 bugs que sobreviveram a 4 rodadas anteriores de review.
+Analise estatica por Codex em 2 rodadas (rodada 5: 4 bugs, rodada 6: 1 bug + docs + backlog).
 
 **Bug 1 — Render concurrency com 3+ callers (templateRenderer.ts)**
 `renderMirrorTemplate` usava `if (renderingPromises.has(cacheKey))` pra serializar renders. Com 2 callers funciona (A roda, B espera, B roda). Com 3+: A completa → B e C resumem do `await` simultaneamente → ambos chamam `doRender()` em paralelo, disputando `container.innerHTML`. Fix: `if` → `while` — cada waiter re-checa o lock apos resumir. Teste com `maxActiveRenders` tracking e `setTimeout(10ms)` no mock do `renderMarkdown` pra simular trabalho async. `component` no ctx necessario pra bypass do hash dedup (linha 83).
@@ -40,8 +40,18 @@ Funcao pura que recebe (plugin, file, frontmatter, viewId, viewMode) e retorna `
 
 **Nota sobre override double-apply:** `getApplicableConfig` ja aplica `positionOverrides` internamente, e `computeMirrorRuntimeDecision` tambem le overrides. No escopo atual (so `domPositionManager` chama, que limpa override antes), nao ha double-apply. Considerar ao migrar outros callers futuramente.
 
-**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, architecture.md, backlog.md
-**Testes:** +11 (370 total, 25 suites)
+**Bug 5 (Codex review #6) — renderingPromises nao limpo no hot-reload (templateRenderer.ts)**
+`cleanupMirrorCaches()` limpava todos os caches exceto `renderingPromises`. No hot-reload rapido (disable+enable), instancia nova podia ficar presa em `while (renderingPromises.has(cacheKey))` esperando promise da instancia morta. Fix: `clearRenderingPromises()` exportado e chamado em `cleanupMirrorCaches`.
+
+**Docs (Codex review #6) — architecture.md desatualizado**
+- Metadata flow dizia que passava por `computeMirrorRuntimeDecision` — errado, StateField usa `getApplicableConfig` direto
+- Citava `resolveViewOverrides()` que nao existe — corrigido pra `applyViewOverrides()` em viewOverrides.ts
+- Test counts desatualizados (359/23 → 372/25)
+
+**Backlog — Nivel 4 adicionado:** migrar mirrorState + marginPanelExtension pra `computeMirrorRuntimeDecision` (sem impacto runtime atual, CM6 escondido em RV)
+
+**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, architecture.md, backlog.md
+**Testes:** +13 (372 total, 25 suites)
 
 ## O que mudou na v54
 

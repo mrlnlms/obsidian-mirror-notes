@@ -14,6 +14,9 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: margin panel ResizeObserver sobrevive ciclo de mudanca de posicao (`destroy` → `removePanel` em update)
 - Fix: margin positions retornam `engine:none` em Reading View (CM6 ViewPlugin invisivel em RV)
 - Fix: todos fire-and-forget timers rastreados via `scheduleTimer()` e cancelados no onunload (backlinks retries 3s, cold-start 1s, mode switch 50ms)
+- Fix: `renderingPromises` limpo no onunload — previne hot-reload ficar preso em promise de instancia morta
+- Docs: architecture.md corrigido (metadata flow, `resolveViewOverrides` removido, test counts)
+- Backlog: nivel 4 — migrar mirrorState + marginPanelExtension pra `computeMirrorRuntimeDecision`
 - 372 testes (+13)
 
 ## v54 — Runtime correctness + type safety + DRY
