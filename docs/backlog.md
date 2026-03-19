@@ -25,18 +25,11 @@ Identificado via analise de carga cognitiva (Codex, 2026-03-18). O codigo esta l
 **Nivel 1 — Logs orientados a decisao — CONCLUIDO (pos-v53)**
 `traceMirrorDecision()` implementado em mirrorUtils.ts com prefixo `[trace]` filtravel. 5 pontos de insercao: config-resolve (mirrorConfig), cooldown-skip e dom-injection (domPositionManager), forced-update (mirrorState), render-skip (templateRenderer). Filtrar: `grep '[trace]' debug.log`. 6 testes unitarios.
 
-**Nivel 2 — Funcao central de decisao (`computeMirrorRuntimeDecision`)**
-Extrair uma funcao pura que recebe (plugin, view, file, frontmatter) e retorna um objeto declarativo:
-```
-{ viewMode, config, engine (cm6|dom|margin|none), requestedPosition, finalPosition, fallbackApplied, reason }
-```
-O resto do codigo passa a executar a decisao em vez de descobrir no caminho. Reduz branching espalhado, facilita testes unitarios da logica de decisao isolada. `domPositionManager.setupDomPosition` ja faz parte disso mas mistura decisao com execucao.
+**Nivel 2 — Funcao central de decisao (`computeMirrorRuntimeDecision`) — CONCLUIDO (v55)**
+`computeMirrorRuntimeDecision()` em `mirrorDecision.ts`. Funcao pura: recebe (plugin, file, frontmatter, viewId, viewMode), retorna `{ config, engine, requestedPosition, resolvedPosition, fallbackApplied, reason }`. `resolveEngine()` centraliza decisao de engine (CM6 positions em RV → dom). `domPositionManager.setupDomPosition` refatorado pra usar a decisao. 11 testes unitarios.
 
-**Nivel 3 — Documentar fluxos canonicos no architecture.md**
-2-3 fluxos criticos com: evento de entrada → funcao central → saidas possiveis → fallback esperado:
-- Mode switch (Cmd+E): layout-change → debounce 50ms → detectar modo → re-setup DOM + CM6
-- Metadata change: metadataCache.on('changed') → branch ativo vs cross-note vs template
-- Template change: vault.on('modify') + metadataCache → handleTemplateChange → re-render dependentes
+**Nivel 3 — Documentar fluxos canonicos no architecture.md — CONCLUIDO (v55)**
+3 fluxos canonicos documentados em architecture.md: mode switch (Cmd+E), metadata change, template change. Cada fluxo com evento de entrada → funcao central → saidas possiveis.
 
 **O que NAO fazer:** nao abstrair demais, nao criar framework interno, nao refatorar so porque e complexo. Complexidade atual e quase toda inevitavel dado o escopo do plugin (paridade LP/RV, 7 posicoes, multi-pane, fallback chain, reatividade) num host sem APIs publicas completas.
 

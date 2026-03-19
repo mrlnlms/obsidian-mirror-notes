@@ -262,6 +262,34 @@ Todos os 3 caminhos (CM6, code block, DOM) usam `metadataCache.getFileCache()` c
 - **Scoped invalidation** (v41): `clearRenderCache(cacheKey)` + `domCache.delete(cacheKey)` — so o widget atualizado perde cache
 - **Per-source timeout** (v41): `crossNoteTimeouts = Map<string, Timeout>` — cada source tem debounce independente
 
+## Fluxos canonicos
+
+Funcao central: `computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId, viewMode)` em `mirrorDecision.ts`. Retorna `{ config, engine, requestedPosition, resolvedPosition, fallbackApplied, reason }`. Callers executam a decisao.
+
+### Mode switch (Cmd+E)
+1. `layout-change` → `modeSwitchDetector.ts` trailing debounce 50ms
+2. Detecta mudanca de modo via `getMode()` + `lastViewMode` guard
+3. `setupEditor(view)` — garante StateField existe
+4. `setupDomPosition(view)` → `computeMirrorRuntimeDecision` com novo `viewMode`
+   - Se engine mudou (ex: `cm6` → `dom` em RV): remove widgets CM6, injeta DOM
+   - Se engine igual: re-injeta na posicao (container pode ter sido destruido pelo mode switch)
+5. `applyViewOverrides(view)` — CSS classes persistem entre modos
+
+### Metadata change (frontmatter editado)
+1. `metadataCache.on('changed')` → per-file debounce 500ms
+2. `iterateAllLeaves` dentro do setTimeout (multi-pane aware)
+3. Para cada pane: `setupDomPosition` + `applyViewOverrides` + `forceMirrorUpdateEffect`
+4. CM6 StateField `update()` → per-view throttle 500ms → `handleForcedUpdate`
+5. `clearConfigCache` → `computeMirrorRuntimeDecision` com frontmatter fresco
+6. `buildDecorations` → novo widget com dados atualizados
+
+### Template change (template file editado)
+1. `vault.on('modify')` ou `metadataCache.on('changed')` → `handleTemplateChange(filePath)`
+2. Re-query callbacks dentro do debounce 500ms (sem closure stale)
+3. Code blocks + DOM mirrors: callback `doRender()` direto
+4. CM6 widgets: `iterateAllLeaves` → `forceMirrorUpdateEffect` se templatePath matcha
+5. StateField `handleForcedUpdate` → clear caches → rebuild decorations → widget re-render
+
 ## View Overrides (v42)
 
 Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescrever:
