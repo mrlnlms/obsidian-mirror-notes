@@ -1,7 +1,6 @@
 import { MarkdownView } from 'obsidian';
 import { forceMirrorUpdateEffect } from '../editor/mirrorState';
-import { getApplicableConfig } from '../editor/mirrorConfig';
-import { CM6_POSITIONS } from '../editor/mirrorTypes';
+import { computeMirrorRuntimeDecision } from '../editor/mirrorDecision';
 import { isDomPosition, injectDomMirror, removeAllDomMirrors, removeOtherDomMirrors, getViewId, disconnectObserversByPrefix } from './domInjector';
 import { Logger } from '../dev/logger';
 import { traceMirrorDecision } from '../editor/mirrorUtils';
@@ -65,13 +64,14 @@ export async function setupDomPosition(
 
   const frontmatter = plugin.app.metadataCache.getFileCache(file)?.frontmatter || {};
   const viewMode = getViewMode(view);
-  const isReadingView = viewMode === 'preview';
-  const config = getApplicableConfig(plugin, file, frontmatter, viewId, viewMode);
-  // In Reading View, CM6 doesn't render — top/bottom need DOM injection too
-  const configPos = config?.position;
-  const shouldInjectDom = (configPos && isDomPosition(configPos)) ||
-                          (isReadingView && configPos && (CM6_POSITIONS as readonly string[]).includes(configPos));
-  if (!config || !shouldInjectDom) {
+
+  // Use central decision for engine resolution
+  const decision = computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId, viewMode);
+  const config = decision.config;
+
+  // DOM injection needed when engine is 'dom' (includes RV + CM6 positions)
+  // Note: positionOverride was deleted at line 64, so decision.engine reflects the BASE position
+  if (!config || decision.engine !== 'dom') {
     removeAllDomMirrors(viewId, file.path);
     return;
   }
