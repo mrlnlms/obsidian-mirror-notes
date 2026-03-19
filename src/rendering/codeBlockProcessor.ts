@@ -73,7 +73,7 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
   });
 }
 
-async function resolveVariables(
+export async function resolveVariables(
   plugin: MirrorUIPlugin,
   inlineVars: Record<string, string>,
   sourcePath: string | undefined,

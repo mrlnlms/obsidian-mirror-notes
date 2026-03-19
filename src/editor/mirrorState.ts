@@ -44,11 +44,11 @@ function getMetadataCacheFrontmatter(plugin: MirrorUIPlugin, filePath: string): 
   return plugin.app.metadataCache.getFileCache(file)?.frontmatter ?? {};
 }
 
-const fileDebounceMap = new Map<string, number>();
-const lastForcedUpdateMap = new Map<string, number>();
+export const fileDebounceMap = new Map<string, number>();
+export const lastForcedUpdateMap = new Map<string, number>();
 
 /** Check if a forced update was requested in this transaction */
-function hasForcedUpdate(tr: Transaction): boolean {
+export function hasForcedUpdate(tr: Transaction): boolean {
   for (const effect of tr.effects) {
     if (effect.is(forceMirrorUpdateEffect)) return true;
   }
@@ -56,7 +56,7 @@ function hasForcedUpdate(tr: Transaction): boolean {
 }
 
 /** Detect if any change in the transaction touches the frontmatter region */
-function detectFrontmatterChange(tr: Transaction, docText: string): boolean {
+export function detectFrontmatterChange(tr: Transaction, docText: string): boolean {
   let frontmatterEndPos = 0;
   const frontmatterMatch = docText.match(/^---\n[\s\S]*?\n---/);
   if (frontmatterMatch) {
@@ -73,7 +73,7 @@ function detectFrontmatterChange(tr: Transaction, docText: string): boolean {
 }
 
 /** Handle a forced update: invalidate cache, compare configs, rebuild if needed */
-function handleForcedUpdate(
+export function handleForcedUpdate(
   tr: Transaction,
   value: MirrorState,
   decorations: DecorationSet,
@@ -167,7 +167,7 @@ function handleForcedUpdate(
 }
 
 /** Handle normal (non-forced) config change */
-function handleConfigChange(
+export function handleConfigChange(
   tr: Transaction,
   value: MirrorState,
   plugin: MirrorUIPlugin,
@@ -215,7 +215,7 @@ function handleConfigChange(
 }
 
 /** Clear widget instance cache entries for a specific widgetId */
-function clearWidgetCaches(widgetId: string): void {
+export function clearWidgetCaches(widgetId: string): void {
   const fileWidgets = Array.from(MirrorTemplateWidget.widgetInstanceCache.keys())
     .filter(key => key.includes(widgetId));
   fileWidgets.forEach(key => {
