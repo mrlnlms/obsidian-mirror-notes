@@ -322,7 +322,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (372 testes, 25 suites)
+npm test         # vitest (374 testes, 25 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

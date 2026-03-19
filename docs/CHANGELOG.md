@@ -18,6 +18,8 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Docs: architecture.md corrigido (metadata flow, `resolveViewOverrides` removido, test counts)
 - Backlog: nivel 4 — migrar mirrorState + marginPanelExtension pra `computeMirrorRuntimeDecision`
 - Fix: templateDeps limpo no rename/delete de template (previne acumulo de callbacks stale)
+- Fix: viewOverrides stale apos mudanca de mirror — `applyViewOverrides` agora roda APOS `cm.dispatch` (StateField atualizado)
+- Fix: viewOverrides nao aplica overrides quando engine e `none` (left/right em RV sem mirror visivel)
 - 374 testes (+15)
 
 ## v54 — Runtime correctness + type safety + DRY

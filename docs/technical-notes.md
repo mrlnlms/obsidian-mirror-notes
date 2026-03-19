@@ -55,10 +55,16 @@ Funcao pura que recebe (plugin, file, frontmatter, viewId, viewMode) e retorna `
 
 **Edge cases investigados e descartados (Codex review #6, 2026-03-19):**
 - *External frontmatter sync:* seguro — per-file debounce cancela timeouts anteriores, dados sempre fresh (re-query de metadataCache dentro do setTimeout), forceMirrorUpdateEffect bypassa per-view debounce. Nenhuma closure stale encontrada.
-- *Split LP+RV mesmo arquivo:* seguro — RV nao tem CM6 StateField (sem CodeMirror em Reading View). Toda renderizacao RV e via DOM injection (`setupDomPosition`), que passa viewMode corretamente. positionOverrides isolados por viewId. Config cache mode-aware.
+- *Split LP+RV mesmo arquivo:* seguro — RV tem CM6 DOM (`.markdown-source-view` existe) mas fica hidden via CSS, StateField nao e relevante visualmente. Toda renderizacao RV e via DOM injection (`setupDomPosition`), que passa viewMode corretamente. positionOverrides isolados por viewId. Config cache mode-aware.
 - *Template delete durante render:* graceful — try-catch no `doRender` captura erro, mostra "Template not found" com link pro settings. In-flight render falha mas nao crasheia. Settings atualizados automaticamente no rename, manualmente no delete.
 
-**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, templateDependencyRegistry.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, architecture.md, backlog.md
+**Bug 7 (Codex review #7) — viewOverrides stale apos mudanca de frontmatter (main.ts)**
+No handler de `metadataCache.on('changed')`, `applyViewOverrides` rodava ANTES de `cm.dispatch(forceMirrorUpdateEffect)`. Como `applyViewOverrides` le config do StateField, pegava o mirror ANTIGO. Se frontmatter mudasse e causasse troca de mirror (ex: conditions diferentes), CSS classes (hideProps, inlineTitle) ficavam stale ate o proximo evento. Fix: mover `applyViewOverrides` pra DEPOIS do dispatch (que e sincrono — atualiza StateField imediatamente).
+
+**Bug 8 (Codex review #7) — viewOverrides aplicados quando engine e none (viewOverrides.ts)**
+Fallback RV em `applyViewOverrides` consultava `getApplicableConfig` e aplicava overrides sem checar engine. Para left/right em RV (`resolveEngine` retorna `none`), nenhum mirror renderizava mas overrides (hideProps, inlineTitle) eram aplicados — usuario via properties escondidas sem mirror visivel. Fix: checar `resolveEngine(config.position, viewMode) !== 'none'` antes de aplicar.
+
+**Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, templateDependencyRegistry.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, viewOverrides.ts, architecture.md, backlog.md
 **Testes:** +15 (374 total, 25 suites)
 
 ## O que mudou na v54
