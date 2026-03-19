@@ -12,7 +12,7 @@ A powerful Obsidian plugin that displays dynamic templates in your notes based o
 - **Per-View Setting Overrides**: Control hide properties, readable line width, and inline title per mirror — overrides Obsidian's global settings for matched notes
 - **Hide Properties Option**: Optionally hide the frontmatter section in notes with mirrors
 - **Inline Mirror Blocks**: Embed templates anywhere with ` ```mirror``` ` code blocks — works in Live Preview and Reading View
-- **Cross-Note Reactivity**: Mirror blocks with `source:` update automatically when the source note's frontmatter changes — even across split views
+- **Cross-Note Reactivity**: Mirror blocks with `source:` update automatically when the source note's frontmatter changes — works independently across split views
 - **Smart Fallback Chain**: If a DOM target is hidden (e.g., properties off), the mirror automatically falls back to the next valid position
 - **Reactive Config Detection**: Mirrors reposition in real-time when you toggle Obsidian settings (inline title, properties, backlinks)
 - **Insert Command**: Right-click menu and command palette entry with file autocomplete
@@ -191,7 +191,7 @@ npm run dev      # watch mode
 
 ## Version History
 
-49 versions across 7 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
+54 versions across 8 development eras. See [docs/CHANGELOG.md](docs/CHANGELOG.md) for the full history.
 
 | Era | Period | Summary |
 |-----|--------|---------|
@@ -202,6 +202,7 @@ npm run dev      # watch mode
 | Era 5: Code Blocks + Polish | Mar 2026 | v26-v33 — Inline mirror blocks, shared renderer, rename-aware settings, cross-note reactivity, position engine, structural refactor |
 | Era 6: Hardening | Mar 2026 | v34-v42 — CI/CD, performance, CSS parity, DOM visibility, fallback chain, backlinks timing, metadataCache unification, scoped cache, per-view overrides |
 | Era 7: Position Refinement | Mar 2026 | v43-v49 — Position simplification, cold start fixes, margin panel positioning, AND/OR filters, Reading View DOM injection, per-view isolation, dual-template LP/RV, main.ts refactor |
+| Era 8: Structural Quality | Mar 2026 | v50-v54 — MutationObserver recovery, Codex audit, structural refactor, runtime correctness, type safety, code block pane isolation |
 
 ## Known Limitations
 
@@ -214,7 +215,7 @@ See [docs/roadmap.md](docs/roadmap.md) for the full roadmap.
 
 **Next:**
 - Margin panel refinements (width control, overlap threshold, gutters support)
-- Settings UI review (rename mirrors, usability with many mirrors)
+- Settings UI review (usability with many mirrors, i18n, deprecated options cleanup)
 
 **Pre-launch (must-have):**
 - Demo vault curation
