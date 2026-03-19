@@ -1,7 +1,7 @@
 import { TFile, MarkdownRenderer, MarkdownRenderChild, Component } from "obsidian";
 import MirrorUIPlugin from "../../main";
 import { Logger } from '../dev/logger';
-import { resolveVariable, traceMirrorDecision } from '../editor/mirrorUtils';
+import { resolveVariable, traceMirrorDecision, hashObject } from '../editor/mirrorUtils';
 
 export interface RenderContext {
   plugin: MirrorUIPlugin;
@@ -20,16 +20,6 @@ const renderingPromises = new Map<string, Promise<void>>();
  *  Without this, each doRender() adds a new child to the component without
  *  removing the previous one, leaking detached DOM lifecycle handlers. */
 const lastRenderChildren = new Map<string, MarkdownRenderChild>();
-
-function simpleHash(str: string): string {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  return hash.toString();
-}
 
 export async function renderMirrorTemplate(ctx: RenderContext): Promise<void> {
   const { cacheKey } = ctx;
@@ -86,7 +76,7 @@ async function doRender(ctx: RenderContext): Promise<void> {
       });
     }
 
-    const contentHash = simpleHash(processedContent);
+    const contentHash = hashObject(processedContent);
     const lastContent = lastRenderedContent.get(cacheKey);
     // Cache de hash so para CM6 widgets (container reusado). Code blocks (com component) sempre renderizam.
     if (!ctx.component && lastContent === contentHash && container.children.length > 0) {
