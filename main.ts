@@ -194,14 +194,15 @@ export default class MirrorUIPlugin extends Plugin {
             clearConfigCache();
             this.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.file) {
+                // DOM injection + overrides run for ALL views (including RV without CM6)
+                setupDomPosition(this, leaf.view as MarkdownView);
                 const cm = getEditorView(leaf.view as MarkdownView);
                 if (cm) {
                   cm.dispatch({
                     effects: forceMirrorUpdateEffect.of()
                   });
-                  applyViewOverrides(this, leaf.view as MarkdownView);
-                  setupDomPosition(this, leaf.view as MarkdownView);
                 }
+                applyViewOverrides(this, leaf.view as MarkdownView);
               }
             });
             this.settingsUpdateDebounce = null;
