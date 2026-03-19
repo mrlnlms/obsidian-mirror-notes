@@ -19,6 +19,8 @@ export const S = {
   posBelowBacklinks: '.mirror-position-below-backlinks',
   posTop: '.mirror-position-top',
   posBottom: '.mirror-position-bottom',
+  codeBlock: '.mirror-code-block',
+  codeBlockError: '.mirror-block-error',
   activeLeaf: '.workspace-leaf.mod-active',
   cmContent: '.workspace-leaf.mod-active .cm-content',
   inlineTitle: '.workspace-leaf.mod-active .inline-title',
@@ -35,6 +37,8 @@ export const NOTES = {
   posCm6Bottom: 'notes/pos-cm6-bottom.md',
   dualTemplate: 'notes/dual-template.md',
   noMirror: 'notes/no-mirror.md',
+  codeBlock: 'notes/code-block.md',
+  codeBlockSource: 'notes/code-block-source.md',
 } as const;
 
 export const MARKERS = {
@@ -47,6 +51,7 @@ export const MARKERS = {
   bottom: 'E2E-BOTTOM',
   lpDual: 'E2E-LP-TEMPLATE',
   rvDual: 'E2E-RV-TEMPLATE',
+  codeBlock: 'E2E-CODEBLOCK',
 } as const;
 
 /**

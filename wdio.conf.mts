@@ -18,6 +18,8 @@ export const config = createConfig({
     'test/e2e/specs/mode-switch.e2e.ts',
     'test/e2e/specs/lifecycle.e2e.ts',
     'test/e2e/specs/visual-baselines.e2e.ts',
+    'test/e2e/specs/code-blocks.e2e.ts',
+    'test/e2e/specs/advanced-behaviors.e2e.ts',
   ],
   screenshotDir: 'test/e2e/screenshots',
   timeout: 90000,
