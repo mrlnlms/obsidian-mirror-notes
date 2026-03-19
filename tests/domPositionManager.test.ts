@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { positionOverrideKey, clearSetupCooldowns, setupDomPosition } from '../src/rendering/domPositionManager';
 import { getApplicableConfig } from '../src/editor/mirrorConfig';
-import { isDomPosition, injectDomMirror, removeAllDomMirrors, getViewId } from '../src/rendering/domInjector';
+import { injectDomMirror, removeAllDomMirrors, getViewId } from '../src/rendering/domInjector';
 import { getViewMode } from '../src/utils/obsidianInternals';
 import { traceMirrorDecision } from '../src/editor/mirrorUtils';
 
