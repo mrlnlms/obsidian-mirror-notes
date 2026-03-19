@@ -279,7 +279,7 @@ Funcao central: `computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId,
 ### Metadata change (frontmatter editado)
 1. `metadataCache.on('changed')` → per-file debounce 500ms
 2. `iterateAllLeaves` dentro do setTimeout (multi-pane aware)
-3. Para cada pane: `setupDomPosition` (usa `computeMirrorRuntimeDecision`) + `applyViewOverrides` + `forceMirrorUpdateEffect`
+3. Para cada pane: `setupDomPosition` (usa `computeMirrorRuntimeDecision`) → `cm.dispatch(forceMirrorUpdateEffect)` (sincrono, atualiza StateField) → `applyViewOverrides` (le config fresca do StateField). Ordem importa: viewOverrides DEPOIS do dispatch pra evitar stale CSS classes (v55 fix)
 4. CM6 StateField `update()` → per-view throttle 500ms → `handleForcedUpdate`
 5. `clearConfigCache` → `getApplicableConfig` com frontmatter fresco (StateField ainda nao migrado pra decision function)
 6. `buildDecorations` → novo widget com dados atualizados
