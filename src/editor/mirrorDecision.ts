@@ -5,6 +5,7 @@
 import { TFile } from 'obsidian';
 import { ApplicableMirrorConfig, MirrorPosition, DOM_POSITIONS, CM6_POSITIONS, MARGIN_POSITIONS } from './mirrorTypes';
 import { getApplicableConfig } from './mirrorConfig';
+import { traceMirrorDecision } from './mirrorUtils';
 import type MirrorUIPlugin from '../../main';
 
 export type MirrorEngine = 'cm6' | 'dom' | 'margin' | 'none';
@@ -58,22 +59,28 @@ export function computeMirrorRuntimeDecision(
 
   if (override) {
     const resolvedEngine = resolveEngine(override, viewMode);
+    const reason = `fallback: ${requestedPosition} (${requestedEngine}) → ${override} (${resolvedEngine})`;
+    traceMirrorDecision({
+      file: file.path, viewId, event: 'runtime-decision',
+      mirror: config.templatePath.split('/').pop() ?? config.templatePath,
+      position: { requested: requestedPosition, actual: override },
+      engine: resolvedEngine, reason,
+    });
     return {
-      config,
-      engine: resolvedEngine,
-      requestedPosition,
-      resolvedPosition: override,
-      fallbackApplied: true,
-      reason: `fallback: ${requestedPosition} (${requestedEngine}) → ${override} (${resolvedEngine})`,
+      config, engine: resolvedEngine, requestedPosition,
+      resolvedPosition: override, fallbackApplied: true, reason,
     };
   }
 
+  const reason = `direct: ${requestedPosition} (${requestedEngine})`;
+  traceMirrorDecision({
+    file: file.path, viewId, event: 'runtime-decision',
+    mirror: config.templatePath.split('/').pop() ?? config.templatePath,
+    position: { requested: requestedPosition },
+    engine: requestedEngine, reason,
+  });
   return {
-    config,
-    engine: requestedEngine,
-    requestedPosition,
-    resolvedPosition: requestedPosition,
-    fallbackApplied: false,
-    reason: `direct: ${requestedPosition} (${requestedEngine})`,
+    config, engine: requestedEngine, requestedPosition,
+    resolvedPosition: requestedPosition, fallbackApplied: false, reason,
   };
 }

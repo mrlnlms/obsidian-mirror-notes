@@ -105,14 +105,7 @@ export async function setupDomPosition(
     }
   });
 
-  traceMirrorDecision({
-    file: file.path,
-    viewId,
-    event: 'dom-injection',
-    mirror: config.templatePath.split('/').pop() ?? config.templatePath,
-    position: { requested: config.position, actual: actualPos },
-    engine: actualPos !== config.position ? 'cm6' : 'dom',
-  });
+  Logger.log(`DOM injection result: ${config.position} → ${actualPos} for ${file.path} [${viewId}]`);
 
   if (actualPos !== config.position) {
     // DOM target not found — fallback to CM6
