@@ -59,7 +59,7 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 
 ## E2E Testing — concluido (pos-v53)
 
-25 E2E specs passando contra Obsidian real via `obsidian-plugin-e2e` harness (`~/Desktop/obsidian-plugin-e2e`). Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
+35 E2E specs passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
 
 | Suite | Specs | Cobertura |
 |-------|-------|-----------|
@@ -68,6 +68,8 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 | mode-switch | 4 | LP→RV→LP, dual templates, sem classes vazadas |
 | lifecycle | 4 | Cold start, unload cleanup, re-enable, sem orphans |
 | visual-baselines | 6 | Screenshots: above-title, viewport, CM6, RV, roundtrip |
+| code-blocks | 5 | Render, variavel frontmatter, RV, source reference, border |
+| advanced-behaviors | 5 | Multi-pane isolation (3), MutationObserver recovery (2) |
 
 Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baselines: `npm run test:visual:update`.
 
