@@ -71,22 +71,28 @@ Cada doc tem um proposito unico. NAO duplicar informacao entre eles. Na duvida, 
 - **Regra:** header do arquivo deve referenciar architecture.md. Secoes de versao sao append-only (nao editar versoes antigas)
 
 ### `docs/CHANGELOG.md` — Historico de versoes (resumido)
-- **Quando atualizar:** a cada versao nova, adicionar entrada no TOPO
+- **Quando atualizar:** a cada versao nova, adicionar entrada no TOPO. Tambem ao final de sessoes com multiplos fixes (mesmo sem bump de versao)
 - **O que colocar:** lista concisa do que mudou (bullet points). Foco no "o que", nao no "por que"
 - **O que NAO colocar:** detalhes tecnicos profundos (vai no technical-notes)
 - **Regra:** se a versao tem entrada no technical-notes, o changelog e o resumo curto
 
-### `docs/backlog.md` — Trabalho pendente
-- **Quando atualizar:** quando descobrir bug/feature novo OU resolver um item existente
-- **O que colocar:** item pendente com descricao clara, ou mover item resolvido pra secao "Resolvidos" com versao
+### `docs/backlog.md` — Trabalho pendente + decisoes documentadas
+- **Quando atualizar:** quando descobrir bug/feature novo OU resolver um item existente OU avaliar um ponto e descartar
+- **O que colocar:** item pendente com descricao clara, ou mover item resolvido pra secao "Resolvidos" com versao. Pontos avaliados e descartados vao na secao "Considerado resolvido" com justificativa detalhada (evita re-analise por outros LLMs/reviewers)
 - **O que NAO colocar:** itens ja resolvidos na secao pendente, duplicatas de coisas que ja estao no codigo
-- **Regra:** antes de adicionar, verificar se o item ja existe. Organizado por tipo (Bugs, Features, Position engine)
+- **Regra:** antes de adicionar, verificar se o item ja existe. "Considerado resolvido" e append-only — nao editar justificativas antigas. Organizado por tipo (Bugs, Features, Position engine)
 
 ### `docs/roadmap.md` — Horizonte de produto (forward-looking)
 - **Quando atualizar:** quando prioridades mudam ou versao nova e concluida
 - **O que colocar:** o que vem pela frente (proximo, pre-lancamento, should-have, nice-to-have). Versoes concluidas vao na tabela resumo (1 linha por versao)
 - **O que NAO colocar:** listas detalhadas de itens concluidos (vai no changelog/technical-notes)
 - **Regra:** se a secao "Concluido" tiver mais de 5 linhas detalhadas, ta errado. Usar tabela resumo
+
+### `CLAUDE.md` — Instrucoes do projeto (este arquivo)
+- **Quando atualizar:** quando test counts mudam (`npm test`, `npm run test:e2e`), quando comandos de build mudam, ou quando convencoes do projeto mudam
+- **O que colocar:** counts atuais de testes, comandos corretos, convencoes vigentes
+- **O que NAO colocar:** historico, detalhes de implementacao (vai nos outros docs)
+- **Regra:** qualquer dev ou LLM que abrir esse arquivo deve ter comandos e counts corretos pra rodar o projeto
 
 ### `README.md` — Public-facing (ingles)
 - **Quando atualizar:** quando features, known issues, ou arquitetura mudam de forma visivel pro usuario
