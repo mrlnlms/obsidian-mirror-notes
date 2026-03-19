@@ -20,6 +20,7 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: templateDeps limpo no rename/delete de template (previne acumulo de callbacks stale)
 - Fix: viewOverrides stale apos mudanca de mirror — `applyViewOverrides` agora roda APOS `cm.dispatch` (StateField atualizado)
 - Fix: viewOverrides nao aplica overrides quando engine e `none` (left/right em RV sem mirror visivel)
+- Fix: data.json modify handler processa panes RV sem CM6 editor (setupDomPosition + applyViewOverrides fora do `if (cm)`)
 - 374 testes (+15)
 
 ## v54 — Runtime correctness + type safety + DRY

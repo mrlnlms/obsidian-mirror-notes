@@ -61,11 +61,15 @@ Funcao pura que recebe (plugin, file, frontmatter, viewId, viewMode) e retorna `
 **Bug 7 (Codex review #7) — viewOverrides stale apos mudanca de frontmatter (main.ts)**
 No handler de `metadataCache.on('changed')`, `applyViewOverrides` rodava ANTES de `cm.dispatch(forceMirrorUpdateEffect)`. Como `applyViewOverrides` le config do StateField, pegava o mirror ANTIGO. Se frontmatter mudasse e causasse troca de mirror (ex: conditions diferentes), CSS classes (hideProps, inlineTitle) ficavam stale ate o proximo evento. Fix: mover `applyViewOverrides` pra DEPOIS do dispatch (que e sincrono — atualiza StateField imediatamente).
 
-**Bug 8 (Codex review #7) — viewOverrides aplicados quando engine e none (viewOverrides.ts)**
+**Bug 8 (Codex review #9) — data.json modify handler ignorava panes RV sem CM6 (main.ts)**
+Handler de `vault.on('modify')` pra data.json colocava `setupDomPosition` e `applyViewOverrides` dentro do `if (cm)` — panes em Reading View sem editor CM6 disponivel nao eram reprocessados. Nao afetava saves pela UI (que chamam `refreshAllEditors`), mas afetava edicao manual/externa do data.json. Fix: mover `setupDomPosition` e `applyViewOverrides` pra fora do `if (cm)`, consistente com `refreshAllEditors`.
+
+**Bug 9 (Codex review #7) — viewOverrides aplicados quando engine e none (viewOverrides.ts)**
 Fallback RV em `applyViewOverrides` consultava `getApplicableConfig` e aplicava overrides sem checar engine. Para left/right em RV (`resolveEngine` retorna `none`), nenhum mirror renderizava mas overrides (hideProps, inlineTitle) eram aplicados — usuario via properties escondidas sem mirror visivel. Fix: checar `resolveEngine(config.position, viewMode) !== 'none'` antes de aplicar.
 
 **Arquivos tocados:** mirrorDecision.ts (novo), domPositionManager.ts, templateRenderer.ts, templateDependencyRegistry.ts, mirrorState.ts, marginPanelExtension.ts, main.ts, modeSwitchDetector.ts, viewOverrides.ts, architecture.md, backlog.md
 **Testes:** +15 (374 total, 25 suites)
+**Total de bugs corrigidos na v55:** 9 (6 Codex rodadas 5-6, 2 Codex rodada 7, 1 Codex rodada 9)
 
 ## O que mudou na v54
 
