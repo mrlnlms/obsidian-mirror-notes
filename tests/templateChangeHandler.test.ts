@@ -99,6 +99,25 @@ describe('handleTemplateChange', () => {
     expect(cb).not.toHaveBeenCalled();
   });
 
+  it('does NOT execute callbacks that were unregistered during debounce window', () => {
+    const cb = vi.fn();
+    const callbackMap: Record<string, Array<() => void>> = { 'templates/a.md': [cb] };
+    const plugin = createMockPlugin(callbackMap);
+
+    // Override getDependentCallbacks to return live state of callbackMap
+    plugin.templateDeps.getDependentCallbacks = vi.fn((path: string) => callbackMap[path] ?? []);
+
+    handleTemplateChange(plugin, 'templates/a.md');
+
+    // Simulate: block destroyed during debounce window (callback removed from registry)
+    callbackMap['templates/a.md'] = [];
+
+    vi.advanceTimersByTime(TIMING.METADATA_CHANGE_DEBOUNCE);
+
+    // Callback should NOT have been called — it was unregistered before timeout fired
+    expect(cb).not.toHaveBeenCalled();
+  });
+
   it('skips template with no callbacks and not in knownTemplatePaths', () => {
     const plugin = createMockPlugin({});
     plugin.knownTemplatePaths = new Set(); // empty

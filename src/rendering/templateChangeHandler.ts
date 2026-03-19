@@ -10,16 +10,19 @@ import type MirrorUIPlugin from '../../main';
 const templateUpdateTimeouts = new Map<string, NodeJS.Timeout>();
 
 export function handleTemplateChange(plugin: MirrorUIPlugin, filePath: string) {
-  const templateCbs = plugin.templateDeps.getDependentCallbacks(filePath);
   // Fast path: se nenhum callback E nao e template dos settings → skip
-  if (templateCbs.length === 0 && !plugin.knownTemplatePaths.has(filePath)) return;
+  // Check at event time to avoid scheduling unnecessary timeouts
+  const hasCallbacksNow = plugin.templateDeps.getDependentCallbacks(filePath).length > 0;
+  if (!hasCallbacksNow && !plugin.knownTemplatePaths.has(filePath)) return;
 
   const existing = templateUpdateTimeouts.get(filePath);
   if (existing) clearTimeout(existing);
 
   templateUpdateTimeouts.set(filePath, setTimeout(() => {
     templateUpdateTimeouts.delete(filePath);
-    // Callbacks registrados (code blocks + DOM mirrors)
+    // Re-query callbacks at execution time (not event time) — blocks may have been
+    // destroyed during the debounce window, removing their callbacks from the registry.
+    const templateCbs = plugin.templateDeps.getDependentCallbacks(filePath);
     if (templateCbs.length > 0) {
       Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
       for (const cb of templateCbs) {

@@ -157,14 +157,18 @@ export default class MirrorUIPlugin extends Plugin {
         }
 
         // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
-        const callbacks = this.sourceDeps.getDependentCallbacks(file.path);
-        if (callbacks.length > 0) {
+        // Check at event time to decide if we need a timeout at all
+        if (this.sourceDeps.getDependentCallbacks(file.path).length > 0) {
           const existing = this.crossNoteTimeouts.get(file.path);
           if (existing) clearTimeout(existing);
           this.crossNoteTimeouts.set(file.path, setTimeout(() => {
-            Logger.log(`Cross-note refresh: ${callbacks.length} block(s) depend on ${file.path}`);
-            for (const cb of callbacks) {
-              cb();
+            // Re-query at execution time — blocks may have been destroyed during debounce
+            const callbacks = this.sourceDeps.getDependentCallbacks(file.path);
+            if (callbacks.length > 0) {
+              Logger.log(`Cross-note refresh: ${callbacks.length} block(s) depend on ${file.path}`);
+              for (const cb of callbacks) {
+                cb();
+              }
             }
             this.crossNoteTimeouts.delete(file.path);
           }, TIMING.METADATA_CHANGE_DEBOUNCE));
