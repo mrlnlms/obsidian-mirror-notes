@@ -88,6 +88,15 @@ describe('hashObject', () => {
   it('produces different hashes for different strings', () => {
     expect(hashObject('title: A')).not.toBe(hashObject('title: B'));
   });
+
+  it('returns deterministic value for null', () => {
+    expect(hashObject(null)).toBe('0');
+    expect(hashObject(null)).toBe(hashObject(null));
+  });
+
+  it('returns deterministic value for undefined', () => {
+    expect(hashObject(undefined)).toBe('0');
+  });
 });
 
 // =============================================================================

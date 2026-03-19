@@ -2,6 +2,37 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## Code review v56 — 9 fixes de auditoria completa
+
+Auditoria completa do codebase v55 em busca de bugs, gaps e inconsistencias. 11 findings (2 critical, 2 high, 4 medium, 3 low). 9 corrigidos, 2 avaliados e descartados.
+
+**Critical 1 — data.json modify handler nao recarregava settings (main.ts)**
+Handler limpava configCache e forcava updates, mas nunca chamava `loadSettings()`. Settings in-memory ficavam stale ate reiniciar. Afetava Obsidian Sync: settings mudavam no outro device, handler disparava, mas usava objeto antigo. Fix: `await this.loadSettings()` + `Logger.setEnabled()` no handler.
+
+**Critical 2 — Migration guard ausente para conditions (main.ts, mirrorConfig.ts)**
+`mirror.conditions.length === 0` crashava com TypeError se conditions fosse undefined. Usuarios upgrading de pre-v46 (antes do sistema de conditions) teriam crash no load. Fix duplo: `loadSettings()` migra mirrors sem conditions/conditionLogic + defesa em profundidade com optional chaining (`mirror.conditions?.length`) em mirrorConfig.ts.
+
+**High 1 — applyViewOverrides ausente em file-open/active-leaf-change (main.ts)**
+setupEditor retornava early se StateField ja existia (caso comum apos primeiro setup). applyViewOverrides so rodava no first-time. Ao navegar entre notas com overrides diferentes, CSS classes da nota anterior persistiam ~500ms ate debounce do metadataCache. Fix: applyViewOverrides adicionado em ambos handlers.
+
+**High 2 — hashObject sem null guard (mirrorUtils.ts)**
+`Object.keys(null)` crasharia. Call sites atuais protegidos via `?? {}`, mas funcao aceita `any` sem validacao. Fix: `if (obj == null) return '0'`.
+
+**Medium — 4 fixes menores**
+- `refreshAllEditors` applyViewOverrides dentro de `if (cm)` — views RV sem CM6 ficavam sem overrides. Movido pra fora do if.
+- architecture.md caller list de applyViewOverrides errada (5 hooks → 6 hooks com file-open, active-leaf-change, modeSwitchDetector, data.json handler).
+- `settingsUpdateDebounce` usava setTimeout raw — migrado pra scheduleTimer pra auto-cleanup.
+- Cold start retry: `clearRenderCache()` movido pra fora do loop (chamava N vezes, resultado identico). Documentado trade-off.
+
+**Low — 3 cleanups**
+- Typo "Colapse" → "Collapse" em customCards.ts.
+- `lastContentHash` dead code removido de mirrorTypes.ts (declarado, nunca lido/escrito).
+- 3 testes novos: hashObject null/undefined + migration guard pre-v46.
+
+**Descartados (2):** Widget destroy() no-op (by design — viewport recycling), cold start global cache clear (trade-off aceito — cacheKeys internos ao domPositionManager).
+
+**Testes:** 377 (+3). tsc + build OK.
+
 ## Codex review v55 — 5 bug fixes + docs
 
 Analise estatica por Codex em 2 rodadas (rodada 5: 4 bugs, rodada 6: 1 bug + docs + backlog).

@@ -1,6 +1,12 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado pos-v53 (code review).
+Trabalho tecnico pendente. Atualizado pos-v55 (code review completo).
+
+## Code Review v56
+
+Auditoria completa do codebase (v55). Findings organizados por severidade.
+
+Todos os findings resolvidos ou avaliados. Ver secoes "Considerado resolvido" e "Resolvidos" abaixo.
 
 ## Epico: Margin Panel
 
@@ -125,8 +131,20 @@ Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baseli
 - **`getBlockViewId` depende de `.workspace-leaf-content`** — risco aceito (v54). Mesma classe usada pelo Obsidian em toda a API de workspace (`view.containerEl`). Se Obsidian mudar o seletor, `getBlockViewId` degrada pra fallback `'default'` (sem crash, perde isolamento multi-pane de code blocks — volta ao comportamento pre-v54). Mitigacao: E2E multi-pane code blocks no backlog. Avaliado na v54, aceito como risco baixo
 - **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
 - **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
+- **Widget destroy() no-op** — por design, nao e bug. CM6 chama destroy/toDOM no viewport recycling (scroll). Limpar domCache no destroy causa re-render e flickering a cada scroll. mirrorState.ts ja limpa cacheKeys antigos quando config muda (linhas 125-126). cleanupMirrorCaches() limpa tudo no unload. Acumulo durante sessao e bounded pelo numero de widgets unicos. Avaliado na v56 code review, descartado
+- **Cold start retry limpa render cache global** — trade-off aceito, nao e bug. clearRenderCache() global necessario porque DOM mirror cacheKeys sao internos ao domPositionManager e nao podem ser enumerados externamente. Unico impacto: mirrors que renderizaram OK no primeiro try re-renderizam 1x apos 1s. Custo negligivel vs garantir recovery. Documentado no codigo. Avaliado na v56 code review, aceito
 
 ## Resolvidos
+
+- [x] data.json modify handler recarrega settings do disco — `loadSettings()` + `Logger.setEnabled()` no handler (v56 code review)
+- [x] Migration guard pra `conditions` em CustomMirror — `loadSettings()` migra mirrors sem conditions/conditionLogic + defesa em profundidade com `?.` em mirrorConfig.ts (v56 code review)
+- [x] `applyViewOverrides` adicionado em file-open e active-leaf-change — CSS overrides aplicam imediatamente ao navegar entre notas (v56 code review)
+- [x] hashObject null guard — retorna '0' pra null/undefined, previne crash silencioso em StateField (v56 code review)
+- [x] architecture.md caller list de applyViewOverrides atualizada — 6 hooks corretos documentados (v56 code review)
+- [x] refreshAllEditors applyViewOverrides fora do if(cm) — RV sem CM6 recebe overrides corretamente (v56 code review)
+- [x] Typo "Colapse" → "Collapse" em customCards.ts (v56 code review)
+- [x] settingsUpdateDebounce migrado pra scheduleTimer — auto-cleanup no unload, consistente com padrao do projeto (v56 code review)
+- [x] lastContentHash dead code removido de mirrorTypes.ts (v56 code review)
 
 - [x] Widget sumia ao digitar rapido no meta-bind (v25.2)
 - [x] Dead code em mirrorState.ts (v25.3)

@@ -111,8 +111,8 @@ export function getApplicableConfig(
     const hasLP = mirror.enable_custom_live_preview_mode && !!mirror.custom_settings_live_preview_note;
     const hasRV = mirror.enable_custom_preview_mode && !!mirror.custom_settings_preview_note;
     if (isPreviewMode ? !hasRV : !hasLP) continue;
-    if (mirror.conditions.length === 0) continue;
-    if (evaluateConditions(mirror.conditions, mirror.conditionLogic, file, frontmatter)) {
+    if (!mirror.conditions?.length) continue;
+    if (evaluateConditions(mirror.conditions, mirror.conditionLogic ?? 'any', file, frontmatter)) {
       matchedMirror = mirror;
       break;
     }

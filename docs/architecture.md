@@ -303,7 +303,7 @@ Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescreve
 
 - `null` = inherit: restaura setting global do Obsidian via `app.vault.getConfig()`
 - Multi-pane: cada view aplica overrides independentes (CSS scoped, class toggle por elemento)
-- `applyViewOverrides()` chamado em 5 hooks (metadataCache.changed, refreshAllEditors, setupEditor, file-open, active-leaf-change)
+- `applyViewOverrides()` chamado em 6 hooks (file-open, active-leaf-change, metadataCache.changed, refreshAllEditors, setupEditor first-time, modeSwitchDetector, data.json modify handler)
 - Onunload: remove classes CSS + restaura `is-readable-line-width` pro valor global
 - Config: `ViewOverrides` em `types.ts`, resolvido inline por `applyViewOverrides()` em `viewOverrides.ts`
 

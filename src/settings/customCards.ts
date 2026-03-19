@@ -97,7 +97,7 @@ function buildCustomSettingCards(options: CustomCardsOptions): void {
             })
             .addExtraButton((cb) => {
                 cb.setIcon(dynamicIcon)
-                    .setTooltip("Colapse")
+                    .setTooltip("Collapse")
                     .onClick(() => {
                         customMirrors[index].openview = !customMirrors[index].openview;
                         onRedisplay();

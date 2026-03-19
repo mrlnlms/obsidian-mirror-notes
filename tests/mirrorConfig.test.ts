@@ -553,4 +553,20 @@ describe('getApplicableConfig', () => {
     expect(rvConfig!.templatePath).toBe('templates/global-rv.md');
     expect(rvConfig!.position).toBe('bottom');
   });
+
+  // ---- Migration: pre-v46 mirrors without conditions field ----
+  it('does not crash when mirror has no conditions field (pre-v46 migration)', () => {
+    // Simulate a pre-v46 data.json where conditions/conditionLogic don't exist
+    const legacyMirror = createCustomMirror({}) as any;
+    delete legacyMirror.conditions;
+    delete legacyMirror.conditionLogic;
+    const plugin = createFakePlugin({
+      settings: { ...createFakePlugin().settings, customMirrors: [legacyMirror] },
+    });
+    const file = makeTFile('nota.md');
+
+    // Should not throw — mirror.conditions is undefined, line 114 must handle gracefully
+    expect(() => getApplicableConfig(plugin, file, {})).not.toThrow();
+    expect(getApplicableConfig(plugin, file, {})).toBeNull();
+  });
 });

@@ -39,7 +39,6 @@ export interface MirrorState {
   filePath: string; // Path do arquivo que contém este editor (não depende de getActiveFile)
   lastDocText?: string;
   frontmatterHash?: string; // Hash do frontmatter para detectar mudanças reais
-  lastContentHash?: string; // Hash do conteúdo do template para evitar re-renderização
 }
 
 export interface MirrorFieldState {

@@ -68,6 +68,7 @@ export default class MirrorUIPlugin extends Plugin {
               this.lastViewMode.set(`${vid}:${file.path}`, getViewMode(view));
               this.setupEditor(view);
               setupDomPosition(this, view);
+              applyViewOverrides(this, view);
             }
           }, TIMING.EDITOR_SETUP_DELAY);
         }
@@ -83,6 +84,7 @@ export default class MirrorUIPlugin extends Plugin {
           this.scheduleTimer(() => {
             this.setupEditor(leaf.view as MarkdownView);
             setupDomPosition(this, leaf.view as MarkdownView);
+            applyViewOverrides(this, leaf.view as MarkdownView);
           }, TIMING.EDITOR_SETUP_DELAY);
         }
       })
@@ -117,9 +119,12 @@ export default class MirrorUIPlugin extends Plugin {
       // Backlinks também podem não ter children ainda. Re-renderiza DOM mirrors após delay.
       this.scheduleTimer(() => {
         Logger.log('[event] cold-start-retry (1s)');
+        // Global clear needed: DOM mirror cacheKeys are internal to domPositionManager
+        // and we can't enumerate which specific views failed on first render.
+        // Trade-off: re-renders all mirrors but guarantees cold-start recovery.
+        clearRenderCache();
         this.app.workspace.iterateAllLeaves(leaf => {
           if (leaf.view instanceof MarkdownView && leaf.view.file) {
-            clearRenderCache();
             setupDomPosition(this, leaf.view);
           }
         });
@@ -187,10 +192,13 @@ export default class MirrorUIPlugin extends Plugin {
         if (file.path === `.obsidian/plugins/${this.manifest.id}/data.json`) {
           if (this.settingsUpdateDebounce) {
             clearTimeout(this.settingsUpdateDebounce);
+            this.pendingTimers.delete(this.settingsUpdateDebounce);
           }
 
-          this.settingsUpdateDebounce = setTimeout(() => {
-            Logger.log('Settings changed, updating all editors');
+          this.settingsUpdateDebounce = this.scheduleTimer(async () => {
+            Logger.log('Settings changed, reloading from disk');
+            await this.loadSettings();
+            Logger.setEnabled(this.settings.debug_logging);
             clearConfigCache();
             this.app.workspace.iterateAllLeaves(leaf => {
               if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -261,6 +269,11 @@ export default class MirrorUIPlugin extends Plugin {
   async loadSettings() {
     const raw = await this.loadData();
     this.settings = Object.assign({}, DEFAULT_SETTINGS, raw ?? {});
+    // Migration: ensure conditions fields exist on each mirror (pre-v46 data.json)
+    for (const mirror of this.settings.customMirrors) {
+      if (!mirror.conditions) mirror.conditions = [];
+      if (!mirror.conditionLogic) mirror.conditionLogic = 'any';
+    }
     rebuildKnownTemplatePaths(this);
   }
 
@@ -285,13 +298,13 @@ export default class MirrorUIPlugin extends Plugin {
     for (const view of views) {
       await setupDomPosition(this, view);
     }
-    // Pass 2: dispatch CM6 updates (reads overrides set in pass 1)
+    // Pass 2: dispatch CM6 updates (reads overrides set in pass 1) + apply view overrides
     for (const view of views) {
       const cm = getEditorView(view);
       if (cm) {
         cm.dispatch({ effects: forceMirrorUpdateEffect.of() });
-        applyViewOverrides(this, view);
       }
+      applyViewOverrides(this, view);
     }
   }
 

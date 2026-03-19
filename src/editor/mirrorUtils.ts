@@ -8,6 +8,7 @@ export function extractRawYaml(content: string): string {
 }
 
 export function hashObject(obj: any): string {
+  if (obj == null) return '0';
   const str = typeof obj === 'string'
     ? obj
     : JSON.stringify(obj, Object.keys(obj).sort());
