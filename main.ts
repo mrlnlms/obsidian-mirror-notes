@@ -12,7 +12,7 @@ import { clearConfigCache } from './src/editor/mirrorConfig';
 import { MirrorPosition } from './src/editor/mirrorTypes';
 import { mirrorMarginPanelPlugin } from './src/editor/marginPanelExtension';
 import { cleanupAllDomMirrors, getViewId } from './src/rendering/domInjector';
-import { clearRenderCache, clearRenderingPromises } from './src/rendering/templateRenderer';
+import { clearRenderCache } from './src/rendering/templateRenderer';
 import { updateSettingsPaths as updatePaths } from './src/utils/settingsPaths';
 import { getEditorView, getVaultBasePath, getVaultConfig, getViewMode, openSettings, openSettingsTab, rerenderPreview } from './src/utils/obsidianInternals';
 import { applyViewOverrides } from './src/editor/viewOverrides';

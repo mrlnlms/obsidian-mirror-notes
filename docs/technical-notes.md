@@ -31,7 +31,10 @@ setupEditor retornava early se StateField ja existia (caso comum apos primeiro s
 
 **Descartados (2):** Widget destroy() no-op (by design — viewport recycling), cold start global cache clear (trade-off aceito — cacheKeys internos ao domPositionManager).
 
-**Testes:** 377 (+3). tsc + build OK.
+**Observability nivel 4 — migrate callers to `computeMirrorRuntimeDecision`**
+`mirrorState.ts` (3 callers: handleForcedUpdate, handleConfigChange, mirrorStateField.create) e `viewOverrides.ts` (1 caller getApplicableConfig + 1 resolveEngine) migrados pra `computeMirrorRuntimeDecision`. viewMode explicitado como `'source'` nos callers CM6 (StateField so opera em LP). `marginPanelExtension.ts` nao chamava diretamente (backlog stale). `getApplicableConfig` e `resolveEngine` agora sao internos a `mirrorDecision.ts`. Import morto `clearRenderingPromises` removido de main.ts.
+
+**Testes:** 377 (+3). tsc + build + lint (0 errors) OK.
 
 ## Codex review v55 — 5 bug fixes + docs
 

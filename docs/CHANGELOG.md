@@ -2,7 +2,7 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
-## v56 — Code review: 9 bug fixes
+## v56 — Code review + observability nivel 4
 
 - Fix: data.json modify handler agora recarrega settings do disco (afetava Obsidian Sync)
 - Fix: migration guard pra mirrors pre-v46 sem campo conditions (crash no load)
@@ -11,8 +11,10 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: refreshAllEditors aplica overrides em views RV sem CM6
 - Fix: settingsUpdateDebounce migrado pra scheduleTimer (auto-cleanup)
 - Fix: typo "Colapse" → "Collapse"
-- Cleanup: lastContentHash dead code removido
-- Docs: architecture.md caller list corrigida (6 hooks)
+- Cleanup: lastContentHash dead code removido, clearRenderingPromises import morto removido
+- Refactor: mirrorState.ts (3 callers) e viewOverrides.ts (1 caller) migrados pra computeMirrorRuntimeDecision
+- Refactor: getApplicableConfig e resolveEngine agora internos a mirrorDecision.ts (zero callers externos)
+- Docs: architecture.md caller list corrigida (6 hooks), observability nivel 4 concluido
 - 377 testes (+3)
 
 ## v55 — Central decision function + canonical flows
