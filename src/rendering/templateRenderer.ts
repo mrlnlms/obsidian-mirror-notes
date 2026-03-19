@@ -133,8 +133,16 @@ export function clearRenderCache(cacheKey?: string): void {
     lastRenderedContent.delete(cacheKey);
   } else {
     lastRenderedContent.clear();
-    lastRenderChildren.clear(); // Full clear: plugin unload, cold-start retry
+    // lastRenderChildren NOT cleared here — cold-start retry calls clearRenderCache()
+    // while blocks are still mounted. Clearing would orphan their lifecycle handlers.
+    // Use clearAllRenderChildren() on plugin unload instead.
   }
+}
+
+/** Clear ALL lastRenderChildren entries. Only call on plugin unload
+ *  when all blocks are being destroyed anyway. */
+export function clearAllRenderChildren(): void {
+  lastRenderChildren.clear();
 }
 
 /** Remove a specific entry from the lastRenderChildren map.

@@ -15,6 +15,7 @@ vi.mock('../src/editor/mirrorWidget', () => ({
 vi.mock('../src/rendering/templateRenderer', () => ({
   renderMirrorTemplate: vi.fn(),
   clearRenderCache: vi.fn(),
+  clearAllRenderChildren: vi.fn(),
 }));
 vi.mock('../src/editor/decorationBuilder', () => ({
   buildDecorations: vi.fn(),

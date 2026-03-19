@@ -30,6 +30,7 @@ export default class MirrorUIPlugin extends Plugin {
   /** Position overrides when DOM injection falls back to CM6 */
   positionOverrides = new Map<string, MirrorPosition>();
   private settingsUpdateDebounce: NodeJS.Timeout | null = null;
+  private metadataUpdateTimeouts = new Map<string, NodeJS.Timeout>();
   private crossNoteTimeouts = new Map<string, NodeJS.Timeout>();
   /** Set precomputado de template paths usados nos settings (atualizado em loadSettings/saveSettings) */
   knownTemplatePaths = new Set<string>();
@@ -126,15 +127,14 @@ export default class MirrorUIPlugin extends Plugin {
     this.addSettingTab(new MirrorUISettingsTab(this.app, this));
 
     // Sincronizar com metadataCache de forma mais conservadora
-    let metadataUpdateTimeout: NodeJS.Timeout | null = null;
     this.registerEvent(
       this.app.metadataCache.on('changed', (file) => {
         // Branch 1: atualizar TODOS os views da nota que mudou (multi-pane aware)
-        // iterateAllLeaves inside setTimeout — query live workspace state inside debounce
-        if (metadataUpdateTimeout) {
-          clearTimeout(metadataUpdateTimeout);
-        }
-        metadataUpdateTimeout = setTimeout(() => {
+        // Per-file debounce — mudancas em A.md nao cancelam refresh de B.md
+        const existingMeta = this.metadataUpdateTimeouts.get(file.path);
+        if (existingMeta) clearTimeout(existingMeta);
+        this.metadataUpdateTimeouts.set(file.path, setTimeout(() => {
+          this.metadataUpdateTimeouts.delete(file.path);
           this.app.workspace.iterateAllLeaves(leaf => {
             if (!(leaf.view instanceof MarkdownView) || leaf.view.file?.path !== file.path) return;
             const view = leaf.view as MarkdownView;
@@ -150,8 +150,7 @@ export default class MirrorUIPlugin extends Plugin {
               });
             }
           });
-          metadataUpdateTimeout = null;
-        }, TIMING.METADATA_CHANGE_DEBOUNCE);
+        }, TIMING.METADATA_CHANGE_DEBOUNCE));
 
         // Branch 2: cross-note — source externo mudou, re-render blocos dependentes
         // Check at event time to decide if we need a timeout at all
@@ -379,6 +378,8 @@ export default class MirrorUIPlugin extends Plugin {
     if (this.settingsUpdateDebounce) {
       clearTimeout(this.settingsUpdateDebounce);
     }
+    for (const t of this.metadataUpdateTimeouts.values()) clearTimeout(t);
+    this.metadataUpdateTimeouts.clear();
     for (const t of this.crossNoteTimeouts.values()) clearTimeout(t);
     this.crossNoteTimeouts.clear();
     clearTemplateChangeTimeout();

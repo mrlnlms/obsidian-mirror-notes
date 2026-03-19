@@ -328,7 +328,7 @@ describe('renderMirrorTemplate', () => {
     removeChildSpy.mockRestore();
   });
 
-  it('clearRenderCache (full) also clears lastRenderChildren — no stale removeChild', async () => {
+  it('clearRenderCache (full) preserves lastRenderChildren — blocks still alive get proper cleanup', async () => {
     const { Component } = await import('obsidian');
     const fakeComponent = new Component();
     const addChildSpy = vi.spyOn(fakeComponent, 'addChild');
@@ -364,16 +364,16 @@ describe('renderMirrorTemplate', () => {
     await renderMirrorTemplate(ctx);
     expect(addChildSpy).toHaveBeenCalledTimes(1);
 
-    // Global cache clear (simulates plugin unload / cold-start retry)
-    // Full clear now also clears lastRenderChildren
+    // Global cache clear (simulates cold-start retry while blocks are still alive)
+    // clearRenderCache does NOT clear lastRenderChildren — blocks need their refs
     clearRenderCache();
 
-    // Re-render after full clear — removeChild should NOT be called
-    // (the previous child reference was wiped by the full clear)
+    // Re-render after cache clear — removeChild SHOULD be called
+    // (lastRenderChildren preserved, previous child properly cleaned up)
     version = 2;
     await renderMirrorTemplate(ctx);
     expect(addChildSpy).toHaveBeenCalledTimes(2);
-    expect(removeChildSpy).not.toHaveBeenCalled();
+    expect(removeChildSpy).toHaveBeenCalledTimes(1);
 
     addChildSpy.mockRestore();
     removeChildSpy.mockRestore();
