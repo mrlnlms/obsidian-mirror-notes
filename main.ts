@@ -214,6 +214,9 @@ export default class MirrorUIPlugin extends Plugin {
     // Atualizar paths nos settings quando arquivos/pastas sao renomeados
     this.registerEvent(
       this.app.vault.on('rename', (file, oldPath) => {
+        // Clear stale templateDeps callbacks under old path — prevents memory leak
+        // when templates are renamed. New callbacks are registered on next render cycle.
+        this.templateDeps.unregisterTemplate(oldPath);
         const result = this.updateSettingsPaths(oldPath, file.path);
         if (result.changed) {
           Logger.log(`Settings paths updated: ${oldPath} -> ${file.path}`);
@@ -233,6 +236,8 @@ export default class MirrorUIPlugin extends Plugin {
     // Notificar quando template referenciado e deletado
     this.registerEvent(
       this.app.vault.on('delete', (file) => {
+        // Clear templateDeps callbacks for deleted template — prevents stale callbacks
+        this.templateDeps.unregisterTemplate(file.path);
         checkDeletedTemplates(this, file.path);
       })
     );

@@ -43,6 +43,17 @@ export class TemplateDependencyRegistry {
     }
   }
 
+  /** Remove todos os blocos que dependem de templatePath.
+   *  Call on template rename/delete to prevent stale callbacks from accumulating. */
+  unregisterTemplate(templatePath: string): void {
+    const set = this.deps.get(templatePath);
+    if (!set) return;
+    for (const key of set) {
+      this.callbacks.delete(key);
+    }
+    this.deps.delete(templatePath);
+  }
+
   /** Retorna callbacks de re-render para blocos que dependem de templatePath */
   getDependentCallbacks(templatePath: string): (() => Promise<void>)[] {
     const set = this.deps.get(templatePath);

@@ -117,6 +117,29 @@ describe('TemplateDependencyRegistry', () => {
     });
   });
 
+  describe('unregisterTemplate', () => {
+    it('removes all blocks depending on a template path', () => {
+      const cb1 = vi.fn();
+      const cb2 = vi.fn();
+      const cb3 = vi.fn();
+      registry.register('templates/header.md', 'block-1', cb1);
+      registry.register('templates/header.md', 'block-2', cb2);
+      registry.register('templates/footer.md', 'block-3', cb3);
+
+      registry.unregisterTemplate('templates/header.md');
+
+      expect(registry.getDependentCallbacks('templates/header.md')).toHaveLength(0);
+      // Other templates unaffected
+      expect(registry.getDependentCallbacks('templates/footer.md')).toHaveLength(1);
+    });
+
+    it('is no-op for unknown template path', () => {
+      registry.register('templates/header.md', 'block-1', vi.fn());
+      registry.unregisterTemplate('nonexistent.md');
+      expect(registry.getDependentCallbacks('templates/header.md')).toHaveLength(1);
+    });
+  });
+
   describe('clear', () => {
     it('removes all registrations', () => {
       registry.register('templates/header.md', 'block-1', vi.fn());
