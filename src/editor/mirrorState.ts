@@ -1,7 +1,7 @@
 import { StateField, StateEffect, EditorState, Transaction, Facet } from "@codemirror/state";
 import { EditorView, DecorationSet } from "@codemirror/view";
 import MirrorUIPlugin from '../../main';
-import { MirrorFieldState, MirrorState } from "./mirrorTypes";
+import { MirrorFieldState, MirrorState, ApplicableMirrorConfig } from "./mirrorTypes";
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { clearRenderCache, clearAllRenderChildren } from "../rendering/templateRenderer";
 import { buildDecorations } from "./decorationBuilder";
@@ -72,6 +72,17 @@ export function detectFrontmatterChange(tr: Transaction, docText: string): boole
   return changeInFrontmatterRegion;
 }
 
+/** Compare current MirrorState against a fresh config to detect changes */
+function hasConfigChanged(value: MirrorState, freshConfig: ApplicableMirrorConfig | null): boolean {
+  return (!!freshConfig) !== value.enabled ||
+    freshConfig?.position !== value.config?.position ||
+    freshConfig?.templatePath !== value.config?.templatePath ||
+    freshConfig?.hideProps !== value.config?.hideProps ||
+    freshConfig?.showContainer !== value.config?.showContainer ||
+    freshConfig?.viewOverrides?.readableLineLength !== value.config?.viewOverrides?.readableLineLength ||
+    freshConfig?.viewOverrides?.showInlineTitle !== value.config?.viewOverrides?.showInlineTitle;
+}
+
 /** Handle a forced update: invalidate cache, compare configs, rebuild if needed */
 export function handleForcedUpdate(
   tr: Transaction,
@@ -87,14 +98,7 @@ export function handleForcedUpdate(
   const viewId = tr.state.facet(viewIdFacet);
   const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter, viewId);
 
-  const configChanged =
-    (!!freshConfig) !== value.enabled ||
-    freshConfig?.position !== value.config?.position ||
-    freshConfig?.templatePath !== value.config?.templatePath ||
-    freshConfig?.hideProps !== value.config?.hideProps ||
-    freshConfig?.showContainer !== value.config?.showContainer ||
-    freshConfig?.viewOverrides?.readableLineLength !== value.config?.viewOverrides?.readableLineLength ||
-    freshConfig?.viewOverrides?.showInlineTitle !== value.config?.viewOverrides?.showInlineTitle;
+  const configChanged = hasConfigChanged(value, freshConfig);
 
   if (configChanged) {
     const changedFields = [
@@ -179,20 +183,15 @@ export function handleConfigChange(
   const viewId = tr.state.facet(viewIdFacet);
   const config = getApplicableConfig(plugin, file, newFrontmatter, viewId);
 
-  const enabledChanged = value.enabled !== !!config;
-  const positionChanged = value.config?.position !== config?.position;
-  const templateChanged = value.config?.templatePath !== config?.templatePath;
-  const hidePropsChanged = value.config?.hideProps !== config?.hideProps;
-  const containerChanged = value.config?.showContainer !== config?.showContainer;
-  const overridesChanged =
-    value.config?.viewOverrides?.readableLineLength !== config?.viewOverrides?.readableLineLength ||
-    value.config?.viewOverrides?.showInlineTitle !== config?.viewOverrides?.showInlineTitle;
-
-  if (!enabledChanged && !positionChanged && !templateChanged && !hidePropsChanged && !containerChanged && !overridesChanged) {
+  if (!hasConfigChanged(value, config)) {
     return null; // No config change
   }
 
-  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${hidePropsChanged}, container:${containerChanged}, overrides:${overridesChanged}`);
+  const enabledChanged = value.enabled !== !!config;
+  const positionChanged = value.config?.position !== config?.position;
+  const templateChanged = value.config?.templatePath !== config?.templatePath;
+
+  Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${value.config?.hideProps !== config?.hideProps}, container:${value.config?.showContainer !== config?.showContainer}`);
 
   if (enabledChanged || positionChanged || templateChanged) {
     clearWidgetCaches(value.widgetId);
