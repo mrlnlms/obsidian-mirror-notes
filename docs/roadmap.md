@@ -34,7 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
-| v56 | Code review completo | 9 bug fixes (data.json reload, migration guard, applyViewOverrides gap, hashObject null, refreshAllEditors RV, scheduleTimer, typo, dead code). 377 unit + 37 E2E |
+| v56 | Code review + observability nivel 4 | 9 bug fixes + migrate all callers to computeMirrorRuntimeDecision (getApplicableConfig/resolveEngine internos). 377 unit + 37 E2E |
 | v55 | Central decision + 9 Codex fixes | `computeMirrorRuntimeDecision`, canonical flows, 9 bugs via Codex review (concurrency, observer, margin RV, timers, renderingPromises, templateDeps, viewOverrides ordering/engine, data.json RV). 374 unit + 37 E2E |
 | v54 | Runtime correctness + pane isolation | Stale callbacks, multi-pane frontmatter, memory leak, code block pane isolation, type safety, DRY. Audit Claude+Codex. 359 unit + 37 E2E |
 | v53 | Rename mirrors + typo migration | Inline rename, `overide→override` migration com auto-save, `toogle→toggle` fix, UI labels EN |
