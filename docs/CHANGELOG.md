@@ -2,6 +2,18 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## v54 — Runtime correctness + type safety + DRY
+
+- Fix: stale callbacks em debounce de cross-note e template (re-query dentro do setTimeout)
+- Fix: multi-pane frontmatter staleness (iterateAllLeaves no metadataCache handler)
+- Fix: lastRenderChildren memory leak (clearRenderChild no block destroy)
+- Fix: clearRenderCache() global nao orfana mais lifecycle de blocos vivos (Codex review)
+- Fix: metadataUpdateTimeout per-file — mudancas em arquivos diferentes nao cancelam refresh (Codex review)
+- Fix: code blocks per-pane isolation via `getBlockViewId` — split view da mesma nota nao colide mais (Codex review)
+- Refactor: frontmatter types padronizados pra `Record<string, unknown>` (6 arquivos)
+- Refactor: hash function deduplicada, buildContainerClasses extraido, cooldown centralizado
+- 359 testes (+8)
+
 ## Observability level 1: decision trace logs (pos-v53)
 
 - `traceMirrorDecision()` com prefixo `[trace]` filtravel via grep

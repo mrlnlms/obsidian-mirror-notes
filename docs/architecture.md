@@ -3,7 +3,7 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (pos-v53)
+## File Map (pos-v54)
 
 ```
 main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup) — 386 linhas
@@ -227,7 +227,7 @@ interface Condition {
 - `editor-change` — registra StateField se nao existe (early return se ja registrado, zero custo)
 - `file-open` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
 - `active-leaf-change` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
-- `metadataCache.changed` — branch 1: DOM injection + viewOverrides + force CM6 update. Branch 2: cross-note source deps. Branch 3: template deps
+- `metadataCache.changed` — branch 1: `iterateAllLeaves` dentro do debounce per-file (`metadataUpdateTimeouts` Map), atualiza TODOS os panes do arquivo que mudou (DOM injection + viewOverrides + force CM6 update). Branch 2: cross-note source deps. Branch 3: template deps. Branches 1-3 re-query live state dentro do setTimeout (sem closure stale)
 - `vault.modify` — em `data.json`: re-update settings. Em outros: template deps
 - `vault.on('raw')` — delegado a `obsidianConfigMonitor.ts`: detecta mudancas em `.obsidian/app.json` e `core-plugins.json` → `refreshAllEditors()`
 - `layout-change` — delegado a `modeSwitchDetector.ts`: trailing debounce 50ms, per-view mode tracking, triggers setupEditor + setupDomPosition + applyViewOverrides
@@ -237,8 +237,9 @@ interface Condition {
 `SourceDependencyRegistry` — registry centralizado com callbacks de re-render direto.
 - Code blocks com `source:` registram `doRender()` como callback
 - Code blocks sem `source:` registram self-dependency (v41) — reagem a mudancas no proprio frontmatter
-- `metadataCache.on('changed')` Branch 2: consulta registry, invoca callbacks apos debounce 500ms
-- Cleanup via `MarkdownRenderChild.register()` — unregister automatico quando bloco e destruido
+- `metadataCache.on('changed')` Branch 2: re-query callbacks dentro do debounce 500ms (v54: evita execucao de callbacks stale)
+- Cleanup via `MarkdownRenderChild.register()` — unregister automatico quando bloco e destruido + `clearRenderChild()` e `clearRenderCache()` limpam caches (v54)
+- Code blocks sao per-pane isolados (v54): `getBlockViewId(el)` usa `el.closest('.workspace-leaf-content')` → `getViewId()` pra gerar keys unicas por pane (`block-${viewId}-${sourcePath}-${lineStart}`). Fallback `'default'` quando DOM traversal falha (testes, elementos desconectados)
 
 ### Template reactivity (v35)
 

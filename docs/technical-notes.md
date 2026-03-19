@@ -2,6 +2,42 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## O que mudou na v54
+
+### Runtime correctness + type safety + DRY
+
+**Contexto:** audit conjunto (Claude + Codex) identificou 3 bugs de runtime, inconsistencia de tipos no pipeline de frontmatter, e duplicacoes de codigo que amplificavam risco.
+
+**Bug 1 — Stale callbacks em debounce (main.ts, templateChangeHandler.ts)**
+Callbacks de cross-note e template eram capturados ANTES do setTimeout. Se um code block fosse destruido durante a janela de 500ms, o callback stale executava em DOM/component ja descartado. Fix: re-query `getDependentCallbacks()` DENTRO do setTimeout.
+
+**Bug 2 — Multi-pane frontmatter staleness (main.ts)**
+`metadataCache.on('changed')` Branch 1 usava `getActiveViewOfType(MarkdownView)` — so atualizava o pane ativo. Panes secundarios do mesmo arquivo ficavam stale ate ganhar foco. Fix: `iterateAllLeaves` dentro do debounce, filtrando por `file.path`. Consistente com `refreshAllEditors`.
+
+**Bug 3 — lastRenderChildren memory leak (templateRenderer.ts, codeBlockProcessor.ts)**
+Map global `lastRenderChildren` acumulava `MarkdownRenderChild` de code blocks destruidos. Fix: `clearRenderChild(cacheKey)` chamado no `child.register()` cleanup do codeBlockProcessor. `clearRenderCache()` full-clear agora tambem limpa `lastRenderChildren`.
+
+**Type safety — frontmatter pipeline (6 arquivos)**
+`frontmatter: any` em mirrorConfig.ts (3x), `Record<string, string>` em domInjector.ts e templateRenderer.ts (muito restrito), `Record<string, any>` em mirrorState.ts e mirrorTypes.ts — tudo padronizado pra `Record<string, unknown>`. `resolveVariable` em mirrorUtils.ts ajustado com narrowing explicito.
+
+**DRY — hash + container classes + cooldown**
+- `simpleHash` removido de templateRenderer.ts, usa `hashObject` de mirrorUtils
+- `buildContainerClasses()` extraido pra mirrorTypes.ts, usado por mirrorWidget + domInjector
+- `SETUP_COOLDOWN_MS` movido pra timingConfig.ts como `TIMING.SETUP_COOLDOWN`
+- `.substr()` deprecated → `.substring()`
+
+**Fix 4 (Codex review) — clearRenderCache() global reintroduzia leak**
+`clearRenderCache()` sem cacheKey (cold-start retry em main.ts:114) limpava `lastRenderChildren` de blocos ainda montados — orfanando lifecycle handlers. Fix: `clearRenderCache()` full-clear nao toca `lastRenderChildren`. Novo `clearAllRenderChildren()` chamado so no `cleanupMirrorCaches` (plugin unload).
+
+**Fix 5 (Codex review) — metadataUpdateTimeout global cancelava refreshes entre arquivos**
+Unico timeout para Branch 1 do metadataCache handler — mudanca em A.md dentro de 500ms apos B.md cancelava refresh de B.md. Fix: `metadataUpdateTimeouts` agora e `Map<string, NodeJS.Timeout>` indexado por `file.path`, mesmo padrao de `crossNoteTimeouts` e `templateUpdateTimeouts`.
+
+**Fix 6 (Codex review) — code blocks sem isolamento por pane em split view**
+Duas panes da mesma nota com `\`\`\`mirror` colidiam em `cacheKey` (`block-note.md-5`) e `blockKey` (`note.md::5`), causando: registry overwrite (pane 1 perde reatividade), lastRenderChildren cruzado, renderingPromises compartilhado, hash cache falso-positivo. Fix: `getBlockViewId(el)` em domInjector.ts — `el.closest('.workspace-leaf-content')` → `getViewId()`, fallback `'default'` pra testes. viewId prepended a ambas as keys: `block-${viewId}-${sourcePath}-${lineStart}`, `${viewId}:${sourcePath}::${lineStart}`. Tambem adicionado `clearRenderCache(cacheKey)` no destroy handler pra limpar `lastRenderedContent`.
+
+**Arquivos tocados:** main.ts, mirrorConfig.ts, mirrorState.ts, mirrorTypes.ts, mirrorUtils.ts, mirrorWidget.ts, timingConfig.ts, codeBlockProcessor.ts, domInjector.ts, domPositionManager.ts, templateChangeHandler.ts, templateRenderer.ts
+**Testes:** 351 → 359 (+8)
+
 ## Observability level 1: decision trace logs (pos-v53)
 
 ### O que mudou

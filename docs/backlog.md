@@ -57,7 +57,9 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 - **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
 - **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
 
-## E2E Testing — concluido (pos-v53)
+## E2E Testing — proximo
+
+- **E2E multi-pane code blocks** — split view da mesma nota com `\`\`\`mirror` em duas panes. Validar que ambas renderizam e reagem independentemente. Motivacao: fix de isolamento per-pane (v54) nao tem cobertura E2E — so unit tests em jsdom (onde `el.closest` cai no fallback `'default'`). Suite sugerida: `advanced-behaviors` (ja tem multi-pane isolation pra DOM mirrors)
 
 35 E2E specs passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
 
@@ -112,6 +114,7 @@ Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baseli
 - **viewOverrides em mirrors preview-only** — resolvido. `applyViewOverrides` agora tem fallback: se StateField nao tem config (preview-only mirror), consulta `getApplicableConfig` com viewMode do view atual. Overrides aplicam corretamente em mirrors RV-only (v49)
 - **sourcePath no MarkdownRenderer e a nota hospedeira, nao o template** — por design, nao e bug. `renderMarkdown(..., sourcePath)` resolve links relativos. Links no template devem resolver do contexto da nota que mostra o mirror (ex: `[[tasks]]` relativo a nota, nao ao template em `templates/`). Se resolvesse do template, links quebrariam pra qualquer nota fora da pasta do template
 - **"Descartado com warning" no multi-mirror** — warning existia no antigo `buildMirrorIndex` (removido na v46). Hoje e first-match-wins silencioso. Doc do roadmap corrigida
+- **`getBlockViewId` depende de `.workspace-leaf-content`** — risco aceito (v54). Mesma classe usada pelo Obsidian em toda a API de workspace (`view.containerEl`). Se Obsidian mudar o seletor, `getBlockViewId` degrada pra fallback `'default'` (sem crash, perde isolamento multi-pane de code blocks — volta ao comportamento pre-v54). Mitigacao: E2E multi-pane code blocks no backlog. Avaliado na v54, aceito como risco baixo
 - **CSS parity com Live Preview nativo** — mirrors tem parity com Reading View (v38). Live Preview usa modelo de spacing completamente diferente (CM6 lines, padding em vez de margin). Delta LP vs RV e do proprio Obsidian. Nao e bug do plugin
 - **`{{title}}` e `{{position}}` literal** — templates de teste usavam variaveis que nao existem no frontmatter. templateRenderer resolve so frontmatter da nota, nao propriedades do config do mirror. Comportamento correto — campo vazio e preenchido pelo usuario (ex: meta-bind)
 
