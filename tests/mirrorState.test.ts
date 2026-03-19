@@ -25,6 +25,9 @@ vi.mock('../src/editor/mirrorConfig', () => ({
   getApplicableConfig: vi.fn(),
   clearConfigCache: vi.fn(),
 }));
+vi.mock('../src/editor/mirrorDecision', () => ({
+  computeMirrorRuntimeDecision: vi.fn(),
+}));
 vi.mock('../src/dev/logger', () => ({
   Logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }));
@@ -42,7 +45,7 @@ import {
 import { MirrorTemplateWidget } from '../src/editor/mirrorWidget';
 import { clearRenderCache } from '../src/rendering/templateRenderer';
 import { buildDecorations } from '../src/editor/decorationBuilder';
-import { getApplicableConfig } from '../src/editor/mirrorConfig';
+import { computeMirrorRuntimeDecision } from '../src/editor/mirrorDecision';
 import { StateEffect } from '@codemirror/state';
 
 // =================================================================================
@@ -158,7 +161,14 @@ describe('handleConfigChange', () => {
 
   it('returns null when config is identical', () => {
     const state = makeMirrorState();
-    vi.mocked(getApplicableConfig).mockReturnValue(state.config);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: state.config,
+      engine: 'cm6',
+      requestedPosition: state.config?.position ?? null,
+      resolvedPosition: state.config?.position ?? null,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -167,7 +177,14 @@ describe('handleConfigChange', () => {
 
   it('detects enabled change (config becomes null)', () => {
     const state = makeMirrorState();
-    vi.mocked(getApplicableConfig).mockReturnValue(null);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: null,
+      engine: 'none',
+      requestedPosition: null,
+      resolvedPosition: null,
+      fallbackApplied: false,
+      reason: 'no matching mirror',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -181,7 +198,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       position: 'bottom',
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -196,7 +220,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       templatePath: 'templates/other.md',
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -210,7 +241,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       hideProps: true,
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -226,7 +264,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       viewOverrides: { hideProps: false, readableLineLength: 'on', showInlineTitle: 'inherit' },
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -239,7 +284,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       showContainer: false,
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);
@@ -253,7 +305,14 @@ describe('handleConfigChange', () => {
       ...state.config!,
       position: 'above-title',
     };
-    vi.mocked(getApplicableConfig).mockReturnValue(newConfig);
+    vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+      config: newConfig,
+      engine: 'cm6',
+      requestedPosition: newConfig.position,
+      resolvedPosition: newConfig.position,
+      fallbackApplied: false,
+      reason: 'test',
+    });
     const tr = mockTransactionWithState();
 
     const result = handleConfigChange(tr, state, fakePlugin, fakeFile, docText, frontmatter, fmHash);

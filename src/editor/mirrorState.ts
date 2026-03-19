@@ -5,7 +5,8 @@ import { MirrorFieldState, MirrorState, ApplicableMirrorConfig } from "./mirrorT
 import { MirrorTemplateWidget } from "./mirrorWidget";
 import { clearRenderCache, clearAllRenderChildren, clearRenderingPromises } from "../rendering/templateRenderer";
 import { buildDecorations } from "./decorationBuilder";
-import { getApplicableConfig, clearConfigCache } from "./mirrorConfig";
+import { clearConfigCache } from "./mirrorConfig";
+import { computeMirrorRuntimeDecision } from "./mirrorDecision";
 import { TIMING } from "./timingConfig";
 import { extractRawYaml, hashObject, generateWidgetId, traceMirrorDecision } from "./mirrorUtils";
 import { TFile } from "obsidian";
@@ -96,7 +97,8 @@ export function handleForcedUpdate(
 ): MirrorFieldState {
   clearConfigCache();
   const viewId = tr.state.facet(viewIdFacet);
-  const freshConfig = getApplicableConfig(plugin, file, newFrontmatter || value.frontmatter, viewId);
+  const decision = computeMirrorRuntimeDecision(plugin, file, newFrontmatter || value.frontmatter, viewId, 'source');
+  const freshConfig = decision.config;
 
   const configChanged = hasConfigChanged(value, freshConfig);
 
@@ -181,7 +183,8 @@ export function handleConfigChange(
   newFrontmatterHash: string
 ): MirrorFieldState | null {
   const viewId = tr.state.facet(viewIdFacet);
-  const config = getApplicableConfig(plugin, file, newFrontmatter, viewId);
+  const decision = computeMirrorRuntimeDecision(plugin, file, newFrontmatter, viewId, 'source');
+  const config = decision.config;
 
   if (!hasConfigChanged(value, config)) {
     return null; // No config change
@@ -234,7 +237,8 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const frontmatterHash = hashObject(extractRawYaml(state.doc.toString()));
     const frontmatter = filePath ? getMetadataCacheFrontmatter(plugin, filePath) : {};
     const viewId = state.facet(viewIdFacet);
-    const config = getApplicableConfig(plugin, file, frontmatter, viewId);
+    const decision = computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId, 'source');
+    const config = decision.config;
 
     const mirrorState: MirrorState = {
       enabled: !!config,
