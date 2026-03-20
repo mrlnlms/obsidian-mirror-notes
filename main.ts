@@ -274,7 +274,9 @@ export default class MirrorUIPlugin extends Plugin {
 
   async loadSettings() {
     const raw = await this.loadData();
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, raw ?? {});
+    // structuredClone prevents shallow-copy pollution of DEFAULT_SETTINGS
+    // (customMirrors array and global_view_overrides object are nested)
+    this.settings = Object.assign(structuredClone(DEFAULT_SETTINGS), raw ?? {});
     // Migration: ensure conditions fields exist on each mirror (pre-v46 data.json)
     for (const mirror of this.settings.customMirrors) {
       if (!mirror.conditions) mirror.conditions = [];
@@ -331,7 +333,7 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   async resetSettings() {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS);
+    this.settings = structuredClone(DEFAULT_SETTINGS);
     await this.saveSettings();
   }
 
