@@ -11,8 +11,10 @@ Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usand
 - Fix: scalar sanitization — boolean "false"/"true" stringificado, posicao invalida com fallback
 - Chore: bump CI actions (checkout v6, setup-node v6, cache v5), Node 22, xvfb-run inline
 - Chore: traduzir ultimo texto PT no settings banner
-- Test: 13 unit tests novos (race conditions, normalization, sanitization, callback rejection)
-- 408 testes (+13), 39 E2E specs. Zero findings em rodada 5
+- Fix: sanitize stringified booleans inside view_overrides (hideProps "false" string was truthy)
+- Test: 15 unit tests novos (race conditions, normalization, sanitization, callback rejection, view overrides)
+- Test: 2 composite E2E specs (split pane cross-leak + folder rename) — 6 test cases
+- 410 unit tests (+15), 45 E2E test cases em 10 specs (+6). Zero findings em rodada 6
 
 ## v57 — Suggest migration + Codex hardening
 

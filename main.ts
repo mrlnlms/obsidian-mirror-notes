@@ -295,6 +295,9 @@ export default class MirrorUIPlugin extends Plugin {
     sanitizeBool(this.settings, 'global_show_container_border', true);
     sanitizeBool(this.settings, 'auto_update_paths', true);
 
+    // Sanitize view overrides internal scalars
+    sanitizeViewOverrides(this.settings.global_view_overrides);
+
     // Sanitize top-level positions
     sanitizePosition(this.settings, 'global_settings_live_preview_pos', 'top');
     sanitizePosition(this.settings, 'global_settings_preview_pos', 'top');
@@ -306,6 +309,7 @@ export default class MirrorUIPlugin extends Plugin {
       if (!mirror.custom_view_overrides || typeof mirror.custom_view_overrides !== 'object') {
         mirror.custom_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
       }
+      sanitizeViewOverrides(mirror.custom_view_overrides);
       // Sanitize per-mirror booleans and positions
       sanitizeBool(mirror, 'enable_custom_live_preview_mode', false);
       sanitizeBool(mirror, 'enable_custom_preview_mode', false);
@@ -500,6 +504,22 @@ function sanitizeBool<T>(obj: T, key: keyof T, fallback: boolean): void {
   if (val === 'true') { (obj as Record<string, unknown>)[key as string] = true; return; }
   if (val === 'false') { (obj as Record<string, unknown>)[key as string] = false; return; }
   if (typeof val !== 'boolean') { (obj as Record<string, unknown>)[key as string] = fallback; }
+}
+
+/** Sanitize ViewOverrides internal scalars (hideProps, readableLineLength, showInlineTitle) */
+function sanitizeViewOverrides(vo: import('./src/settings/types').ViewOverrides): void {
+  sanitizeBool(vo, 'hideProps', false);
+  sanitizeTriState(vo, 'readableLineLength');
+  sanitizeTriState(vo, 'showInlineTitle');
+}
+
+/** Sanitize tri-state (boolean | null) — coerce "true"/"false"/"null" strings */
+function sanitizeTriState<T>(obj: T, key: keyof T): void {
+  const val = obj[key];
+  if (val === 'true') { (obj as Record<string, unknown>)[key as string] = true; return; }
+  if (val === 'false') { (obj as Record<string, unknown>)[key as string] = false; return; }
+  if (val === 'null' || val === '') { (obj as Record<string, unknown>)[key as string] = null; return; }
+  if (val !== true && val !== false && val !== null) { (obj as Record<string, unknown>)[key as string] = null; }
 }
 
 /** Validate position strings against known values, fallback to default */

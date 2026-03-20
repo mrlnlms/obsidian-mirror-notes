@@ -37,7 +37,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
-| v58 | Codex review (5 rodadas) | Margin panel race, schema normalization, async callback safety, post-destroy race, scalar sanitization, CI bump. 408 unit + 39 E2E |
+| v58 | Codex review (6 rodadas) + composite E2E | Margin panel race, schema normalization, async callback safety, post-destroy race, scalar sanitization, view overrides sanitization, CI bump, 2 composite E2E specs. 410 unit + 45 E2E |
 | v57 | Suggest migration + Codex hardening | AbstractInputSuggest nativo, DebouncedInputSuggest, zero deps runtime, structuredClone defaults, async safety, 6 Codex fixes. 395 unit + 39 E2E |
 | v56 | Code review + observability nivel 4 | 9 bug fixes + migrate all callers to computeMirrorRuntimeDecision (getApplicableConfig/resolveEngine internos). 377 unit + 37 E2E |
 | v55 | Central decision + 9 Codex fixes | `computeMirrorRuntimeDecision`, canonical flows, 9 bugs via Codex review (concurrency, observer, margin RV, timers, renderingPromises, templateDeps, viewOverrides ordering/engine, data.json RV). 374 unit + 37 E2E |

@@ -58,7 +58,7 @@ Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts
 
 ## E2E Testing — concluido (pos-v54)
 
-47 E2E specs passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
+45 E2E test cases em 10 spec files passando contra Obsidian real via `obsidian-e2e-visual-test-kit` harness. Stack: WebdriverIO 9 + wdio-obsidian-service + @wdio/visual-service.
 
 | Suite | Specs | Cobertura |
 |-------|-------|-----------|

@@ -248,4 +248,39 @@ describe('DEFAULT_SETTINGS clone isolation', () => {
     expect(mirror.custom_settings_preview_pos).toBe('bottom'); // valid — kept
     expect(mirror.custom_show_container_border).toBe(false);
   });
+
+  it('sanitizes stringified booleans inside global_view_overrides', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      global_view_overrides: { hideProps: "true", readableLineLength: "false", showInlineTitle: "null" },
+    });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.global_view_overrides.hideProps).toBe(true);
+    expect(plugin.settings.global_view_overrides.readableLineLength).toBe(false);
+    expect(plugin.settings.global_view_overrides.showInlineTitle).toBe(null);
+  });
+
+  it('sanitizes stringified booleans inside custom_view_overrides', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'test', name: 'Test', openview: false,
+        enable_custom_live_preview_mode: true,
+        custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top',
+        enable_custom_preview_mode: false,
+        custom_settings_preview_note: '',
+        custom_settings_preview_pos: 'top',
+        custom_settings_override: true,
+        custom_view_overrides: { hideProps: "false", readableLineLength: "true", showInlineTitle: 42 },
+        custom_show_container_border: true,
+        custom_auto_update_paths: true,
+      }],
+    });
+    await plugin.loadSettings();
+
+    const vo = plugin.settings.customMirrors[0].custom_view_overrides;
+    expect(vo.hideProps).toBe(false);
+    expect(vo.readableLineLength).toBe(true);
+    expect(vo.showInlineTitle).toBe(null); // invalid number → null fallback
+  });
 });
