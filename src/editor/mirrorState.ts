@@ -111,7 +111,7 @@ export function handleForcedUpdate(
 ): MirrorFieldState {
   clearConfigCache();
   const viewId = tr.state.facet(viewIdFacet);
-  const decision = computeMirrorRuntimeDecision(plugin, file, newFrontmatter || value.frontmatter, viewId, 'source');
+  const decision = computeMirrorRuntimeDecision(plugin, file, newFrontmatter, viewId, 'source');
   const freshConfig = decision.config;
 
   const configChanged = hasConfigChanged(value, freshConfig);
@@ -146,8 +146,8 @@ export function handleForcedUpdate(
 
     const newState: MirrorState = {
       ...value,
-      frontmatter: newFrontmatter || value.frontmatter,
-      frontmatterHash: newFrontmatterHash || value.frontmatterHash,
+      frontmatter: newFrontmatter,
+      frontmatterHash: newFrontmatterHash,
       widgetId: newWidgetId,
       lastDocText: docText
     };
@@ -168,8 +168,8 @@ export function handleForcedUpdate(
   const newMirrorState: MirrorState = {
     enabled: !!freshConfig,
     config: freshConfig,
-    frontmatter: newFrontmatter || value.frontmatter,
-    frontmatterHash: newFrontmatterHash || value.frontmatterHash,
+    frontmatter: newFrontmatter,
+    frontmatterHash: newFrontmatterHash,
     widgetId: generateWidgetId(),
     filePath: value.filePath,
     lastDocText: docText

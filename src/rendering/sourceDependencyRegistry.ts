@@ -1,14 +1,14 @@
 /**
  * Registry centralizado de dependencias cross-note para mirror blocks com `source:`.
- * Rastreia: "sourcePath X e dependencia de viewPath Y".
- * Guarda callbacks de re-render pra atualizar blocos diretamente (funciona em Live Preview + Reading View).
+ * Rastreia: sourcePath → Set<blockKey> com callbacks de re-render.
+ * Funciona em Live Preview + Reading View.
  */
 export class SourceDependencyRegistry {
   private deps = new Map<string, Set<string>>();
   private callbacks = new Map<string, () => Promise<void>>();
 
   /** Registra dependencia + callback de re-render. blockKey deve ser unico por bloco. */
-  register(sourcePath: string, viewPath: string, blockKey: string, rerender: () => Promise<void>): void {
+  register(sourcePath: string, _viewPath: string, blockKey: string, rerender: () => Promise<void>): void {
     // Limpar registro anterior com mesmo blockKey (source pode ter mudado)
     this.unregisterBlock(blockKey);
 

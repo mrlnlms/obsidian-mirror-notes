@@ -51,7 +51,7 @@ export class MirrorTemplateWidget extends WidgetType {
 
     // Fire-and-forget: toDOM must be synchronous (CM6 API), so async render
     // runs in background. "Loading template..." placeholder handles the interim.
-    this.updateContentIfNeeded(container, view);
+    this.updateContentIfNeeded(container, view).catch(err => Logger.error(`Widget render failed: ${err}`));
     return container;
   }
 
