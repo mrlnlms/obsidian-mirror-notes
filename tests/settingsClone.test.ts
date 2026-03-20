@@ -91,6 +91,77 @@ describe('DEFAULT_SETTINGS clone isolation', () => {
     expect(DEFAULT_SETTINGS.global_view_overrides.hideProps).toBe(false);
   });
 
+  it('normalizes customMirrors: null from corrupted data.json', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({ customMirrors: null });
+    await plugin.loadSettings();
+
+    expect(Array.isArray(plugin.settings.customMirrors)).toBe(true);
+    expect(plugin.settings.customMirrors).toHaveLength(0);
+  });
+
+  it('normalizes customMirrors: {} (object instead of array) from corrupted data.json', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({ customMirrors: {} });
+    await plugin.loadSettings();
+
+    expect(Array.isArray(plugin.settings.customMirrors)).toBe(true);
+    expect(plugin.settings.customMirrors).toHaveLength(0);
+  });
+
+  it('normalizes global_view_overrides: null from corrupted data.json', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({ global_view_overrides: null });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.global_view_overrides).toBeDefined();
+    expect(typeof plugin.settings.global_view_overrides).toBe('object');
+    expect(plugin.settings.global_view_overrides.hideProps).toBe(false);
+  });
+
+  it('normalizes mirror with missing custom_view_overrides from corrupted data.json', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'test', name: 'Test', openview: false,
+        enable_custom_live_preview_mode: true,
+        custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top',
+        enable_custom_preview_mode: false,
+        custom_settings_preview_note: '',
+        custom_settings_preview_pos: 'top',
+        custom_settings_override: false,
+        custom_view_overrides: null,
+        custom_show_container_border: true,
+        custom_auto_update_paths: true,
+      }],
+    });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.customMirrors[0].custom_view_overrides).toBeDefined();
+    expect(plugin.settings.customMirrors[0].custom_view_overrides.hideProps).toBe(false);
+  });
+
+  it('normalizes mirror with missing conditions from pre-v46 data.json', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'old', name: 'Old Mirror', openview: false,
+        enable_custom_live_preview_mode: true,
+        custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top',
+        enable_custom_preview_mode: false,
+        custom_settings_preview_note: '',
+        custom_settings_preview_pos: 'top',
+        custom_settings_override: false,
+        custom_show_container_border: true,
+        custom_auto_update_paths: true,
+        // no conditions, no conditionLogic, no custom_view_overrides
+      }],
+    });
+    await plugin.loadSettings();
+
+    const mirror = plugin.settings.customMirrors[0];
+    expect(Array.isArray(mirror.conditions)).toBe(true);
+    expect(mirror.conditionLogic).toBe('any');
+    expect(mirror.custom_view_overrides).toBeDefined();
+  });
+
   it('resetSettings returns to clean defaults after mutations', async () => {
     await plugin.loadSettings();
 

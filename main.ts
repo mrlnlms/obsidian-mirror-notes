@@ -1,7 +1,7 @@
 import { Plugin, MarkdownView, WorkspaceLeaf, Notice } from 'obsidian';
 import { StateEffect } from "@codemirror/state";
 import { mirrorStateField, forceMirrorUpdateEffect, mirrorPluginFacet, filePathFacet, viewIdFacet, cleanupMirrorCaches } from './src/editor/mirrorState';
-import { MirrorUIPluginSettings, DEFAULT_SETTINGS, MirrorUISettingsTab } from './settings';
+import { MirrorUIPluginSettings, DEFAULT_SETTINGS, DEFAULT_VIEW_OVERRIDES, MirrorUISettingsTab } from './settings';
 import { Logger } from './src/dev/logger';
 import { registerMirrorCodeBlock } from './src/rendering/codeBlockProcessor';
 import { registerInsertMirrorBlock } from './src/commands/insertMirrorBlock';
@@ -277,10 +277,22 @@ export default class MirrorUIPlugin extends Plugin {
     // structuredClone prevents shallow-copy pollution of DEFAULT_SETTINGS
     // (customMirrors array and global_view_overrides object are nested)
     this.settings = Object.assign(structuredClone(DEFAULT_SETTINGS), raw ?? {});
+
+    // Normalize fields that external sync/manual edits can corrupt to wrong types
+    if (!Array.isArray(this.settings.customMirrors)) {
+      this.settings.customMirrors = [];
+    }
+    if (!this.settings.global_view_overrides || typeof this.settings.global_view_overrides !== 'object' || Array.isArray(this.settings.global_view_overrides)) {
+      this.settings.global_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
+    }
+
     // Migration: ensure conditions fields exist on each mirror (pre-v46 data.json)
     for (const mirror of this.settings.customMirrors) {
       if (!mirror.conditions) mirror.conditions = [];
       if (!mirror.conditionLogic) mirror.conditionLogic = 'any';
+      if (!mirror.custom_view_overrides || typeof mirror.custom_view_overrides !== 'object') {
+        mirror.custom_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
+      }
     }
     rebuildKnownTemplatePaths(this);
   }
