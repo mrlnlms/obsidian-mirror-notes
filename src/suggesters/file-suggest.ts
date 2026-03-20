@@ -1,4 +1,4 @@
-import { TAbstractFile, TFile, TFolder } from 'obsidian';
+import { TFile, TFolder } from 'obsidian';
 import { DebouncedInputSuggest } from './debounced-suggest';
 
 export class FileSuggest extends DebouncedInputSuggest<TFile> {
