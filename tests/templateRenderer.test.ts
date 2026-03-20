@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderMirrorTemplate, clearRenderCache, clearRenderChild } from '../src/rendering/templateRenderer';
 import { createFakePlugin } from './mocks/pluginFactory';
 import { TFile } from 'obsidian';
@@ -13,7 +13,12 @@ describe('renderMirrorTemplate', () => {
 
   beforeEach(() => {
     container = document.createElement('div');
+    document.body.appendChild(container);
     clearRenderCache();
+  });
+
+  afterEach(() => {
+    container.remove();
   });
 
   it('renders template content into container', async () => {
@@ -450,6 +455,36 @@ describe('renderMirrorTemplate', () => {
 
     expect(removeChildSpy).not.toHaveBeenCalled();
     removeChildSpy.mockRestore();
+  });
+
+  it('skips addChild/lastRenderChildren when container detaches mid-render', async () => {
+    const { Component, MarkdownRenderer } = await import('obsidian');
+    const fakeComponent = new Component();
+    const addChildSpy = vi.spyOn(fakeComponent, 'addChild');
+
+    // Make renderMarkdown detach the container before returning (simulates block destroy)
+    vi.spyOn(MarkdownRenderer, 'renderMarkdown').mockImplementation(async (_content, el) => {
+      el.parentElement?.remove(); // detach container from DOM
+    });
+
+    const plugin = createFakePlugin();
+    // container already in DOM via beforeEach — isConnected is true
+
+    await renderMirrorTemplate({
+      plugin,
+      templatePath: 'templates/test.md',
+      variables: { title: 'Detach' },
+      sourcePath: 'note.md',
+      container,
+      cacheKey: 'test-detach-race',
+      component: fakeComponent,
+    });
+
+    // addChild should NOT have been called — container was detached
+    expect(addChildSpy).not.toHaveBeenCalled();
+
+    addChildSpy.mockRestore();
+    vi.mocked(MarkdownRenderer.renderMarkdown).mockRestore();
   });
 });
 

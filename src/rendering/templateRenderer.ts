@@ -110,6 +110,12 @@ async function doRender(ctx: RenderContext): Promise<void> {
 
     // Registrar no lifecycle do Obsidian (necessario pro Reading View)
     if (ctx.component) {
+      // Guard: if container was destroyed during async render (navigation/re-render),
+      // skip lifecycle registration to avoid re-polluting lastRenderChildren after cleanup.
+      if (!container.isConnected) {
+        Logger.log('Container detached after render — skipping lifecycle registration');
+        return;
+      }
       // Unload previous child to avoid accumulating detached lifecycle handlers
       const prev = lastRenderChildren.get(cacheKey);
       if (prev) {

@@ -286,6 +286,19 @@ export default class MirrorUIPlugin extends Plugin {
       this.settings.global_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
     }
 
+    // Sanitize top-level booleans (external editors can write "false" as string)
+    sanitizeBool(this.settings, 'global_settings', false);
+    sanitizeBool(this.settings, 'debug_logging', false);
+    sanitizeBool(this.settings, 'enable_global_live_preview_mode', false);
+    sanitizeBool(this.settings, 'enable_global_preview_mode', false);
+    sanitizeBool(this.settings, 'global_settings_override', false);
+    sanitizeBool(this.settings, 'global_show_container_border', true);
+    sanitizeBool(this.settings, 'auto_update_paths', true);
+
+    // Sanitize top-level positions
+    sanitizePosition(this.settings, 'global_settings_live_preview_pos', 'top');
+    sanitizePosition(this.settings, 'global_settings_preview_pos', 'top');
+
     // Migration: ensure conditions fields exist on each mirror (pre-v46 data.json)
     for (const mirror of this.settings.customMirrors) {
       if (!mirror.conditions) mirror.conditions = [];
@@ -293,6 +306,14 @@ export default class MirrorUIPlugin extends Plugin {
       if (!mirror.custom_view_overrides || typeof mirror.custom_view_overrides !== 'object') {
         mirror.custom_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
       }
+      // Sanitize per-mirror booleans and positions
+      sanitizeBool(mirror, 'enable_custom_live_preview_mode', false);
+      sanitizeBool(mirror, 'enable_custom_preview_mode', false);
+      sanitizeBool(mirror, 'custom_settings_override', false);
+      sanitizeBool(mirror, 'custom_show_container_border', true);
+      sanitizeBool(mirror, 'custom_auto_update_paths', true);
+      sanitizePosition(mirror, 'custom_settings_live_preview_pos', 'top');
+      sanitizePosition(mirror, 'custom_settings_preview_pos', 'top');
     }
     rebuildKnownTemplatePaths(this);
   }
@@ -463,6 +484,29 @@ export default class MirrorUIPlugin extends Plugin {
 
     Logger.log('Plugin unloaded successfully');
     Logger.destroy();
+  }
+}
+
+// --- Settings sanitization helpers (external sync/manual edit defense) ---
+
+const VALID_POSITIONS = new Set([
+  'top', 'bottom', 'above-title', 'above-properties', 'below-properties',
+  'above-backlinks', 'below-backlinks', 'left', 'right'
+]);
+
+/** Coerce stringified booleans ("true"/"false") and non-boolean values to real booleans */
+function sanitizeBool<T>(obj: T, key: keyof T, fallback: boolean): void {
+  const val = obj[key];
+  if (val === 'true') { (obj as Record<string, unknown>)[key as string] = true; return; }
+  if (val === 'false') { (obj as Record<string, unknown>)[key as string] = false; return; }
+  if (typeof val !== 'boolean') { (obj as Record<string, unknown>)[key as string] = fallback; }
+}
+
+/** Validate position strings against known values, fallback to default */
+function sanitizePosition<T>(obj: T, key: keyof T, fallback: string): void {
+  const val = obj[key];
+  if (typeof val !== 'string' || !VALID_POSITIONS.has(val)) {
+    (obj as Record<string, unknown>)[key as string] = fallback;
   }
 }
 

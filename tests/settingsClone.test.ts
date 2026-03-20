@@ -195,4 +195,57 @@ describe('DEFAULT_SETTINGS clone isolation', () => {
     // DEFAULT_SETTINGS still clean
     expect(DEFAULT_SETTINGS.customMirrors).toHaveLength(0);
   });
+
+  it('coerces stringified boolean "false" to real false', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({ global_settings: "false" });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.global_settings).toBe(false);
+    expect(typeof plugin.settings.global_settings).toBe('boolean');
+  });
+
+  it('coerces stringified boolean "true" to real true', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({ global_show_container_border: "true" });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.global_show_container_border).toBe(true);
+    expect(typeof plugin.settings.global_show_container_border).toBe('boolean');
+  });
+
+  it('falls back invalid position to default "top"', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      global_settings_live_preview_pos: "bogus",
+      global_settings_preview_pos: 42,
+    });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.global_settings_live_preview_pos).toBe('top');
+    expect(plugin.settings.global_settings_preview_pos).toBe('top');
+  });
+
+  it('sanitizes per-mirror stringified booleans and invalid positions', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'test', name: 'Test', openview: false,
+        enable_custom_live_preview_mode: "false",
+        custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: "bogus",
+        enable_custom_preview_mode: "true",
+        custom_settings_preview_note: '',
+        custom_settings_preview_pos: 'bottom',
+        custom_settings_override: false,
+        custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
+        custom_show_container_border: "false",
+        custom_auto_update_paths: true,
+      }],
+    });
+    await plugin.loadSettings();
+
+    const mirror = plugin.settings.customMirrors[0];
+    expect(mirror.enable_custom_live_preview_mode).toBe(false);
+    expect(mirror.enable_custom_preview_mode).toBe(true);
+    expect(mirror.custom_settings_live_preview_pos).toBe('top'); // bogus → default
+    expect(mirror.custom_settings_preview_pos).toBe('bottom'); // valid — kept
+    expect(mirror.custom_show_container_border).toBe(false);
+  });
 });
