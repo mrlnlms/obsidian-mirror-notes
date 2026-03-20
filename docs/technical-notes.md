@@ -4,9 +4,9 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 
 ## O que mudou na v58
 
-### Codex review pos-v57 — 5 rodadas, 4 bugs corrigidos
+### Codex review pos-v57 — 8 rodadas, zero findings na ultima
 
-**Contexto:** revisao estatica completa do codebase pos-v57 (408 unit tests, 39 E2E). Rodada 5 encerrou sem findings — teto de revisao estatica atingido.
+**Contexto:** revisao estatica completa do codebase pos-v57. 8 rodadas de code review automatizado.
 
 **Rodada 1 — Margin panel race condition (medium)**
 Quando `cacheKey` muda no margin panel, o render antigo (com cacheKey anterior) perde exclusao mutua com o render novo em `renderMirrorTemplate` (serializado por cacheKey). Se o render antigo termina depois, sobrescreve o panel com conteudo stale. Fix: offscreen rendering + generation counter — render stale nunca toca o panel real. Arquivo: `marginPanelExtension.ts`.
@@ -21,9 +21,22 @@ Callbacks de `sourceDeps` e `templateDeps` sao tipados como async mas disparados
 1. Race: render async de code block termina apos bloco destruido por navegacao. Cleanup via `child.register()` ja rodou, mas render retoma e re-polui `lastRenderChildren` + `addChild`. Fix: guard `container.isConnected` apos await MarkdownRenderer — se container desconectou, pula lifecycle registration. Arquivo: `templateRenderer.ts`.
 2. Escalares: `loadSettings()` normalizava shapes (null, {}), mas nao escalares malformados de edicao externa. `"false"` (string) continua truthy, posicao invalida faz mirror sumir. Fix: `sanitizeBool()` coerce strings, `sanitizePosition()` valida contra set de posicoes conhecidas com fallback pra default. Arquivo: `main.ts`.
 
-**Arquivos tocados:** main.ts, marginPanelExtension.ts, templateRenderer.ts, templateChangeHandler.ts
-**Testes:** +13 unit tests (1 race margin panel, 5 schema normalization, 2 callback rejection, 1 detach race, 4 scalar sanitization)
-**Total:** 408 unit tests (+13 vs v57), 39 E2E specs
+**Rodada 5 — Zero findings.** Teto de revisao estatica atingido.
+
+**Rodada 6 — View overrides internal scalars (medium) + doc count fix**
+`sanitizeViewOverrides()` + `sanitizeTriState()` cobrem `hideProps`, `readableLineLength`, `showInlineTitle` dentro de global e per-mirror view_overrides. `"false"` string nao e mais truthy em `classList.toggle()`. E2E counts corrigidos em todos os docs (45 test cases, nao 47).
+
+**Rodada 7 — 5 low findings**
+architecture.md test count stale. `viewPath` unused em sourceDependencyRegistry. mirrorWidget async sem .catch(). Dead `|| value.frontmatter` fallback em mirrorState (3 ocorrencias).
+
+**Rodada 8 — Deep schema validation (high + 2 medium + low)**
+1. customMirrors com items nao-objeto (`[null, 42]`) crashava o loop de normalizacao. Fix: `.filter()` antes do loop.
+2. `conditions: {}` (objeto em vez de array) passava intacto e quebrava UI e rename. Fix: `Array.isArray` check.
+3. `custom_view_overrides: []` escapava da normalizacao (array e typeof object). Fix: `Array.isArray` exclusion, mesmo pattern do global.
+
+**Arquivos tocados:** main.ts, marginPanelExtension.ts, templateRenderer.ts, templateChangeHandler.ts, mirrorState.ts, mirrorWidget.ts, sourceDependencyRegistry.ts
+**Testes:** +18 unit tests, +6 E2E test cases (2 composite specs: split pane cross-leak + folder rename)
+**Total:** 413 unit tests (+18 vs v57), 45 E2E test cases em 10 specs (+6)
 
 ## O que mudou na v57
 

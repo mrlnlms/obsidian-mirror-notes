@@ -283,4 +283,57 @@ describe('DEFAULT_SETTINGS clone isolation', () => {
     expect(vo.readableLineLength).toBe(true);
     expect(vo.showInlineTitle).toBe(null); // invalid number → null fallback
   });
+
+  it('filters out non-object items in customMirrors array', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [null, 42, "string", { id: 'valid', name: 'Valid', openview: false,
+        enable_custom_live_preview_mode: true, custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top', enable_custom_preview_mode: false,
+        custom_settings_preview_note: '', custom_settings_preview_pos: 'top',
+        custom_settings_override: false, custom_show_container_border: true,
+        custom_auto_update_paths: true }],
+    });
+    await plugin.loadSettings();
+
+    expect(plugin.settings.customMirrors).toHaveLength(1);
+    expect(plugin.settings.customMirrors[0].id).toBe('valid');
+  });
+
+  it('normalizes conditions: {} (object instead of array) to empty array', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'test', name: 'Test', openview: false,
+        enable_custom_live_preview_mode: true, custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top', enable_custom_preview_mode: false,
+        custom_settings_preview_note: '', custom_settings_preview_pos: 'top',
+        custom_settings_override: false, custom_show_container_border: true,
+        custom_auto_update_paths: true,
+        conditions: {},
+      }],
+    });
+    await plugin.loadSettings();
+
+    expect(Array.isArray(plugin.settings.customMirrors[0].conditions)).toBe(true);
+    expect(plugin.settings.customMirrors[0].conditions).toHaveLength(0);
+  });
+
+  it('normalizes custom_view_overrides: [] (array instead of object) to defaults', async () => {
+    plugin.loadData = vi.fn().mockResolvedValue({
+      customMirrors: [{
+        id: 'test', name: 'Test', openview: false,
+        enable_custom_live_preview_mode: true, custom_settings_live_preview_note: 'x.md',
+        custom_settings_live_preview_pos: 'top', enable_custom_preview_mode: false,
+        custom_settings_preview_note: '', custom_settings_preview_pos: 'top',
+        custom_settings_override: false, custom_show_container_border: true,
+        custom_auto_update_paths: true,
+        custom_view_overrides: [],
+      }],
+    });
+    await plugin.loadSettings();
+
+    const vo = plugin.settings.customMirrors[0].custom_view_overrides;
+    expect(Array.isArray(vo)).toBe(false);
+    expect(vo.hideProps).toBe(false);
+    expect(vo.readableLineLength).toBe(null);
+  });
 });

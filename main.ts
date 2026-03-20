@@ -302,11 +302,16 @@ export default class MirrorUIPlugin extends Plugin {
     sanitizePosition(this.settings, 'global_settings_live_preview_pos', 'top');
     sanitizePosition(this.settings, 'global_settings_preview_pos', 'top');
 
-    // Migration: ensure conditions fields exist on each mirror (pre-v46 data.json)
+    // Filter out non-object items (null, numbers, strings from corrupted data.json)
+    this.settings.customMirrors = this.settings.customMirrors.filter(
+      (m): m is typeof m => m !== null && m !== undefined && typeof m === 'object' && !Array.isArray(m)
+    );
+
+    // Migration + normalization per mirror
     for (const mirror of this.settings.customMirrors) {
-      if (!mirror.conditions) mirror.conditions = [];
+      if (!Array.isArray(mirror.conditions)) mirror.conditions = [];
       if (!mirror.conditionLogic) mirror.conditionLogic = 'any';
-      if (!mirror.custom_view_overrides || typeof mirror.custom_view_overrides !== 'object') {
+      if (!mirror.custom_view_overrides || typeof mirror.custom_view_overrides !== 'object' || Array.isArray(mirror.custom_view_overrides)) {
         mirror.custom_view_overrides = { ...DEFAULT_VIEW_OVERRIDES };
       }
       sanitizeViewOverrides(mirror.custom_view_overrides);
