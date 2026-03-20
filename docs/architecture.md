@@ -3,10 +3,10 @@
 Estado atual do plugin. Referencia rapida pra entender como as coisas funcionam.
 Para historico de mudancas por versao, ver [technical-notes.md](technical-notes.md).
 
-## File Map (pos-v55)
+## File Map (pos-v58)
 
 ```
-main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, scheduleTimer) — 415 linhas
+main.ts                                    — MirrorUIPlugin (lifecycle, event registration, CM6 setup, scheduleTimer, settings sanitization) — 513 linhas
 settings.ts                                — MirrorUISettingsTab (classe shell, banner, routing) — 83 linhas
 src/settings/types.ts                      — Interfaces, defaults, CustomMirror, Condition, ViewOverrides, createDefaultCustomMirror()
 src/settings/globalSection.ts              — buildGlobalSection() — secao global mirror do settings
@@ -18,7 +18,7 @@ src/settings/pathValidator.ts              — addPathValidation() — inline wa
 src/settings/settingsHelpers.ts            — rebuildKnownTemplatePaths() + checkDeletedTemplates()
 src/suggesters/debounced-suggest.ts        — DebouncedInputSuggest base class (extends AbstractInputSuggest, debounce 150ms)
 src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest (extends DebouncedInputSuggest)
-src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block), dot notation + unicode
+src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block), dot notation + unicode, isConnected guard pos-await
 src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
 src/rendering/domInjector.ts               — DOM position engine (above-title, properties, backlinks)
@@ -229,7 +229,7 @@ interface Condition {
 - `file-open` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
 - `active-leaf-change` — setup editor + DOM injection (delay TIMING.EDITOR_SETUP_DELAY)
 - `metadataCache.changed` — branch 1: `iterateAllLeaves` dentro do debounce per-file (`metadataUpdateTimeouts` Map), atualiza TODOS os panes do arquivo que mudou (DOM injection + viewOverrides + force CM6 update). Branch 2: cross-note source deps. Branch 3: template deps. Branches 1-3 re-query live state dentro do setTimeout (sem closure stale)
-- `vault.modify` — em `data.json`: re-update settings. Em outros: template deps
+- `vault.modify` — em `data.json`: re-update settings via `loadSettings()` (normaliza shapes corrompidos + sanitiza escalares stringificados/invalidos de sync externo). Em outros: template deps
 - `vault.on('raw')` — delegado a `obsidianConfigMonitor.ts`: detecta mudancas em `.obsidian/app.json` e `core-plugins.json` → `refreshAllEditors()`
 - `layout-change` — delegado a `modeSwitchDetector.ts`: trailing debounce 50ms, per-view mode tracking, triggers setupEditor + setupDomPosition + applyViewOverrides
 
@@ -258,7 +258,7 @@ Todos os 3 caminhos (CM6, code block, DOM) usam `metadataCache.getFileCache()` c
 - **Hash cache** (`templateRenderer.ts`): `lastRenderedContent` por cacheKey. Previne `MarkdownRenderer.renderMarkdown()` se conteudo nao mudou
 - **DOM cache** (`mirrorWidget.ts`): `domCache` por cacheKey. Reusa container DOM existente
 - **Config cache** (`mirrorConfig.ts`): `configCache` por `file.path:viewMode + frontmatterHash`. Evita iterar mirrors a cada keystroke. Cache guarda config BASE (sem positionOverride) — `applyPositionOverride()` aplica override per-view em ambos os paths (cache hit e miss) (v54)
-- **Render concurrency** (`templateRenderer.ts`): `renderingPromises` por cacheKey. Se um segundo render chega durante o primeiro, aguarda conclusao e re-renderiza com contexto fresco (v54). Nao reusa a promise velha pra evitar dados stale
+- **Render concurrency** (`templateRenderer.ts`): `renderingPromises` por cacheKey. Se um segundo render chega durante o primeiro, aguarda conclusao e re-renderiza com contexto fresco (v54). Nao reusa a promise velha pra evitar dados stale. Guard `container.isConnected` pos-await previne re-poluicao de `lastRenderChildren`/`addChild` quando code block e destruido durante render async (v58)
 - **Throttle/debounce per-view** (`mirrorState.ts`): `lastForcedUpdateMap` e `fileDebounceMap` indexados por `viewId:filePath` (v54). Multi-pane dispatch nao bloqueia panes secundarios
 - **Scoped invalidation** (v41): `clearRenderCache(cacheKey)` + `domCache.delete(cacheKey)` — so o widget atualizado perde cache
 - **Per-source timeout** (v41): `crossNoteTimeouts = Map<string, Timeout>` — cada source tem debounce independente

@@ -1,6 +1,6 @@
 # Mirror Notes — Backlog
 
-Trabalho tecnico pendente. Atualizado pos-v57.
+Trabalho tecnico pendente. Atualizado pos-v58.
 
 ## Code Review v58
 
