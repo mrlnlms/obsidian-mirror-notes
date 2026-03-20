@@ -39,6 +39,7 @@ export default class MirrorUIPlugin extends Plugin {
   /** Track fire-and-forget timers for cleanup on unload */
   pendingTimers = new Set<NodeJS.Timeout>();
   private cleanupModeSwitch: (() => void) | null = null;
+  private isUnloaded = false;
 
   async onload() {
     await this.loadSettings();
@@ -104,7 +105,10 @@ export default class MirrorUIPlugin extends Plugin {
     registerInsertMirrorBlock(this);
 
     // Configurar editores ja abertos e re-renderizar code blocks apos layout pronto
+    // Guard: onLayoutReady is not cancellable — if plugin is disabled before layout is ready,
+    // this callback still fires after onunload(). isUnloaded prevents work on dead instance.
     this.app.workspace.onLayoutReady(() => {
+      if (this.isUnloaded) return;
       const leaves: string[] = [];
       this.app.workspace.iterateAllLeaves(leaf => {
         if (leaf.view instanceof MarkdownView && leaf.view.file) {
@@ -256,11 +260,13 @@ export default class MirrorUIPlugin extends Plugin {
 
   }
 
-  /** Schedule a timeout and track it for cleanup. Auto-removes on completion. */
-  scheduleTimer(fn: () => void, delay: number): NodeJS.Timeout {
+  /** Schedule a timeout and track it for cleanup. Auto-removes on completion.
+   *  Handles async callbacks safely — unhandled rejections are caught and logged. */
+  scheduleTimer(fn: () => void | Promise<void>, delay: number): NodeJS.Timeout {
     const timer = setTimeout(() => {
       this.pendingTimers.delete(timer);
-      fn();
+      if (this.isUnloaded) return;
+      Promise.resolve(fn()).catch(err => Logger.error(`scheduleTimer callback failed: ${err}`));
     }, delay);
     this.pendingTimers.add(timer);
     return timer;
@@ -398,6 +404,7 @@ export default class MirrorUIPlugin extends Plugin {
   }
 
   onunload() {
+    this.isUnloaded = true;
     Logger.log('Unloading plugin...');
 
     document.querySelectorAll('.mirror-ui-widget').forEach(widget => {
