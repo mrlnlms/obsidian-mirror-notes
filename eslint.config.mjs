@@ -1,6 +1,6 @@
 import tseslint from 'typescript-eslint';
 
-export default tseslint.config(
+export default [
   { ignores: ['node_modules/', 'main.js', 'demo/', 'docs/'] },
   ...tseslint.configs.recommended,
   {
@@ -12,5 +12,5 @@ export default tseslint.config(
       '@typescript-eslint/no-empty-function': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
     },
-  }
-);
+  },
+];
