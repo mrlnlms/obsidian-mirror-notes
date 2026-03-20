@@ -21,6 +21,8 @@ export const config = createConfig({
     'test/e2e/specs/code-blocks.e2e.ts',
     'test/e2e/specs/advanced-behaviors.e2e.ts',
     'test/e2e/specs/suggest.e2e.ts',
+    'test/e2e/specs/composite-split-mode.e2e.ts',
+    'test/e2e/specs/composite-rename.e2e.ts',
   ],
   screenshotDir: 'test/e2e/screenshots',
   timeout: 90000,
