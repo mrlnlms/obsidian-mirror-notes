@@ -118,6 +118,21 @@ describe('handleTemplateChange', () => {
     expect(cb).not.toHaveBeenCalled();
   });
 
+  it('rejecting callback does not prevent other callbacks from running', async () => {
+    const cbGood = vi.fn();
+    const cbBad = vi.fn().mockRejectedValue(new Error('render failed'));
+    const plugin = createMockPlugin({ 'templates/a.md': [cbBad, cbGood] });
+
+    handleTemplateChange(plugin, 'templates/a.md');
+    vi.advanceTimersByTime(TIMING.METADATA_CHANGE_DEBOUNCE);
+
+    // Let the microtask queue flush so Promise.resolve(cb()).catch() settles
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(cbBad).toHaveBeenCalledTimes(1);
+    expect(cbGood).toHaveBeenCalledTimes(1);
+  });
+
   it('skips template with no callbacks and not in knownTemplatePaths', () => {
     const plugin = createMockPlugin({});
     plugin.knownTemplatePaths = new Set(); // empty

@@ -98,6 +98,28 @@ describe('SourceDependencyRegistry', () => {
     });
   });
 
+  describe('callback error isolation', () => {
+    it('rejecting callback does not prevent other callbacks from being retrieved', () => {
+      const cbBad = vi.fn().mockRejectedValue(new Error('render failed'));
+      const cbGood = vi.fn().mockResolvedValue(undefined);
+      registry.register('source.md', 'view-a.md', 'block-1', cbBad);
+      registry.register('source.md', 'view-b.md', 'block-2', cbGood);
+
+      const callbacks = registry.getDependentCallbacks('source.md');
+      expect(callbacks).toHaveLength(2);
+
+      // Simulate the dispatch pattern from main.ts: Promise.resolve(cb()).catch(...)
+      const results: Promise<void>[] = [];
+      for (const cb of callbacks) {
+        results.push(Promise.resolve(cb()).catch(() => { /* isolated */ }));
+      }
+
+      // Both callbacks were called — the rejection of one doesn't block the other
+      expect(cbBad).toHaveBeenCalledTimes(1);
+      expect(cbGood).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('clear', () => {
     it('removes all registrations', () => {
       registry.register('source-a.md', 'view.md', 'block-1', vi.fn());

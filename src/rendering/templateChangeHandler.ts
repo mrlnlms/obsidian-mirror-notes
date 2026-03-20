@@ -26,7 +26,7 @@ export function handleTemplateChange(plugin: MirrorUIPlugin, filePath: string) {
     if (templateCbs.length > 0) {
       Logger.log(`Template refresh: ${templateCbs.length} mirror(s) depend on ${filePath}`);
       for (const cb of templateCbs) {
-        cb();
+        Promise.resolve(cb()).catch(err => Logger.error(`Template callback failed: ${err}`));
       }
     }
     // CM6 widgets (settings-based) — iterateAllLeaves DENTRO do debounce

@@ -178,7 +178,7 @@ export default class MirrorUIPlugin extends Plugin {
             if (callbacks.length > 0) {
               Logger.log(`Cross-note refresh: ${callbacks.length} block(s) depend on ${file.path}`);
               for (const cb of callbacks) {
-                cb();
+                Promise.resolve(cb()).catch(err => Logger.error(`Cross-note callback failed: ${err}`));
               }
             }
             this.crossNoteTimeouts.delete(file.path);
