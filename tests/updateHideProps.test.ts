@@ -46,6 +46,16 @@ vi.mock('../src/rendering/domInjector', () => ({
 vi.mock('../src/editor/marginPanelExtension', () => ({
   mirrorMarginPanelPlugin: Symbol('marginPanel'),
 }));
+vi.mock('../src/editor/mirrorDecision', () => ({
+  computeMirrorRuntimeDecision: vi.fn(),
+}));
+vi.mock('../src/utils/obsidianInternals', async () => {
+  const actual = await vi.importActual('../src/utils/obsidianInternals');
+  return {
+    ...actual,
+    getViewMode: vi.fn().mockReturnValue('source'),
+  };
+});
 vi.mock('../settings', async () => {
   const actual = await vi.importActual('../settings');
   return {
@@ -57,6 +67,8 @@ vi.mock('../settings', async () => {
 // Import after all mocks
 import MirrorUIPlugin from '../main';
 import { applyViewOverrides } from '../src/editor/viewOverrides';
+import { computeMirrorRuntimeDecision } from '../src/editor/mirrorDecision';
+import { getViewMode } from '../src/utils/obsidianInternals';
 
 function createViewWithState(mirrorState: any): MarkdownView {
   const viewContentDiv = document.createElement('div');
@@ -229,5 +241,109 @@ describe('applyViewOverrides', () => {
     });
     (view as any).containerEl = document.createElement('div');
     expect(() => applyViewOverrides(plugin, view)).not.toThrow();
+  });
+
+  // --- RV fallback path (preview-only mirrors) ---
+  describe('RV fallback — preview-only mirrors', () => {
+    function createRVView(): MarkdownView {
+      const viewContentDiv = document.createElement('div');
+      viewContentDiv.className = 'view-content';
+      const editorEl = document.createElement('div');
+      editorEl.className = 'markdown-source-view is-readable-line-width';
+      viewContentDiv.appendChild(editorEl);
+      const containerEl = document.createElement('div');
+      containerEl.appendChild(viewContentDiv);
+      return {
+        file: { path: 'rv-note.md', name: 'rv-note.md' },
+        containerEl,
+        // No CM6 editor — simulates RV where StateField has no config
+        editor: { cm: { state: { field: () => undefined } } },
+      } as unknown as MarkdownView;
+    }
+
+    beforeEach(() => {
+      vi.mocked(getViewMode).mockReturnValue('preview');
+      vi.mocked(computeMirrorRuntimeDecision).mockReset();
+      plugin.app.metadataCache = { getFileCache: vi.fn().mockReturnValue({ frontmatter: {} }) } as any;
+    });
+
+    it('applies overrides from decision when engine is not none (preview-only mirror)', () => {
+      vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+        config: {
+          templatePath: 'templates/rv.md', position: 'top', hideProps: true, showContainer: true,
+          viewOverrides: { hideProps: true, readableLineLength: false, showInlineTitle: false },
+        },
+        engine: 'dom',
+        requestedPosition: 'top',
+        resolvedPosition: 'top',
+        fallbackApplied: false,
+        reason: 'test',
+      });
+      const view = createRVView();
+      applyViewOverrides(plugin, view);
+
+      const vc = view.containerEl.querySelector('.view-content')!;
+      expect(vc.classList.contains('mirror-hide-properties')).toBe(true);
+      expect(vc.classList.contains('mirror-hide-inline-title')).toBe(true);
+      const editor = view.containerEl.querySelector('.markdown-source-view')!;
+      expect(editor.classList.contains('is-readable-line-width')).toBe(false);
+    });
+
+    it('does NOT apply overrides when engine is none (left/right in RV)', () => {
+      vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+        config: {
+          templatePath: 'templates/side.md', position: 'left', hideProps: true, showContainer: true,
+          viewOverrides: { hideProps: true, readableLineLength: null, showInlineTitle: null },
+        },
+        engine: 'none',
+        requestedPosition: 'left',
+        resolvedPosition: null,
+        fallbackApplied: false,
+        reason: 'margin invisible in RV',
+      });
+      const view = createRVView();
+      applyViewOverrides(plugin, view);
+
+      const vc = view.containerEl.querySelector('.view-content')!;
+      expect(vc.classList.contains('mirror-hide-properties')).toBe(false);
+    });
+
+    it('does NOT apply overrides when no config returned (no matching mirror)', () => {
+      vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+        config: null,
+        engine: 'none',
+        requestedPosition: null,
+        resolvedPosition: null,
+        fallbackApplied: false,
+        reason: 'no matching mirror',
+      });
+      const view = createRVView();
+      applyViewOverrides(plugin, view);
+
+      const vc = view.containerEl.querySelector('.view-content')!;
+      expect(vc.classList.contains('mirror-hide-properties')).toBe(false);
+    });
+
+    it('does NOT use RV fallback in source mode', () => {
+      vi.mocked(getViewMode).mockReturnValue('source');
+      vi.mocked(computeMirrorRuntimeDecision).mockReturnValue({
+        config: {
+          templatePath: 'templates/rv.md', position: 'top', hideProps: true, showContainer: true,
+          viewOverrides: { hideProps: true, readableLineLength: null, showInlineTitle: null },
+        },
+        engine: 'dom',
+        requestedPosition: 'top',
+        resolvedPosition: 'top',
+        fallbackApplied: false,
+        reason: 'test',
+      });
+      const view = createRVView();
+      applyViewOverrides(plugin, view);
+
+      // In source mode, no StateField config = no overrides (RV fallback skipped)
+      const vc = view.containerEl.querySelector('.view-content')!;
+      expect(vc.classList.contains('mirror-hide-properties')).toBe(false);
+      expect(computeMirrorRuntimeDecision).not.toHaveBeenCalled();
+    });
   });
 });
