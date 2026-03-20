@@ -14,7 +14,7 @@ export class FileSuggest extends DebouncedInputSuggest<TFile> {
   }
 
   selectSuggestion(file: TFile): void {
-    this.setValue(file.path);
+    this.setValueAndNotify(file.path);
     this.close();
   }
 }
@@ -32,7 +32,7 @@ export class FolderSuggest extends DebouncedInputSuggest<TFolder> {
   }
 
   selectSuggestion(folder: TFolder): void {
-    this.setValue(folder.path);
+    this.setValueAndNotify(folder.path);
     this.close();
   }
 }
@@ -61,7 +61,7 @@ export class YamlPropertySuggest extends DebouncedInputSuggest<string> {
   }
 
   selectSuggestion(property: string): void {
-    this.setValue(property);
+    this.setValueAndNotify(property);
     this.close();
   }
 }
