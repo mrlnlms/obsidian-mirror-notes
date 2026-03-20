@@ -46,6 +46,4 @@ jobs:
           key: obsidian-${{ runner.os }}
 
       - name: E2E smoke test
-        uses: coactions/setup-xvfb@v1
-        with:
-          run: npx wdio run wdio.conf.mts --spec test/e2e/specs/smoke.e2e.ts
+        run: xvfb-run npx wdio run wdio.conf.mts --spec test/e2e/specs/smoke.e2e.ts
