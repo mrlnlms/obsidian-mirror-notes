@@ -39,6 +39,7 @@ export const NOTES = {
   noMirror: 'notes/no-mirror.md',
   codeBlock: 'notes/code-block.md',
   codeBlockSource: 'notes/code-block-source.md',
+  splitOverride: 'notes/split-override.md',
 } as const;
 
 export const MARKERS = {
@@ -52,6 +53,8 @@ export const MARKERS = {
   lpDual: 'E2E-LP-TEMPLATE',
   rvDual: 'E2E-RV-TEMPLATE',
   codeBlock: 'E2E-CODEBLOCK',
+  splitLp: 'E2E-SPLIT-LP',
+  splitRv: 'E2E-SPLIT-RV',
 } as const;
 
 /**

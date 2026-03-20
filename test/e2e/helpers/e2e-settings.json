@@ -136,6 +136,20 @@
       "conditionLogic": "all"
     },
     {
+      "id": "e2e-split-override", "name": "E2E Split Override", "openview": false,
+      "enable_custom_live_preview_mode": true,
+      "custom_settings_live_preview_note": "templates/split-override-lp.md",
+      "custom_settings_live_preview_pos": "above-title",
+      "enable_custom_preview_mode": true,
+      "custom_settings_preview_note": "templates/split-override-rv.md",
+      "custom_settings_preview_pos": "above-title",
+      "custom_settings_override": true,
+      "custom_view_overrides": { "hideProps": true, "readableLineLength": null, "showInlineTitle": null },
+      "custom_show_container_border": true, "custom_auto_update_paths": true,
+      "conditions": [{ "type": "property", "negated": false, "propertyName": "mirror", "propertyValue": "split-override" }],
+      "conditionLogic": "all"
+    },
+    {
       "id": "e2e-smoke", "name": "E2E Smoke", "openview": false,
       "enable_custom_live_preview_mode": true,
       "custom_settings_live_preview_note": "templates/top.md",
