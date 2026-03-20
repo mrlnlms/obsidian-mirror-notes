@@ -18,7 +18,6 @@ Itens pendentes:
 - **Sobreposicao / threshold** — quando nao tem espaco (janela estreita, readable line length OFF), o painel sobrepoe conteudo. Definir threshold minimo pra renderizar e fallback (ocultar? mover pra top/bottom?). Evitar valores magicos hardcoded
 - **Gutters / line numbers** — calculo de posicao nao considera `cm-gutters.offsetWidth`. Relevante quando line numbers estao ativados
 - **Min-height** — painel cresce com conteudo, sem min-height. Avaliar se precisa de altura minima (VN usa 528px footer, 100px above-backlinks como referencia)
-- **Menu de posicoes (consolidacao final)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado (v44), `below-properties` + `top` unificados (v42). Falta remover opcoes deprecated do dropdown (breaking change — migrar data.json). So no final do epico, porque o margin panel pode adicionar opcoes intermediarias pra teste. Inclui revisao de UX writing das labels e feedbacks na tela
 
 ## Template Variables — concluido (pos-v53)
 
@@ -50,10 +49,8 @@ Migrado de `@popperjs/core` + `TextInputSuggest` custom pra `AbstractInputSugges
 
 Apos margin panel. A **estrutura de codigo ja foi refatorada** (v52: settings.ts 545→83, split em 5 modulos). Pendente e UX/design:
 
-- **Usabilidade com muitos mirrors** — com dezenas de mirrors a lista fica dificil de navegar. Busca existe (v31) mas layout/hierarquia visual precisam de revisao
-- **Layout geral** — revisar organizacao visual, agrupamento, e hierarquia da pagina
-- **Mixing PT/EN nos textos** — labels e descricoes misturam portugues e ingles. Padronizar pra ingles (plugin public-facing)
-- **Opcoes deprecated expostas** — posicoes unificadas (v42-v44) ainda mostram opcoes antigas no dropdown. Limpeza depende de finalizacao do epico margin panel
+- **Visual redesign** — layout, hierarquia, agrupamento e navegacao. Com dezenas de mirrors a lista fica dificil de navegar (busca existe desde v31 mas nao resolve). Revisao completa de organizacao visual
+- **Menu de posicoes (consolidacao final)** — `bottom` + `above-backlinks` unificados (v43), `below-backlinks` alinhado (v44), `below-properties` + `top` unificados (v42). Remover opcoes deprecated do dropdown (breaking change — migrar data.json). Inclui revisao de UX writing das labels e feedbacks na tela
 
 ## E2E Testing — concluido (pos-v54)
 

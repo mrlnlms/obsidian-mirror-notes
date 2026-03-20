@@ -6,11 +6,11 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ### 1. Margin Panel (epico)
 
-Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e consolidacao do menu de posicoes. Itens granulares no [backlog](backlog.md#epico-margin-panel).
+Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e min-height. Itens granulares no [backlog](backlog.md#epico-margin-panel).
 
 ### 2. Revisao de Settings UI
 
-Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e fix do typo `overide`. Pendente: padronizar textos PT→EN, limpar opcoes deprecated, layout/hierarquia visual. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
+Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e fix do typo `overide`. Pendente: visual redesign completo, consolidacao do menu de posicoes (remover deprecated), padronizar textos PT→EN. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 
 ## Pre-lancamento (must-have)
 

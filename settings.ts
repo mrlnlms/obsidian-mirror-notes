@@ -27,7 +27,7 @@ export class MirrorUISettingsTab extends PluginSettingTab {
         if(this.plugin.settings.enable_getting_started){
             const banner = this.containerEl.createEl("div", { cls: "mirror-plugin-banner" });
             banner.createEl("h1", { text: "Getting Started with Mirror Notes Plugin"});
-            banner.createEl("p",{text:'Mirror Notes propoe uma nova forma de pensar o uso de templates dentro do Obsidian, possibilitando definir um unico template para um grupo definido de notas, ou seja, alterando o template, as notas relacionadas serao atualizadas automaticamente.'})
+            banner.createEl("p",{text:'Mirror Notes introduces a new way to think about templates in Obsidian. Define a single template for a group of notes — when you update the template, all linked notes update automatically.'})
             const dismiss = banner.createEl("button",{text:'Dismiss'})
             dismiss.onclick = () => {
                 this.plugin.settings.enable_getting_started = false;
