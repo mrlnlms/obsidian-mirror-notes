@@ -102,3 +102,26 @@ export class App {
   workspace: any = {};
   metadataCache: any = {};
 }
+
+export class AbstractInputSuggest<T> {
+  protected app: App;
+  protected inputEl: HTMLInputElement;
+  limit: number = 100;
+  constructor(app: App, inputEl: HTMLInputElement) {
+    this.app = app;
+    this.inputEl = inputEl;
+  }
+  setValue(_value: string) {}
+  close() {}
+  getSuggestions(_query: string): T[] | Promise<T[]> { return []; }
+  renderSuggestion(_item: T, _el: HTMLElement): void {}
+  selectSuggestion(_item: T, _evt: MouseEvent | KeyboardEvent): void {}
+}
+
+export function debounce<T extends unknown[]>(
+  fn: (...args: T) => void,
+  _timeout: number,
+  _resetTimer?: boolean
+): (...args: T) => void {
+  return fn;
+}

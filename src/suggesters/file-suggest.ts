@@ -1,24 +1,12 @@
-import { TAbstractFile, TFile, TFolder } from "obsidian";
+import { TAbstractFile, TFile, TFolder } from 'obsidian';
+import { DebouncedInputSuggest } from './debounced-suggest';
 
-import { TextInputSuggest } from "./suggest";
-
-export class FileSuggest extends TextInputSuggest<TFile> {
-  getSuggestions(inputStr: string): TFile[] {
-    const abstractFiles = this.app.vault.getAllLoadedFiles();
-    const files: TFile[] = [];
-    const lowerCaseInputStr = inputStr.toLowerCase();
-
-    abstractFiles.forEach((file: TAbstractFile) => {
-      if (
-        file instanceof TFile &&
-        file.extension === "md" &&
-        file.path.toLowerCase().includes(lowerCaseInputStr)
-      ) {
-        files.push(file);
-      }
-    });
-
-    return files;
+export class FileSuggest extends DebouncedInputSuggest<TFile> {
+  getFilteredSuggestions(query: string): TFile[] {
+    const lower = query.toLowerCase();
+    return this.app.vault.getAllLoadedFiles().filter(
+      (f): f is TFile => f instanceof TFile && f.extension === 'md' && f.path.toLowerCase().includes(lower)
+    );
   }
 
   renderSuggestion(file: TFile, el: HTMLElement): void {
@@ -26,60 +14,45 @@ export class FileSuggest extends TextInputSuggest<TFile> {
   }
 
   selectSuggestion(file: TFile): void {
-    this.inputEl.value = file.path;
-    this.inputEl.trigger("input");
+    this.setValue(file.path);
     this.close();
   }
 }
 
-export class FolderSuggest extends TextInputSuggest<TFolder> {
-  getSuggestions(inputStr: string): TFolder[] {
-    const abstractFiles = this.app.vault.getAllLoadedFiles();
-    const folders: TFolder[] = [];
-    const lowerCaseInputStr = inputStr.toLowerCase();
-
-    abstractFiles.forEach((folder: TAbstractFile) => {
-      if (
-        folder instanceof TFolder &&
-        folder.path.toLowerCase().includes(lowerCaseInputStr)
-      ) {
-        folders.push(folder);
-      }
-    });
-
-    return folders;
+export class FolderSuggest extends DebouncedInputSuggest<TFolder> {
+  getFilteredSuggestions(query: string): TFolder[] {
+    const lower = query.toLowerCase();
+    return this.app.vault.getAllLoadedFiles().filter(
+      (f): f is TFolder => f instanceof TFolder && f.path.toLowerCase().includes(lower)
+    );
   }
 
-  renderSuggestion(file: TFolder, el: HTMLElement): void {
-    el.setText(file.path);
+  renderSuggestion(folder: TFolder, el: HTMLElement): void {
+    el.setText(folder.path);
   }
 
-  selectSuggestion(file: TFolder): void {
-    this.inputEl.value = file.path;
-    this.inputEl.trigger("input");
+  selectSuggestion(folder: TFolder): void {
+    this.setValue(folder.path);
     this.close();
   }
 }
 
-export class YamlPropertySuggest extends TextInputSuggest<string> {
-  getSuggestions(inputStr: string): string[] {
-    const abstractFiles = this.app.vault.getAllLoadedFiles();
-    const properties: Set<string> = new Set();
-    const lowerCaseInputStr = inputStr.toLowerCase();
-
-    abstractFiles.forEach((file: TAbstractFile) => {
-      if (file instanceof TFile && file.extension === "md") {
+export class YamlPropertySuggest extends DebouncedInputSuggest<string> {
+  getFilteredSuggestions(query: string): string[] {
+    const lower = query.toLowerCase();
+    const properties = new Set<string>();
+    for (const file of this.app.vault.getAllLoadedFiles()) {
+      if (file instanceof TFile && file.extension === 'md') {
         const cache = this.app.metadataCache.getFileCache(file);
-        if (cache && cache.frontmatter) {
-          Object.keys(cache.frontmatter).forEach(key => {
-            if (key.toLowerCase().includes(lowerCaseInputStr)) {
+        if (cache?.frontmatter) {
+          for (const key of Object.keys(cache.frontmatter)) {
+            if (key.toLowerCase().includes(lower)) {
               properties.add(key);
             }
-          });
+          }
         }
       }
-    });
-
+    }
     return Array.from(properties);
   }
 
@@ -88,8 +61,7 @@ export class YamlPropertySuggest extends TextInputSuggest<string> {
   }
 
   selectSuggestion(property: string): void {
-    this.inputEl.value = property;
-    this.inputEl.trigger("input");
+    this.setValue(property);
     this.close();
   }
 }
