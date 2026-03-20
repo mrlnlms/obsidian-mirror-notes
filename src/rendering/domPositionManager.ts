@@ -50,6 +50,13 @@ export async function setupDomPosition(
     }
   }
   lastSetupTime.set(overrideKey, Date.now());
+  // Auto-prune stale cooldown entries in long sessions
+  if (lastSetupTime.size > 50) {
+    const now = Date.now();
+    for (const [key, ts] of lastSetupTime) {
+      if (now - ts > 10_000) lastSetupTime.delete(key);
+    }
+  }
 
   // Clear stale template dependency callbacks from previous file in this view.
   // Without this, navigating nota-A → nota-B leaves nota-A's callback registered;

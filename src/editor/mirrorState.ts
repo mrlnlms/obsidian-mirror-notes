@@ -48,6 +48,20 @@ function getMetadataCacheFrontmatter(plugin: MirrorUIPlugin, filePath: string): 
 export const fileDebounceMap = new Map<string, number>();
 export const lastForcedUpdateMap = new Map<string, number>();
 
+const TIMESTAMP_MAP_PRUNE_THRESHOLD = 50;
+const TIMESTAMP_MAP_MAX_AGE_MS = 10_000; // 10s — any cooldown/throttle entry older than this is stale
+
+/** Remove expired entries from a timestamp Map when it grows beyond threshold */
+export function pruneTimestampMap(map: Map<string, number>): void {
+  if (map.size <= TIMESTAMP_MAP_PRUNE_THRESHOLD) return;
+  const now = Date.now();
+  for (const [key, timestamp] of map) {
+    if (now - timestamp > TIMESTAMP_MAP_MAX_AGE_MS) {
+      map.delete(key);
+    }
+  }
+}
+
 /** Check if a forced update was requested in this transaction */
 export function hasForcedUpdate(tr: Transaction): boolean {
   for (const effect of tr.effects) {
@@ -287,6 +301,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
         return { mirrorState: value, decorations };
       }
       lastForcedUpdateMap.set(viewKey, now);
+      pruneTimestampMap(lastForcedUpdateMap);
     }
 
     // Per-view debounce
@@ -313,6 +328,7 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
     const newFrontmatter = getMetadataCacheFrontmatter(plugin, filePath);
 
     fileDebounceMap.set(viewKey, now);
+    pruneTimestampMap(fileDebounceMap);
 
     // Forced update path
     if (forcedUpdate) {

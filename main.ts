@@ -283,17 +283,33 @@ export default class MirrorUIPlugin extends Plugin {
     this.refreshAllEditors();
   }
 
+  /** Remove entries from viewId-keyed Maps whose viewId no longer matches an open leaf */
+  private pruneStaleViewEntries(activeViewIds: Set<string>): void {
+    for (const map of [this.lastViewMode, this.positionOverrides]) {
+      for (const key of map.keys()) {
+        const viewId = key.split(':')[0];
+        if (!activeViewIds.has(viewId)) {
+          map.delete(key);
+        }
+      }
+    }
+  }
+
   /** Atualiza todos os editores abertos com config fresca (chamado apos saveSettings) */
   private async refreshAllEditors() {
     clearConfigCache();
     this.positionOverrides.clear();
     // Collect all open markdown leaves
     const views: MarkdownView[] = [];
+    const activeViewIds = new Set<string>();
     this.app.workspace.iterateAllLeaves(leaf => {
       if (leaf.view instanceof MarkdownView && leaf.view.file) {
         views.push(leaf.view as MarkdownView);
+        activeViewIds.add(getViewId(leaf.view.containerEl));
       }
     });
+    // Prune stale entries from per-view Maps (long session cleanup)
+    this.pruneStaleViewEntries(activeViewIds);
     // Pass 1: resolve DOM positions and set overrides (async)
     for (const view of views) {
       await setupDomPosition(this, view);

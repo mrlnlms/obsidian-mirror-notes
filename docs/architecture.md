@@ -16,8 +16,8 @@ src/settings/viewOverridesUI.ts            — addViewOverridesSection() — vie
 src/settings/conditionBuilder.ts           — buildConditionsSection() — conditions unificadas com AND/OR e negacao
 src/settings/pathValidator.ts              — addPathValidation() — inline warnings em inputs
 src/settings/settingsHelpers.ts            — rebuildKnownTemplatePaths() + checkDeletedTemplates()
-src/suggesters/suggest.ts                  — TextInputSuggest base class (Popper-based)
-src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest
+src/suggesters/debounced-suggest.ts        — DebouncedInputSuggest base class (extends AbstractInputSuggest, debounce 150ms)
+src/suggesters/file-suggest.ts             — FileSuggest, FolderSuggest, YamlPropertySuggest (extends DebouncedInputSuggest)
 src/rendering/templateRenderer.ts          — renderMirrorTemplate() — modulo compartilhado (CM6 + code block), dot notation + unicode
 src/rendering/codeBlockProcessor.ts        — registerMarkdownCodeBlockProcessor("mirror") + cross-note deps
 src/rendering/blockParser.ts               — parseBlockContent() — parser key:value do code block
@@ -55,7 +55,7 @@ O plugin renderiza templates de duas formas independentes:
 ### CM6 widget (Live Preview, via settings)
 
 1. `MirrorUIPlugin.setupEditor()` registra `mirrorStateField` como extensao CM6
-2. `mirrorState.ts` — StateField usa `extractRawYaml` (hash detection) e `getApplicableConfig` (mirrorConfig)
+2. `mirrorState.ts` — StateField usa `extractRawYaml` (hash detection) e `computeMirrorRuntimeDecision` (mirrorDecision)
 3. `decorationBuilder.ts` — `buildDecorations()` cria `MirrorTemplateWidget` com `Decoration.widget`
 4. `mirrorWidget.ts` — WidgetType chama `renderMirrorTemplate()` (templateRenderer)
 5. `viewOverrides.ts` — `applyViewOverrides()` aplica overrides per-view (hideProps, readableLineLength, showInlineTitle)
@@ -66,7 +66,7 @@ Cada mirror pode ter templates diferentes pra Live Preview e Reading View:
 - LP: `enable_custom_live_preview_mode` + `custom_settings_live_preview_note` + `custom_settings_live_preview_pos`
 - RV: `enable_custom_preview_mode` + `custom_settings_preview_note` + `custom_settings_preview_pos`
 
-`getApplicableConfig(plugin, file, fm, viewId?, viewMode?)` seleciona o template correto por modo. Sem fallback entre modos: mirror so com LP configurado nao aparece em RV, e vice-versa. Se ambos estao configurados, cada modo usa seu template/posicao. Cache key inclui viewMode — `${file.path}:${viewMode}`. StateField (CM6) sempre chama sem viewMode (default `source` — CM6 so existe em LP).
+`computeMirrorRuntimeDecision(plugin, file, fm, viewId, viewMode)` seleciona o template correto por modo via `getApplicableConfig` (interno). Sem fallback entre modos: mirror so com LP configurado nao aparece em RV, e vice-versa. Se ambos estao configurados, cada modo usa seu template/posicao. Cache key inclui viewMode — `${file.path}:${viewMode}`. StateField (CM6) sempre passa viewMode `'source'` (CM6 so opera em LP). `getApplicableConfig` e `resolveEngine` sao internos a `mirrorDecision.ts` — zero callers externos em producao (v56).
 
 ### Code block (Reading View + Live Preview, inline)
 
@@ -281,7 +281,7 @@ Funcao central: `computeMirrorRuntimeDecision(plugin, file, frontmatter, viewId,
 2. `iterateAllLeaves` dentro do setTimeout (multi-pane aware)
 3. Para cada pane: `setupDomPosition` (usa `computeMirrorRuntimeDecision`) → `cm.dispatch(forceMirrorUpdateEffect)` (sincrono, atualiza StateField) → `applyViewOverrides` (le config fresca do StateField). Ordem importa: viewOverrides DEPOIS do dispatch pra evitar stale CSS classes (v55 fix)
 4. CM6 StateField `update()` → per-view throttle 500ms → `handleForcedUpdate`
-5. `clearConfigCache` → `getApplicableConfig` com frontmatter fresco (StateField ainda nao migrado pra decision function)
+5. `clearConfigCache` → `computeMirrorRuntimeDecision` com frontmatter fresco (StateField migrado na v56)
 6. `buildDecorations` → novo widget com dados atualizados
 
 ### Template change (template file editado)
@@ -303,7 +303,7 @@ Per-view overrides de settings globais do Obsidian. Cada mirror pode sobrescreve
 
 - `null` = inherit: restaura setting global do Obsidian via `app.vault.getConfig()`
 - Multi-pane: cada view aplica overrides independentes (CSS scoped, class toggle por elemento)
-- `applyViewOverrides()` chamado em 6 hooks (file-open, active-leaf-change, metadataCache.changed, refreshAllEditors, setupEditor first-time, modeSwitchDetector, data.json modify handler)
+- `applyViewOverrides()` chamado em 7 hooks (file-open, active-leaf-change, metadataCache.changed, refreshAllEditors, setupEditor first-time, modeSwitchDetector, data.json modify handler)
 - Onunload: remove classes CSS + restaura `is-readable-line-width` pro valor global
 - Config: `ViewOverrides` em `types.ts`, resolvido inline por `applyViewOverrides()` em `viewOverrides.ts`
 
@@ -322,7 +322,7 @@ npm install
 npm run build    # tsc -noEmit + esbuild production (__DEV__=false, logger no-op)
 npm run dev      # esbuild watch mode + copy to demo vault (__DEV__=true, logger ativo)
 npm run lint     # eslint
-npm test         # vitest (374 testes, 25 suites)
+npm test         # vitest (392 testes, 25 suites)
 ```
 
 Abrir o vault `demo/` no Obsidian para testar.

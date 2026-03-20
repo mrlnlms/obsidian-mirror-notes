@@ -17,14 +17,23 @@ export abstract class DebouncedInputSuggest<T> extends AbstractInputSuggest<T> {
     this.inputEl.trigger('input');
   }
 
+  private pendingResolve: ((results: T[]) => void) | null = null;
+
   getSuggestions(query: string): Promise<T[]> {
+    // Settle any superseded Promise from a previous keystroke
+    if (this.pendingResolve) {
+      this.pendingResolve([]);
+      this.pendingResolve = null;
+    }
     return new Promise((resolve) => {
+      this.pendingResolve = resolve;
       this.debouncedGetSuggestions(query, resolve);
     });
   }
 
   private debouncedGetSuggestions = debounce(
     (query: string, resolve: (results: T[]) => void) => {
+      this.pendingResolve = null;
       resolve(this.getFilteredSuggestions(query));
     },
     DEBOUNCE_MS,
