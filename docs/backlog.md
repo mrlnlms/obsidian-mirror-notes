@@ -2,6 +2,10 @@
 
 Trabalho tecnico pendente. Atualizado pos-v57.
 
+## Code Review v58
+
+5 rodadas Codex, 4 bugs corrigidos, zero findings na rodada final. Proximo ganho vem de stress E2E/manual, nao de revisao estatica.
+
 ## Code Review v56
 
 Auditoria completa do codebase (v55). Findings organizados por severidade.
@@ -129,6 +133,14 @@ Rodar: `npm run test:e2e` (primeira vez baixa Obsidian ~200MB). Atualizar baseli
 
 ## Resolvidos
 
+- [x] Margin panel race condition — offscreen render + generation counter, stale render nao toca panel real (v58 code review)
+- [x] loadSettings schema normalization — customMirrors null/{}, global_view_overrides null, custom_view_overrides por mirror (v58 code review)
+- [x] Async callback fire-and-forget — Promise.resolve(cb()).catch() em sourceDeps e templateDeps loops (v58 code review)
+- [x] Code block post-destroy race — isConnected guard apos await MarkdownRenderer (v58 code review)
+- [x] Scalar sanitization — sanitizeBool coerce "true"/"false" string, sanitizePosition valida contra set de posicoes (v58 code review)
+- [x] Settings UI texto PT/EN — ultimo texto portugues no banner Getting Started traduzido (v58)
+- [x] CI actions deprecated — checkout v6, setup-node v6, cache v5, Node 22, xvfb-run inline (v58)
+- [x] Unused import TAbstractFile — quebrava CI lint (v58)
 - [x] data.json modify handler recarrega settings do disco — `loadSettings()` + `Logger.setEnabled()` no handler (v56 code review)
 - [x] Migration guard pra `conditions` em CustomMirror — `loadSettings()` migra mirrors sem conditions/conditionLogic + defesa em profundidade com `?.` em mirrorConfig.ts (v56 code review)
 - [x] `applyViewOverrides` adicionado em file-open e active-leaf-change — CSS overrides aplicam imediatamente ao navegar entre notas (v56 code review)

@@ -2,6 +2,29 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## O que mudou na v58
+
+### Codex review pos-v57 — 5 rodadas, 4 bugs corrigidos
+
+**Contexto:** revisao estatica completa do codebase pos-v57 (408 unit tests, 39 E2E). Rodada 5 encerrou sem findings — teto de revisao estatica atingido.
+
+**Rodada 1 — Margin panel race condition (medium)**
+Quando `cacheKey` muda no margin panel, o render antigo (com cacheKey anterior) perde exclusao mutua com o render novo em `renderMirrorTemplate` (serializado por cacheKey). Se o render antigo termina depois, sobrescreve o panel com conteudo stale. Fix: offscreen rendering + generation counter — render stale nunca toca o panel real. Arquivo: `marginPanelExtension.ts`.
+
+**Rodada 2 — loadSettings schema normalization (medium)**
+`Object.assign` top-level sobrescreve arrays/objetos nested com valores corrompidos vindos de sync externo ou edicao manual de data.json. `customMirrors: null` ou `customMirrors: {}` crashava o `for..of` no startup. Fix: normalizar `customMirrors` (null/object→array), `global_view_overrides` (null→defaults), `custom_view_overrides` por mirror. Arquivo: `main.ts`.
+
+**Rodada 3 — Async callback fire-and-forget (low)**
+Callbacks de `sourceDeps` e `templateDeps` sao tipados como async mas disparados com `cb()` fire-and-forget. Rejeicao vira unhandled rejection sem observabilidade. Fix: `Promise.resolve(cb()).catch(err => Logger.error(...))` em cross-note (main.ts) e template change (templateChangeHandler.ts).
+
+**Rodada 4 — Code block post-destroy race + scalar sanitization (medium + low)**
+1. Race: render async de code block termina apos bloco destruido por navegacao. Cleanup via `child.register()` ja rodou, mas render retoma e re-polui `lastRenderChildren` + `addChild`. Fix: guard `container.isConnected` apos await MarkdownRenderer — se container desconectou, pula lifecycle registration. Arquivo: `templateRenderer.ts`.
+2. Escalares: `loadSettings()` normalizava shapes (null, {}), mas nao escalares malformados de edicao externa. `"false"` (string) continua truthy, posicao invalida faz mirror sumir. Fix: `sanitizeBool()` coerce strings, `sanitizePosition()` valida contra set de posicoes conhecidas com fallback pra default. Arquivo: `main.ts`.
+
+**Arquivos tocados:** main.ts, marginPanelExtension.ts, templateRenderer.ts, templateChangeHandler.ts
+**Testes:** +13 unit tests (1 race margin panel, 5 schema normalization, 2 callback rejection, 1 detach race, 4 scalar sanitization)
+**Total:** 408 unit tests (+13 vs v57), 39 E2E specs
+
 ## O que mudou na v57
 
 ### Suggest migration: @popperjs/core → AbstractInputSuggest

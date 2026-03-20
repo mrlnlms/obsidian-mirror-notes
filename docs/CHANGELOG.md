@@ -2,6 +2,18 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## v58 — Codex review: 5 rodadas, 4 bugs, zero findings na ultima
+
+- Fix: margin panel race condition — offscreen render + generation counter (stale render nao sobrescreve panel)
+- Fix: loadSettings schema normalization — customMirrors null/{}, global_view_overrides null, custom_view_overrides null
+- Fix: async callback fire-and-forget — Promise.resolve(cb()).catch() em sourceDeps e templateDeps
+- Fix: code block post-destroy race — isConnected guard apos await MarkdownRenderer
+- Fix: scalar sanitization — boolean "false"/"true" stringificado, posicao invalida com fallback
+- Chore: bump CI actions (checkout v6, setup-node v6, cache v5), Node 22, xvfb-run inline
+- Chore: traduzir ultimo texto PT no settings banner
+- Test: 13 unit tests novos (race conditions, normalization, sanitization, callback rejection)
+- 408 testes (+13), 39 E2E specs. Zero findings em rodada 5
+
 ## v57 — Suggest migration + Codex hardening
 
 - Refactor: migrou suggest de @popperjs/core pra AbstractInputSuggest nativo do Obsidian
