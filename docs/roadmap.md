@@ -4,11 +4,15 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ## Ordem de execucao
 
-### 1. Margin Panel (epico)
+### 1. Suggest → AbstractInputSuggest
 
-Proximo bloco de trabalho. Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e consolidacao do menu de posicoes. Itens granulares no [backlog](backlog.md#epico-margin-panel).
+Proximo. Migrar `TextInputSuggest` de `@popperjs/core` pra `AbstractInputSuggest` nativa do Obsidian. Elimina unica dependencia runtime (19KB+). Requer teste manual no Obsidian (posicionamento de popup em scroll containers, viewport boundaries). Itens no [backlog](backlog.md#suggest-component--migrar-de-popperjscore-para-api-nativa).
 
-### 2. Revisao de Settings UI
+### 2. Margin Panel (epico)
+
+Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e consolidacao do menu de posicoes. Itens granulares no [backlog](backlog.md#epico-margin-panel).
+
+### 3. Revisao de Settings UI
 
 Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e fix do typo `overide`. Pendente: padronizar textos PT→EN, limpar opcoes deprecated, layout/hierarquia visual. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 

@@ -48,7 +48,7 @@ O suggest de autocomplete (`src/suggesters/suggest.ts`) usa `@popperjs/core` (19
 
 - Escopo: reescrever `TextInputSuggest` usando `AbstractInputSuggest` do Obsidian
 - Risco: edge cases de posicionamento (scroll containers, viewport boundaries) que o Popper resolve automaticamente
-- Prioridade: baixa — funciona, 19KB em plugin desktop nao e problema real
+- Prioridade: proximo — eliminar unica dep runtime antes de lancar
 
 ## Revisao de Settings UI
 
