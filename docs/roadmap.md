@@ -17,9 +17,9 @@ Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modul
 - [ ] **Curadoria do demo vault** — revisar notas e exemplos em `demo/samples/`, selecionar os melhores, organizar pra publicacao. Hoje o vault acumula tudo que foi portado via `copy-to-demo` durante o dev — precisa de uma passada final
 - [ ] **Starter configs** — templates pre-configurados pra novos usuarios. So faz sentido quando o plugin estiver pronto pra lancar
 
-## Should-have
+## Nice-to-have (pos-lancamento)
 
-- [ ] **Import/Export de configuracoes** — validacao de schema, paths quebrados, conflitos com mirrors existentes. Avaliar se e must-have ou nice-to-have pro lancamento
+- [ ] **Import/Export de configuracoes** — conveniencia, nao essencial. data.json ja e legivel/editavel, plugin recarrega mudancas externas. Codex review confirmou: zero bugs, zero gaps. Se implementar: copy/paste JSON completo com replace all + validacao de paths
 
 ## Ideias (viabilidade a definir)
 
