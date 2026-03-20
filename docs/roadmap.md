@@ -16,7 +16,10 @@ Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modul
 
 - [ ] **Curadoria do demo vault** — revisar notas e exemplos em `demo/samples/`, selecionar os melhores, organizar pra publicacao. Hoje o vault acumula tudo que foi portado via `copy-to-demo` durante o dev — precisa de uma passada final
 - [ ] **Starter configs** — templates pre-configurados pra novos usuarios. So faz sentido quando o plugin estiver pronto pra lancar
-- [ ] **Import/Export de configuracoes** — validacao de schema, paths quebrados, conflitos com mirrors existentes. Menor prioridade entre os must-have
+
+## Should-have
+
+- [ ] **Import/Export de configuracoes** — validacao de schema, paths quebrados, conflitos com mirrors existentes. Avaliar se e must-have ou nice-to-have pro lancamento
 
 ## Ideias (viabilidade a definir)
 
