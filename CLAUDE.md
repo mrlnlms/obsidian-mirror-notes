@@ -25,7 +25,7 @@ Comandos e requisitos pra rodar o projeto. Qualquer LLM ou dev que abrir o repo 
 - `node esbuild.config.mjs` — dev build (com Logger ativo via `__DEV__=true`)
 - `npm run build` — prod build (`tsc --noEmit` + esbuild, `__DEV__=false`, Logger silenciado)
 - `npm test` — 408 unit tests (Vitest + jsdom)
-- `npm run test:e2e` — 39 test cases em 8 spec files contra Obsidian real (WebdriverIO, primeira vez baixa ~200MB)
+- `npm run test:e2e` — 47 test cases em 10 spec files contra Obsidian real (WebdriverIO, primeira vez baixa ~200MB)
 - `npm run lint` — ESLint (0 errors, ~100 warnings de no-explicit-any)
 - `npx tsc --noEmit --skipLibCheck` — type check sem build
 
