@@ -45,7 +45,7 @@ src/dev/logger.ts                          — Logger dev-only (no-op em prod vi
 src/dev/clear-log.sh                       — Script pra limpar debug.log
 styles.css                                 — Plugin styles + viewOverrides (hideProps, inlineTitle) + code block CSS
 wdio.conf.mts                             — WebdriverIO config pra E2E (obsidian-e2e-visual-test-kit)
-test/e2e/                                  — 37 E2E specs (smoke, positions, mode-switch, lifecycle, visual-baselines, code-blocks, advanced-behaviors)
+test/e2e/                                  — 39 E2E specs (smoke, positions, mode-switch, lifecycle, visual-baselines, code-blocks, advanced-behaviors, suggest)
 ```
 
 ## Dois modos de operacao

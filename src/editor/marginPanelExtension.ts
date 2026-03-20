@@ -30,6 +30,7 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
   private lastCacheKey: string | null = null;
   private lastWidgetId: string | null = null;
   private resizeObserver: ResizeObserver | null = null;
+  private renderGeneration = 0;
 
   constructor(private view: EditorView) {
     this.checkAndBuild();
@@ -138,14 +139,29 @@ export const mirrorMarginPanelPlugin = ViewPlugin.fromClass(class {
     const sourcePath = mirrorState.filePath;
     if (!sourcePath) return;
 
+    // Bump generation before starting async render. If another render starts
+    // while we're awaiting, our generation becomes stale and we skip the DOM write.
+    const gen = ++this.renderGeneration;
+
+    // Render into a detached container so stale renders never touch the real panel
+    const offscreen = document.createElement('div');
+
     await renderMirrorTemplate({
       plugin,
       templatePath: config.templatePath,
       variables: mirrorState.frontmatter || {},
       sourcePath,
-      container: this.panel,
+      container: offscreen,
       cacheKey
     });
+
+    // Only commit to the real panel if we're still the latest render
+    if (gen === this.renderGeneration && this.panel) {
+      this.panel.innerHTML = '';
+      while (offscreen.firstChild) {
+        this.panel.appendChild(offscreen.firstChild);
+      }
+    }
   }
 
   private removePanel() {

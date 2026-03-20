@@ -135,6 +135,92 @@ describe('margin panel integration', () => {
     );
   });
 
+  it('stale render does not overwrite panel when cacheKey changes mid-render', async () => {
+    // Simulate: render A starts (slow), cacheKey changes, render B starts (fast),
+    // render B finishes, render A finishes — panel should show B's content, not A's.
+    let resolveSlowRender: () => void;
+    const slowRenderPromise = new Promise<void>(r => { resolveSlowRender = r; });
+
+    let callCount = 0;
+    renderMirrorTemplateMock.mockImplementation(async (ctx: { container: HTMLElement; cacheKey: string }) => {
+      callCount++;
+      if (callCount === 1) {
+        // First render (old cacheKey) — slow, waits for manual resolve
+        await slowRenderPromise;
+        ctx.container.innerHTML = '<div>STALE-A</div>';
+      } else {
+        // Second render (new cacheKey) — fast, resolves immediately
+        ctx.container.innerHTML = '<div>FRESH-B</div>';
+      }
+    });
+
+    const scrollDOM = document.createElement('div');
+    const harness = createIntegrationHarness({
+      activeFilePath: 'notes/A.md',
+      frontmatter: { 'notes/A.md': { title: 'Note A' } },
+    });
+
+    const editorView = createFakeEditorView({
+      plugin: harness.plugin,
+      mirrorState: {
+        enabled: true,
+        frontmatter: { title: 'Note A' },
+        filePath: 'notes/A.md',
+        widgetId: 'w1',
+        config: {
+          position: 'left',
+          templatePath: 'templates/test.md',
+          showContainer: false,
+        },
+      },
+      scrollDOM,
+    });
+
+    // Create panel — starts slow render A with widgetId w1
+    const instance = mirrorMarginPanelPlugin.create(editorView as any);
+    // Let microtasks run but render A is still awaiting
+    await Promise.resolve();
+
+    // Now simulate widgetId change (frontmatter edit) — triggers fast render B
+    const updatedView = createFakeEditorView({
+      plugin: harness.plugin,
+      mirrorState: {
+        enabled: true,
+        frontmatter: { title: 'Note A updated' },
+        filePath: 'notes/A.md',
+        widgetId: 'w2',
+        config: {
+          position: 'left',
+          templatePath: 'templates/test.md',
+          showContainer: false,
+        },
+      },
+      scrollDOM,
+    });
+
+    instance.update({
+      view: updatedView,
+      geometryChanged: false,
+    } as any);
+
+    // Let render B complete
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Now let stale render A complete
+    resolveSlowRender!();
+    await Promise.resolve();
+    await Promise.resolve();
+
+    // Panel should have FRESH-B content, not STALE-A
+    const panel = scrollDOM.querySelector('.mirror-margin-panel');
+    expect(panel).not.toBeNull();
+    expect(panel!.innerHTML).toContain('FRESH-B');
+    expect(panel!.innerHTML).not.toContain('STALE-A');
+
+    instance.destroy();
+  });
+
   it('can mount the margin panel with a reusable multi-pane harness', async () => {
     const harness = createIntegrationHarness({
       activeFilePath: 'notes/A.md',
