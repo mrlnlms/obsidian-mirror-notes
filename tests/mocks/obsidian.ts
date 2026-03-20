@@ -13,6 +13,15 @@ export class TAbstractFile {
   path = '';
 }
 
+export class TFolder extends TAbstractFile {
+  name: string;
+  constructor(path = '', name = '') {
+    super();
+    this.path = path;
+    this.name = name;
+  }
+}
+
 export class Component {
   private unloadCallbacks: Array<() => void> = [];
   addChild() {}
