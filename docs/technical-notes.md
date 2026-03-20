@@ -20,7 +20,25 @@ O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e
 
 **Dep removida:** `@popperjs/core` — zero dependencies runtime
 
-**Testes:** 11 unit tests pra filtering logic (FileSuggest, FolderSuggest, YamlPropertySuggest) + 2 E2E smoke specs. 392 total.
+**Testes:** 11 unit tests pra filtering logic (FileSuggest, FolderSuggest, YamlPropertySuggest) + 2 E2E smoke specs.
+
+### Codex review pos-v57 — 6 fixes em 4 rodadas
+
+**Rodada 1 (3 fixes):**
+- Promise leak no DebouncedInputSuggest: cada `getSuggestions()` criava Promise nova, debounce so executava a ultima — Promises anteriores ficavam pending forever. Fix: `pendingResolve` pattern, resolve anterior com `[]` antes de criar nova.
+- Timestamp Maps append-only: `fileDebounceMap`, `lastForcedUpdateMap`, `lastSetupTime` cresciam indefinidamente em sessoes longas. Fix: auto-prune entries >10s quando Map >50 entries. `lastViewMode`/`positionOverrides` prunados por viewId ativo em `refreshAllEditors`.
+- architecture.md stale: file map, callers de getApplicableConfig, hook count de applyViewOverrides, test count desatualizados.
+
+**Rodada 2 (2 fixes):**
+- Async callbacks em `scheduleTimer()` podiam rejeitar sem catch. Fix: `Promise.resolve(fn()).catch(...)` + skip se `isUnloaded`.
+- `onLayoutReady` callback nao cancelavel — podia rodar apos `onunload()` se plugin disabled durante startup. Fix: `isUnloaded` flag setado no onunload, early return no callback.
+
+**Rodada 3 (1 fix):**
+- `Object.assign({}, DEFAULT_SETTINGS)` em `loadSettings()`/`resetSettings()` fazia shallow copy — `customMirrors[]` e `global_view_overrides{}` compartilhavam referencia com o singleton. UI mutava in-place, poluindo defaults. Fix: `structuredClone(DEFAULT_SETTINGS)`. 3 testes de regressao.
+
+**Rodada 4:** zero findings. Codebase limpo.
+
+**Testes finais:** 395 (+14), 39 E2E specs (+2).
 
 ## Code review v56 — 9 fixes de auditoria completa
 
