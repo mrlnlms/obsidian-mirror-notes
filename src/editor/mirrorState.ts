@@ -142,7 +142,7 @@ export function handleForcedUpdate(
     clearRenderCache(oldCacheKey);
     MirrorTemplateWidget.domCache.delete(oldCacheKey);
     const newWidgetId = generateWidgetId();
-    clearWidgetCaches(value.widgetId);
+
 
     const newState: MirrorState = {
       ...value,
@@ -175,7 +175,7 @@ export function handleForcedUpdate(
     lastDocText: docText
   };
 
-  clearWidgetCaches(value.widgetId);
+
   const oldCacheKey = `${value.widgetId}-${value.config?.position}`;
   MirrorTemplateWidget.domCache.delete(oldCacheKey);
   clearRenderCache(oldCacheKey);
@@ -211,7 +211,7 @@ export function handleConfigChange(
   Logger.log(`Creating new widget - enabled:${enabledChanged}, pos:${positionChanged}, template:${templateChanged}, hideProps:${value.config?.hideProps !== config?.hideProps}, container:${value.config?.showContainer !== config?.showContainer}`);
 
   if (enabledChanged || positionChanged || templateChanged) {
-    clearWidgetCaches(value.widgetId);
+
   }
 
   const newMirrorState: MirrorState = {
@@ -230,14 +230,6 @@ export function handleConfigChange(
   };
 }
 
-/** Clear widget instance cache entries for a specific widgetId */
-export function clearWidgetCaches(widgetId: string): void {
-  const fileWidgets = Array.from(MirrorTemplateWidget.widgetInstanceCache.keys())
-    .filter(key => key.includes(widgetId));
-  fileWidgets.forEach(key => {
-    MirrorTemplateWidget.widgetInstanceCache.delete(key);
-  });
-}
 
 // =================================================================================
 // STATE FIELD
@@ -362,7 +354,6 @@ export const mirrorStateField = StateField.define<MirrorFieldState>({
 // CLEANUP
 // =================================================================================
 export function cleanupMirrorCaches() {
-  MirrorTemplateWidget.widgetInstanceCache.clear();
   MirrorTemplateWidget.domCache.clear();
   clearRenderCache();
   clearAllRenderChildren();

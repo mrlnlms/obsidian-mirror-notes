@@ -129,15 +129,14 @@ function buildConditionRow(
                   });
                 addSearchClass(cb, "mirror-search-input");
             });
-            s.addSearch(cb => {
-                new YamlPropertySuggest(app, cb.inputEl);
+            s.addText(cb => {
                 cb.setPlaceholder("Value (empty = any)")
                   .setValue(condition.propertyValue || '')
                   .onChange(value => {
                       condition.propertyValue = value;
                       onSave();
                   });
-                addSearchClass(cb, "mirror-search-input");
+                cb.inputEl.addClass("mirror-search-input");
             });
             break;
     }
@@ -168,18 +167,20 @@ function addMoveDeleteButtons(
           .onClick(() => {
               if (index > 0) {
                   arraymove(conditions, index, index - 1);
+                  onSave();
+                  onRedisplay();
               }
-              onSave();
-              onRedisplay();
           });
     })
     .addExtraButton(cb => {
         cb.setIcon("down-chevron-glyph")
           .setTooltip("Move down")
           .onClick(() => {
-              arraymove(conditions, index, index + 1);
-              onSave();
-              onRedisplay();
+              if (index < conditions.length - 1) {
+                  arraymove(conditions, index, index + 1);
+                  onSave();
+                  onRedisplay();
+              }
           });
     })
     .addExtraButton(cb => {

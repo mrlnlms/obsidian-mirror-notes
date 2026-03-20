@@ -4,7 +4,15 @@ Trabalho tecnico pendente. Atualizado pos-v58.
 
 ## Code Review v58
 
-5 rodadas Codex, 4 bugs corrigidos, zero findings na rodada final. Proximo ganho vem de stress E2E/manual, nao de revisao estatica.
+9 rodadas, 11 findings na ultima (4 medium, 7 low). 6 resolvidos inline, 5 pro backlog.
+
+### Pendente (findings da rodada 9)
+
+- **readableLineLength override nao aplica em Reading View** (medium) — `.markdown-source-view` selector acha o container LP (hidden em RV), toggle aplica no elemento errado. hideProps/showInlineTitle nao tem esse problema (usam .view-content). Precisa de decisao: aplicar no `.markdown-reading-view` tambem, ou limitacao aceita? Relacionado com #11
+- **Double position override no trace** (medium) — `getApplicableConfig` ja aplica positionOverride, `computeMirrorRuntimeDecision` re-consulta. requestedPosition mostra valor ja overridden. Zero impacto funcional, polui debug.log
+- **resetConfigSnapshot usa defaults hardcoded** (low) — showInlineTitle:true, propertiesInDocument:'visible', backlinkEnabled:false no unload. Se usuario tem valores diferentes, snapshot fica errado ate proximo onload. Janela pequena
+- **transition: none !important em .mirror-ui-widget \*** (low) — mata animacoes em todo conteudo renderizado (callout fold, temas). Precisa avaliar: remover causa flickering? Scoped pra excluir .markdown-rendered?
+- **readableLineLength nao monitorado pelo config watcher** (low) — obsidianConfigMonitor monitora showInlineTitle e propertiesInDocument, mas nao readableLineLength. Depende do fix de #1
 
 ## Code Review v56
 

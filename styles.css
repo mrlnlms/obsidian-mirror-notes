@@ -5,22 +5,6 @@
   opacity: 1 !important;
 }
 
-.project-toolbar {
-    width: auto;
-    height: auto;
-    padding: 3px;
-    display: contents;
-    user-select: none;
-    border-radius: 6px;
-    position: absolute;
-    transition: 200ms ease;
-    min-width: fit-content;
-    justify-content: space-around;
-    z-index: var(--layer-status-bar);
-    box-shadow: 0px 3px 32px rgb(31 38 135 / 15%);
-    border: 1px solid var(--background-modifier-border);
-    position: inherit;
-}
 
 .campo .setting-item {
   display: block !important; /* Override with !important to ensure specificity */
@@ -359,33 +343,6 @@
   margin-top: 1em !important;
 }
 
-/* Forçar decorações de replace a serem invisíveis */
-.cm-content .cm-widget.cm-replace {
-  display: none !important;
-  width: 0 !important;
-  height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  visibility: hidden !important;
-  position: absolute !important;
-  overflow: hidden !important;
-}
-
-/* Esconder linhas que contêm replace widgets */
-.cm-line:has(.cm-widget.cm-replace) {
-  display: none !important;
-  height: 0 !important;
-  line-height: 0 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-}
-
-/* Garantir que o conteúdo substituído não apareça */
-.cm-content .cm-replaced {
-  display: none !important;
-}
 
 /* ========== VIEW OVERRIDES (per-view Obsidian setting overrides) ========== */
 

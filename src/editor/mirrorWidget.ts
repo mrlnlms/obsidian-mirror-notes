@@ -7,7 +7,6 @@ import { renderMirrorTemplate } from '../rendering/templateRenderer';
 // Caches especificos do CM6 widget
 export class MirrorTemplateWidget extends WidgetType {
   public static domCache = new Map<string, HTMLElement>();
-  public static widgetInstanceCache = new Map<string, MirrorTemplateWidget>();
 
   constructor(
     private plugin: MirrorUIPlugin,

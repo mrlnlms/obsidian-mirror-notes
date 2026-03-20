@@ -9,7 +9,6 @@ import { MirrorState, ApplicableMirrorConfig } from '../src/editor/mirrorTypes';
 vi.mock('../src/editor/mirrorWidget', () => ({
   MirrorTemplateWidget: {
     domCache: new Map(),
-    widgetInstanceCache: new Map(),
   },
 }));
 vi.mock('../src/rendering/templateRenderer', () => ({
@@ -38,7 +37,6 @@ import {
   hasForcedUpdate,
   fileDebounceMap,
   lastForcedUpdateMap,
-  clearWidgetCaches,
   cleanupMirrorCaches,
   forceMirrorUpdateEffect,
 } from '../src/editor/mirrorState';
@@ -376,51 +374,18 @@ describe('fileDebounceMap and lastForcedUpdateMap', () => {
 });
 
 // =================================================================================
-// clearWidgetCaches
-// =================================================================================
-
-describe('clearWidgetCaches', () => {
-  beforeEach(() => {
-    MirrorTemplateWidget.widgetInstanceCache.clear();
-  });
-
-  it('removes entries matching widgetId', () => {
-    MirrorTemplateWidget.widgetInstanceCache.set('widget-abc-top', {} as any);
-    MirrorTemplateWidget.widgetInstanceCache.set('widget-abc-bottom', {} as any);
-    MirrorTemplateWidget.widgetInstanceCache.set('widget-xyz-top', {} as any);
-
-    clearWidgetCaches('widget-abc');
-
-    expect(MirrorTemplateWidget.widgetInstanceCache.has('widget-abc-top')).toBe(false);
-    expect(MirrorTemplateWidget.widgetInstanceCache.has('widget-abc-bottom')).toBe(false);
-    expect(MirrorTemplateWidget.widgetInstanceCache.has('widget-xyz-top')).toBe(true);
-  });
-
-  it('ignores non-matching entries', () => {
-    MirrorTemplateWidget.widgetInstanceCache.set('widget-xyz-top', {} as any);
-    MirrorTemplateWidget.widgetInstanceCache.set('widget-xyz-bottom', {} as any);
-
-    clearWidgetCaches('widget-abc');
-
-    expect(MirrorTemplateWidget.widgetInstanceCache.size).toBe(2);
-  });
-});
-
-// =================================================================================
 // cleanupMirrorCaches
 // =================================================================================
 
 describe('cleanupMirrorCaches', () => {
   it('clears all caches', () => {
     // Populate caches
-    MirrorTemplateWidget.widgetInstanceCache.set('key1', {} as any);
     MirrorTemplateWidget.domCache.set('key2', {} as any);
     fileDebounceMap.set('file.md', 1000);
     lastForcedUpdateMap.set('file.md', 2000);
 
     cleanupMirrorCaches();
 
-    expect(MirrorTemplateWidget.widgetInstanceCache.size).toBe(0);
     expect(MirrorTemplateWidget.domCache.size).toBe(0);
     expect(fileDebounceMap.size).toBe(0);
     expect(lastForcedUpdateMap.size).toBe(0);

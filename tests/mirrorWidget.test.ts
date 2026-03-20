@@ -54,7 +54,6 @@ function createWidget(overrides?: {
 describe('MirrorTemplateWidget', () => {
   beforeEach(() => {
     MirrorTemplateWidget.domCache.clear();
-    MirrorTemplateWidget.widgetInstanceCache.clear();
   });
 
   describe('getCacheKey', () => {

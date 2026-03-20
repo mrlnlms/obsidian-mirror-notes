@@ -30,10 +30,11 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     // Falls back to 'default' in tests/detached DOM (preserves single-pane behavior).
     const viewId = getBlockViewId(el);
 
-    // Cache key unico por bloco PER PANE (viewId + path + posicao)
+    // Cache key unico por bloco PER PANE (viewId + path + line)
+    // Fallback to unique suffix if sectionInfo is null (rare — startup before metadataCache)
     const sectionInfo = ctx.getSectionInfo(el);
-    const lineStart = sectionInfo?.lineStart ?? 0;
-    const cacheKey = `block-${viewId}-${ctx.sourcePath}-${lineStart}`;
+    const lineId = sectionInfo?.lineStart ?? `u${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const cacheKey = `block-${viewId}-${ctx.sourcePath}-${lineId}`;
 
     // Funcao de render (reusada no re-render cross-note)
     const doRender = async () => {
@@ -50,7 +51,7 @@ export function registerMirrorCodeBlock(plugin: MirrorUIPlugin): void {
     };
 
     // Chave unica por bloco PER PANE (usada em ambos registries)
-    const blockKey = `${viewId}:${ctx.sourcePath}::${lineStart}`;
+    const blockKey = `${viewId}:${ctx.sourcePath}::${lineId}`;
 
     // Template dependency (todos os code blocks — re-render quando template muda)
     plugin.templateDeps.register(config.templatePath, blockKey, doRender);
