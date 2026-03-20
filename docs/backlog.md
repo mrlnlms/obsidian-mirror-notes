@@ -42,13 +42,9 @@ Identificado via analise de carga cognitiva (Codex, 2026-03-18). O codigo esta l
 
 **O que NAO fazer:** nao abstrair demais, nao criar framework interno, nao refatorar so porque e complexo. Complexidade atual e quase toda inevitavel dado o escopo do plugin (paridade LP/RV, 7 posicoes, multi-pane, fallback chain, reatividade) num host sem APIs publicas completas.
 
-## Suggest component — migrar de @popperjs/core para API nativa
+## Suggest component — migrado pra AbstractInputSuggest (v57)
 
-O suggest de autocomplete (`src/suggesters/suggest.ts`) usa `@popperjs/core` (19KB+, unica dep runtime) pra posicionar o popup. Obsidian tem `AbstractInputSuggest` que faz posicionamento internamente. Migrar eliminaria a dependencia e reduziria bundle.
-
-- Escopo: reescrever `TextInputSuggest` usando `AbstractInputSuggest` do Obsidian
-- Risco: edge cases de posicionamento (scroll containers, viewport boundaries) que o Popper resolve automaticamente
-- Prioridade: proximo — eliminar unica dep runtime antes de lancar
+Migrado de `@popperjs/core` + `TextInputSuggest` custom pra `AbstractInputSuggest` nativo do Obsidian. `DebouncedInputSuggest` base class com debounce 150ms. Dependencia runtime eliminada. Validado manualmente + E2E smoke.
 
 ## Revisao de Settings UI
 

@@ -2,6 +2,26 @@
 
 O que mudou em cada versao e por que. Para arquitetura atual, file map, fluxos e decisoes, ver [architecture.md](architecture.md).
 
+## O que mudou na v57
+
+### Suggest migration: @popperjs/core → AbstractInputSuggest
+
+**Contexto:** `TextInputSuggest<T>` custom com inner class `Suggest<T>` + `@popperjs/core` (19KB, unica dep runtime). Posicionamento, keyboard nav, scope management tudo manual. 178 linhas em `suggest.ts`.
+
+**Diagnostico E2E:** `AbstractInputSuggest` do Obsidian NAO tem debounce interno — dispara `getSuggestions` a cada keystroke (confirmado via E2E com counter global, ratio 1.13 calls/keystroke).
+
+**Solucao:** `DebouncedInputSuggest<T>` (~30 linhas) estende `AbstractInputSuggest<T>`:
+- Debounce 150ms via `debounce()` do Obsidian (resetTimer=true)
+- `limit = 100` (propriedade nativa do AbstractInputSuggest)
+- `setValueAndNotify()` — `setValue()` + trigger input event (necessario porque `AbstractInputSuggest.setValue()` nao dispara o evento que `Setting.onChange` escuta)
+- `getFilteredSuggestions()` abstrato — cada suggest implementa a logica de filtragem
+
+**Arquivos deletados:** `suggest.ts` (178 linhas), `pushKeymapScope`/`popKeymapScope` de obsidianInternals.ts
+
+**Dep removida:** `@popperjs/core` — zero dependencies runtime
+
+**Testes:** 11 unit tests pra filtering logic (FileSuggest, FolderSuggest, YamlPropertySuggest) + 2 E2E smoke specs. 392 total.
+
 ## Code review v56 — 9 fixes de auditoria completa
 
 Auditoria completa do codebase v55 em busca de bugs, gaps e inconsistencias. 11 findings (2 critical, 2 high, 4 medium, 3 low). 9 corrigidos, 2 avaliados e descartados.

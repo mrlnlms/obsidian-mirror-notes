@@ -1,4 +1,4 @@
-import { App, EventRef, MarkdownView, Scope, Vault } from "obsidian";
+import { App, EventRef, MarkdownView, Vault } from "obsidian";
 import { EditorView } from "@codemirror/view";
 
 /**
@@ -60,17 +60,6 @@ export function getBacklinkPlugin(app: App): { enabled: boolean } | null {
     return (app as any).internalPlugins?.plugins?.['backlink'] ?? null;
 }
 
-/** Push keymap scope (for suggest popups) */
-export function pushKeymapScope(app: App, scope: Scope): void {
-    // @ts-ignore — app.keymap not in official typings
-    app.keymap.pushScope(scope);
-}
-
-/** Pop keymap scope */
-export function popKeymapScope(app: App, scope: Scope): void {
-    // @ts-ignore — app.keymap not in official typings
-    app.keymap.popScope(scope);
-}
 
 /** Register a vault 'raw' event listener (fires for .obsidian/ config changes) */
 export function onVaultRaw(vault: Vault, callback: (path: string) => void): EventRef {

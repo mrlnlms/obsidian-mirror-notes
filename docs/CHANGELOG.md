@@ -2,6 +2,16 @@
 
 Um plugin para Obsidian que renderiza templates dinamicos dentro do editor usando CodeMirror 6.
 
+## v57 — Suggest migration: Popper → AbstractInputSuggest
+
+- Refactor: migrou suggest de @popperjs/core pra AbstractInputSuggest nativo do Obsidian
+- Feat: DebouncedInputSuggest base class com debounce 150ms (vault performance)
+- Cleanup: removeu suggest.ts (custom Suggest<T> + TextInputSuggest<T>), pushKeymapScope/popKeymapScope
+- Cleanup: removeu @popperjs/core — zero dependencias runtime
+- Fix: trigger input event no selectSuggestion pra settings.onChange funcionar
+- Test: 11 unit tests pra filtering logic + 2 E2E smoke specs
+- 392 testes (+11), 39 E2E specs (+2)
+
 ## v56 — Code review + observability nivel 4
 
 - Fix: data.json modify handler agora recarrega settings do disco (afetava Obsidian Sync)
