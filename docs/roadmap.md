@@ -4,15 +4,11 @@ Horizonte de produto e ordem de execucao. Trabalho tecnico corrente esta no [bac
 
 ## Ordem de execucao
 
-### 1. Suggest → AbstractInputSuggest
-
-Proximo. Migrar `TextInputSuggest` de `@popperjs/core` pra `AbstractInputSuggest` nativa do Obsidian. Elimina unica dependencia runtime (19KB+). Requer teste manual no Obsidian (posicionamento de popup em scroll containers, viewport boundaries). Itens no [backlog](backlog.md#suggest-component--migrar-de-popperjscore-para-api-nativa).
-
-### 2. Margin Panel (epico)
+### 1. Margin Panel (epico)
 
 Base tecnica pronta (v45: flush positioning + ResizeObserver). Foco: refinamento de largura, thresholds e consolidacao do menu de posicoes. Itens granulares no [backlog](backlog.md#epico-margin-panel).
 
-### 3. Revisao de Settings UI
+### 2. Revisao de Settings UI
 
 Apos margin panel. Estrutura de codigo pronta (v52: settings.ts split em 5 modulos). v53 resolveu rename de mirrors e fix do typo `overide`. Pendente: padronizar textos PT→EN, limpar opcoes deprecated, layout/hierarquia visual. Itens granulares no [backlog](backlog.md#revisao-de-settings-ui).
 
@@ -38,6 +34,7 @@ Resumo por versao. Detalhes tecnicos em [technical-notes.md](technical-notes.md)
 
 | Versao | Tema | Destaques |
 |--------|------|-----------|
+| v57 | Suggest migration | @popperjs/core → AbstractInputSuggest nativo, DebouncedInputSuggest, zero deps runtime. 392 unit + 39 E2E |
 | v56 | Code review + observability nivel 4 | 9 bug fixes + migrate all callers to computeMirrorRuntimeDecision (getApplicableConfig/resolveEngine internos). 377 unit + 37 E2E |
 | v55 | Central decision + 9 Codex fixes | `computeMirrorRuntimeDecision`, canonical flows, 9 bugs via Codex review (concurrency, observer, margin RV, timers, renderingPromises, templateDeps, viewOverrides ordering/engine, data.json RV). 374 unit + 37 E2E |
 | v54 | Runtime correctness + pane isolation | Stale callbacks, multi-pane frontmatter, memory leak, code block pane isolation, type safety, DRY. Audit Claude+Codex. 359 unit + 37 E2E |
