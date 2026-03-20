@@ -1,0 +1,127 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { DEFAULT_SETTINGS, DEFAULT_VIEW_OVERRIDES } from '../src/settings/types';
+
+// Mock heavy deps that main.ts imports
+vi.mock('@codemirror/state', () => ({
+  StateEffect: { appendConfig: { of: vi.fn() } },
+  StateField: { define: vi.fn(() => Symbol('field')) },
+  Facet: { define: vi.fn(() => ({ of: vi.fn() })) },
+}));
+vi.mock('../src/editor/mirrorState', () => ({
+  mirrorStateField: Symbol('mirrorStateField'),
+  forceMirrorUpdateEffect: { of: vi.fn() },
+  mirrorPluginFacet: { of: vi.fn() },
+  filePathFacet: { of: vi.fn() },
+  viewIdFacet: { of: vi.fn() },
+  cleanupMirrorCaches: vi.fn(),
+  toggleWidgetEffect: Symbol('toggleWidgetEffect'),
+}));
+vi.mock('../src/rendering/codeBlockProcessor', () => ({ registerMirrorCodeBlock: vi.fn() }));
+vi.mock('../src/commands/insertMirrorBlock', () => ({ registerInsertMirrorBlock: vi.fn() }));
+vi.mock('../src/rendering/sourceDependencyRegistry', () => ({
+  SourceDependencyRegistry: vi.fn(() => ({ clear: vi.fn(), getDependentCallbacks: vi.fn(() => []) })),
+}));
+vi.mock('../src/editor/mirrorConfig', () => ({ clearConfigCache: vi.fn(), getApplicableConfig: vi.fn() }));
+vi.mock('../src/rendering/domInjector', () => ({
+  cleanupAllDomMirrors: vi.fn(), getViewId: vi.fn().mockReturnValue('v0'), resetViewIdCounter: vi.fn(),
+}));
+vi.mock('../src/editor/marginPanelExtension', () => ({ mirrorMarginPanelPlugin: Symbol('marginPanel') }));
+vi.mock('../src/dev/logger', () => ({
+  Logger: { log: vi.fn(), warn: vi.fn(), error: vi.fn(), init: vi.fn(), setEnabled: vi.fn(), destroy: vi.fn() },
+}));
+vi.mock('../settings', async () => {
+  const actual = await vi.importActual('../settings');
+  return { ...actual, MirrorUISettingsTab: vi.fn() };
+});
+
+import MirrorUIPlugin from '../main';
+
+describe('DEFAULT_SETTINGS clone isolation', () => {
+  let plugin: MirrorUIPlugin;
+
+  beforeEach(() => {
+    plugin = Object.create(MirrorUIPlugin.prototype);
+    plugin.knownTemplatePaths = new Set();
+    // Mock loadData to return empty (fresh install)
+    plugin.loadData = vi.fn().mockResolvedValue(null);
+    // Mock saveData
+    plugin.saveData = vi.fn().mockResolvedValue(undefined);
+    // Mock app for rebuildKnownTemplatePaths
+    (plugin as any).app = {
+      workspace: { iterateAllLeaves: vi.fn() },
+      vault: { getConfig: vi.fn() },
+    };
+    (plugin as any).positionOverrides = new Map();
+    (plugin as any).lastViewMode = new Map();
+    (plugin as any).pendingTimers = new Set();
+    (plugin as any).isUnloaded = false;
+  });
+
+  it('loadSettings does not pollute DEFAULT_SETTINGS.customMirrors', async () => {
+    await plugin.loadSettings();
+
+    // Mutate the plugin's settings (simulates UI adding a mirror)
+    plugin.settings.customMirrors.push({
+      id: 'test', name: 'Test', openview: false,
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'x.md',
+      custom_settings_live_preview_pos: 'top',
+      enable_custom_preview_mode: false,
+      custom_settings_preview_note: '',
+      custom_settings_preview_pos: 'top',
+      custom_settings_override: false,
+      custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
+      custom_show_container_border: true,
+      custom_auto_update_paths: true,
+      conditions: [],
+      conditionLogic: 'any',
+    });
+
+    // DEFAULT_SETTINGS must remain clean
+    expect(DEFAULT_SETTINGS.customMirrors).toHaveLength(0);
+  });
+
+  it('loadSettings does not pollute DEFAULT_SETTINGS.global_view_overrides', async () => {
+    await plugin.loadSettings();
+
+    // Mutate view overrides (simulates UI toggle)
+    plugin.settings.global_view_overrides.hideProps = true;
+
+    // DEFAULT_SETTINGS must remain clean
+    expect(DEFAULT_SETTINGS.global_view_overrides.hideProps).toBe(false);
+  });
+
+  it('resetSettings returns to clean defaults after mutations', async () => {
+    await plugin.loadSettings();
+
+    // Mutate
+    plugin.settings.customMirrors.push({
+      id: 'dirty', name: 'Dirty', openview: false,
+      enable_custom_live_preview_mode: true,
+      custom_settings_live_preview_note: 'dirty.md',
+      custom_settings_live_preview_pos: 'top',
+      enable_custom_preview_mode: false,
+      custom_settings_preview_note: '',
+      custom_settings_preview_pos: 'top',
+      custom_settings_override: false,
+      custom_view_overrides: { ...DEFAULT_VIEW_OVERRIDES },
+      custom_show_container_border: true,
+      custom_auto_update_paths: true,
+      conditions: [],
+      conditionLogic: 'any',
+    });
+    plugin.settings.global_view_overrides.hideProps = true;
+    plugin.settings.debug_logging = true;
+
+    // Reset
+    await plugin.resetSettings();
+
+    // Should be back to defaults
+    expect(plugin.settings.customMirrors).toHaveLength(0);
+    expect(plugin.settings.global_view_overrides.hideProps).toBe(false);
+    expect(plugin.settings.debug_logging).toBe(false);
+
+    // DEFAULT_SETTINGS still clean
+    expect(DEFAULT_SETTINGS.customMirrors).toHaveLength(0);
+  });
+});
