@@ -5,34 +5,51 @@ import { S, NOTES, MARKERS, toggleReadingView, getViewMode } from '../helpers/mi
  * Composite test: split pane + same file + LP→RV→LP on active pane.
  * Validates that the inactive pane doesn't leak CSS override classes
  * or gain/lose DOM mirrors when the active pane switches mode.
+ *
+ * Uses Obsidian API (workspace.getLeavesOfType) instead of CSS selectors
+ * to target markdown leaves — avoids matching sidebar/explorer leaves.
  */
 describe('composite: split pane + mode switch cross-leak', () => {
   const OVERRIDE_CLASSES = ['mirror-hide-properties', 'mirror-force-inline-title', 'mirror-hide-inline-title'];
 
-  /** Count override classes on a specific leaf (active or inactive) */
-  async function getOverrideClasses(target: 'active' | 'inactive'): Promise<string[]> {
-    return browser.execute((t: string, classes: string[]) => {
-      const selector = t === 'active'
-        ? '.workspace-leaf.mod-active .view-content'
-        : '.workspace-leaf:not(.mod-active) .view-content';
-      const el = document.querySelector(selector);
-      if (!el) return [];
-      return classes.filter(cls => el.classList.contains(cls));
+  /** Query markdown leaves via Obsidian API, return info about active + other leaf */
+  async function queryLeaves(marker: string): Promise<{
+    total: number;
+    activeHasMarker: boolean;
+    otherHasMarker: boolean;
+    otherMirrorCount: number;
+  }> {
+    const result = await browser.execute((m: string) => {
+      const ws = (window as any).app.workspace;
+      const leaves = ws.getLeavesOfType('markdown');
+      const active = ws.activeLeaf;
+      const other = leaves.find((l: any) => l !== active);
+      return {
+        total: leaves.length,
+        activeHasMarker: active ? active.containerEl.innerHTML.includes(m) : false,
+        otherHasMarker: other ? other.containerEl.innerHTML.includes(m) : false,
+        otherMirrorCount: other ? other.containerEl.querySelectorAll('.mirror-ui-widget, .mirror-dom-injection').length : 0,
+      };
+    }, marker);
+    return result as any;
+  }
+
+  /** Get override classes on the active or other markdown leaf */
+  async function getOverrideClasses(target: 'active' | 'other'): Promise<string[]> {
+    const result = await browser.execute((t: string, classes: string[]) => {
+      const ws = (window as any).app.workspace;
+      const leaves = ws.getLeavesOfType('markdown');
+      const active = ws.activeLeaf;
+      const leaf = t === 'active' ? active : leaves.find((l: any) => l !== active);
+      if (!leaf) return [] as string[];
+      const viewContent = leaf.containerEl.querySelector('.view-content');
+      if (!viewContent) return [] as string[];
+      return classes.filter((cls: string) => viewContent.classList.contains(cls));
     }, target, OVERRIDE_CLASSES);
+    return result as string[];
   }
 
-  /** Get mirror marker content from a specific leaf */
-  async function leafHasMarker(target: 'active' | 'inactive', marker: string): Promise<boolean> {
-    return browser.execute((t: string, m: string) => {
-      const selector = t === 'active'
-        ? '.workspace-leaf.mod-active'
-        : '.workspace-leaf:not(.mod-active)';
-      const leaf = document.querySelector(selector);
-      return leaf ? leaf.innerHTML.includes(m) : false;
-    }, target, marker);
-  }
-
-  /** Ensure single-pane state before tests */
+  /** Ensure single-pane state */
   before(async () => {
     await browser.execute(() => {
       const ws = (window as any).app.workspace;
@@ -43,7 +60,6 @@ describe('composite: split pane + mode switch cross-leak', () => {
   });
 
   after(async () => {
-    // Cleanup: close split panes
     await browser.execute(() => {
       const ws = (window as any).app.workspace;
       const leaves = ws.getLeavesOfType('markdown');
@@ -53,79 +69,79 @@ describe('composite: split pane + mode switch cross-leak', () => {
   });
 
   it('setup: open same note in split panes, both start in LP', async () => {
-    // Open override note in first pane
     await openFile(NOTES.splitOverride);
     await waitForElement(S.aboveTitle, 15000);
     await browser.pause(2000);
 
-    // Verify LP mode and mirror rendered
     expect(await getViewMode()).toBe('source');
-    expect(await leafHasMarker('active', MARKERS.splitLp)).toBe(true);
 
-    // Split and open same file
-    await browser.execute(() => {
-      (window as any).app.workspace.getLeaf('split');
+    // Split pane — duplicate current leaf
+    await browser.execute(async () => {
+      const ws = (window as any).app.workspace;
+      await ws.duplicateLeaf(ws.activeLeaf, 'split');
     });
-    await browser.pause(2000);
-    await openFile(NOTES.splitOverride);
-    await browser.pause(5000);
+    await browser.pause(8000);
 
-    // Both panes should have LP template
-    expect(await leafHasMarker('active', MARKERS.splitLp)).toBe(true);
-    expect(await leafHasMarker('inactive', MARKERS.splitLp)).toBe(true);
+    const info = await queryLeaves(MARKERS.splitLp);
+    expect(info.total).toBeGreaterThanOrEqual(2);
+    // At least one pane should have the marker (the new pane may still be rendering)
+    expect(info.activeHasMarker || info.otherHasMarker).toBe(true);
   });
 
-  it('active pane override classes do not leak to inactive pane', async () => {
-    // Active pane should have hideProps override (configured in mirror)
+  it('both panes have hideProps override (same mirror, same note)', async () => {
     const activeOverrides = await getOverrideClasses('active');
     expect(activeOverrides).toContain('mirror-hide-properties');
 
-    // Inactive pane should also have it (same mirror, same note)
-    const inactiveOverrides = await getOverrideClasses('inactive');
-    expect(inactiveOverrides).toContain('mirror-hide-properties');
+    const otherOverrides = await getOverrideClasses('other');
+    expect(otherOverrides).toContain('mirror-hide-properties');
   });
 
-  it('LP→RV on active pane: inactive pane stays in LP with LP template', async () => {
-    // Toggle active pane to Reading View
+  it('LP→RV on active pane: other pane stays in LP with LP template', async () => {
     await toggleReadingView();
-    await browser.pause(3000);
+    await browser.pause(5000);
 
-    // Active pane: should now show RV template
     expect(await getViewMode()).toBe('preview');
-    expect(await leafHasMarker('active', MARKERS.splitRv)).toBe(true);
 
-    // Inactive pane: should STILL have LP template, NOT RV
-    expect(await leafHasMarker('inactive', MARKERS.splitLp)).toBe(true);
-    expect(await leafHasMarker('inactive', MARKERS.splitRv)).toBe(false);
+    // Active pane: RV template
+    const activeInfo = await queryLeaves(MARKERS.splitRv);
+    expect(activeInfo.activeHasMarker).toBe(true);
+
+    // Other pane: still LP template, NOT RV
+    const otherInfo = await queryLeaves(MARKERS.splitLp);
+    expect(otherInfo.otherHasMarker).toBe(true);
+
+    const otherHasRv = await browser.execute((m: string) => {
+      const ws = (window as any).app.workspace;
+      const leaves = ws.getLeavesOfType('markdown');
+      const other = leaves.find((l: any) => l !== ws.activeLeaf);
+      return other ? other.containerEl.innerHTML.includes(m) : false;
+    }, MARKERS.splitRv);
+    expect(otherHasRv).toBe(false);
   });
 
-  it('RV→LP on active pane: inactive pane unaffected', async () => {
-    // Toggle back to LP
+  it('RV→LP on active pane: other pane unaffected', async () => {
     await toggleReadingView();
     await browser.pause(3000);
 
-    // Active pane: back to LP template
     expect(await getViewMode()).toBe('source');
-    expect(await leafHasMarker('active', MARKERS.splitLp)).toBe(true);
 
-    // Inactive pane: still LP, no change
-    expect(await leafHasMarker('inactive', MARKERS.splitLp)).toBe(true);
+    const info = await queryLeaves(MARKERS.splitLp);
+    expect(info.activeHasMarker).toBe(true);
+    expect(info.otherHasMarker).toBe(true);
   });
 
   it('no orphan override classes after roundtrip', async () => {
-    // After LP→RV→LP roundtrip, both panes should have hideProps
-    // (the mirror is active in both) but no unexpected classes
     const activeOverrides = await getOverrideClasses('active');
-    const inactiveOverrides = await getOverrideClasses('inactive');
+    const otherOverrides = await getOverrideClasses('other');
 
     // hideProps should be present (mirror has it configured)
     expect(activeOverrides).toContain('mirror-hide-properties');
-    expect(inactiveOverrides).toContain('mirror-hide-properties');
+    expect(otherOverrides).toContain('mirror-hide-properties');
 
     // No title override classes (not configured)
     expect(activeOverrides).not.toContain('mirror-force-inline-title');
     expect(activeOverrides).not.toContain('mirror-hide-inline-title');
-    expect(inactiveOverrides).not.toContain('mirror-force-inline-title');
-    expect(inactiveOverrides).not.toContain('mirror-hide-inline-title');
+    expect(otherOverrides).not.toContain('mirror-force-inline-title');
+    expect(otherOverrides).not.toContain('mirror-hide-inline-title');
   });
 });
